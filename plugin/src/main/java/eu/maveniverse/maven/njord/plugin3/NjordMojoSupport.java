@@ -2,7 +2,7 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;

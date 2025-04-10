@@ -3,8 +3,8 @@ package eu.maveniverse.maven.njord.shared.impl.repository;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.repository.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

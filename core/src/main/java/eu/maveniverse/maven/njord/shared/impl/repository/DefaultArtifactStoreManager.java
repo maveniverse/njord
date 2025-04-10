@@ -4,9 +4,9 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreTemplate;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

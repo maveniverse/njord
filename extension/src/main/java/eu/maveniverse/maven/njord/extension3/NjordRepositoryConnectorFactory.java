@@ -10,8 +10,8 @@ package eu.maveniverse.maven.njord.extension3;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Optional;

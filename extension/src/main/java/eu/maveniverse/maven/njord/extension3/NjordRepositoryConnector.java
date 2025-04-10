@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.extension3;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;

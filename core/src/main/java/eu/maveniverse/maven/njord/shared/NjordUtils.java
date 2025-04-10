@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.repository.DefaultArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.eclipse.aether.RepositorySystemSession;

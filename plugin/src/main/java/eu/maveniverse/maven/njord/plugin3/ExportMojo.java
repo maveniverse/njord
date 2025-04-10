@@ -1,6 +1,6 @@
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;

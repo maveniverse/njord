@@ -1,4 +1,4 @@
-package eu.maveniverse.maven.njord.shared.repository;
+package eu.maveniverse.maven.njord.shared.store;
 
 import java.io.Closeable;
 import java.io.IOException;

@@ -1,8 +1,8 @@
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.impl.repository.DeployingArtifactStorePublisher;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Optional;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -38,11 +38,11 @@ public class MergeMojo extends NjordMojoSupport {
 
         toOptional.orElseThrow().close();
         try (ArtifactStore from = fromOptional.orElseThrow()) {
-            new DeployingArtifactStorePublisher(
+            new ArtifactStoreDeployer(
                             repositorySystem,
                             mavenSession.getRepositorySession(),
                             new RemoteRepository.Builder(to, "default", "njord:repository:" + to).build())
-                    .publish(from);
+                    .deploy(from);
             if (drop) {
                 artifactStoreManager.dropArtifactStore(from);
             }
