@@ -103,33 +103,6 @@
         <version>1</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.eclipse.sisu</groupId>
-        <artifactId>org.eclipse.sisu.inject</artifactId>
-        <version>0.9.0.M3</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject</groupId>
-        <artifactId>guice</artifactId>
-        <version>5.1.0</version>
-        <classifier>classes</classifier>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>33.4.6-jre</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>failureaccess</artifactId>
-        <version>1.0.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.ow2.asm</groupId>
-        <artifactId>asm</artifactId>
-        <version>9.8</version>
-      </dependency>
-
       <!-- Resolver + Maven -->
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
@@ -153,22 +126,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-named-locks</artifactId>
-        <version>${version.resolver}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-connector-basic</artifactId>
-        <version>${version.resolver}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-transport-file</artifactId>
-        <version>${version.resolver}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-transport-http</artifactId>
         <version>${version.resolver}</version>
       </dependency>
       <dependency>
@@ -181,21 +139,6 @@
         <artifactId>maven-core</artifactId>
         <version>${version.maven}</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-resolver-provider</artifactId>
-        <version>${version.maven}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-utils</artifactId>
-        <version>4.0.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-xml</artifactId>
-        <version>3.0.1</version>
-      </dependency>
 
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>
@@ -204,45 +147,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.immutables</groupId>
-        <artifactId>value</artifactId>
-        <version>2.10.1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.msgpack</groupId>
-        <artifactId>msgpack-core</artifactId>
-        <version>0.9.9</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jgroups</groupId>
-        <artifactId>jgroups</artifactId>
-        <version>5.4.5.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.minio</groupId>
-        <artifactId>minio</artifactId>
-        <version>8.5.17</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
         <version>5.12.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>${version.testcontainers}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>minio</artifactId>
-        <version>${version.testcontainers}</version>
-        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
