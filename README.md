@@ -36,6 +36,14 @@ With Maven 3 create project-wide, or with Maven 4-rc-3+ create user-wide `~/.m2/
 </extensions>
 ```
 
+It is recommended (but not mandatory) to add this stanza to your `settings.xml` as well if you don't have it already 
+(to not type whole G of plugin):
+```xml
+  <pluginGroups>
+    <pluginGroup>eu.maveniverse.maven.plugins</pluginGroup>
+  </pluginGroups>
+```
+
 That's all! No project change needed at all. Next, let's see an example of Apache Maven project (I used `maven-gpg-plugin`):
 
 1. For example’s sake, I took last release of plugin: `git checkout maven-gpg-plugin-3.2.7`
