@@ -5,21 +5,21 @@ import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
+/**
+ * Lists content of given store.
+ */
 @Mojo(name = "list-content", threadSafe = true, requiresProject = false)
 public class ListContentMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "store")
     private String store;
 
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager)
-            throws IOException, MojoExecutionException, MojoFailureException {
+    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
         Optional<ArtifactStore> storeOptional = artifactStoreManager.selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             try (ArtifactStore store = storeOptional.orElseThrow()) {

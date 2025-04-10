@@ -5,15 +5,15 @@ import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 
+/**
+ * List all existing stores.
+ */
 @Mojo(name = "list", threadSafe = true, requiresProject = false)
 public class ListMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager)
-            throws IOException, MojoExecutionException, MojoFailureException {
+    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
         logger.info("List of existing ArtifactStore:");
         Collection<String> storeNames = artifactStoreManager.listArtifactStoreNames();
         for (String storeName : storeNames) {

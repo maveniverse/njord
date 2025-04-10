@@ -5,12 +5,13 @@ import eu.maveniverse.maven.njord.shared.repository.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Optional;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * Merges {@code from} store onto {@code to} store, eventually dropping {@code from} store.
+ */
 @Mojo(name = "merge", threadSafe = true, requiresProject = false)
 public class MergeMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "from")
@@ -23,9 +24,7 @@ public class MergeMojo extends NjordMojoSupport {
     private boolean drop;
 
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager)
-            throws IOException, MojoExecutionException, MojoFailureException {
-
+    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
         Optional<ArtifactStore> fromOptional = artifactStoreManager.selectArtifactStore(from);
         Optional<ArtifactStore> toOptional = artifactStoreManager.selectArtifactStore(to);
         if (fromOptional.isEmpty()) {

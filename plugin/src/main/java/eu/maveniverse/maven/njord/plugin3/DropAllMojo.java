@@ -5,19 +5,19 @@ import eu.maveniverse.maven.njord.shared.repository.ArtifactStoreManager;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+/**
+ * Tabula rasa: removes all stores. To make it work you need extra {@code -Dyes}.
+ */
 @Mojo(name = "drop-all", threadSafe = true, requiresProject = false)
 public class DropAllMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "yes")
     private boolean yes;
 
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager)
-            throws IOException, MojoExecutionException, MojoFailureException {
+    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
         if (yes) {
             logger.info("Dropping all ArtifactStore");
             AtomicInteger count = new AtomicInteger();

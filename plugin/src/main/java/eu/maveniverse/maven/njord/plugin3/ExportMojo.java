@@ -6,18 +6,15 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Publishes given store to given target.
+ * Exports a store to given path (ie for archival purposes or processing or whatever).
  */
-@Mojo(name = "publish", threadSafe = true, requiresProject = false)
-public class PublishMojo extends NjordMojoSupport {
+@Mojo(name = "export", threadSafe = true, requiresProject = false)
+public class ExportMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "store")
     private String store;
 
-    @Parameter(required = true, property = "target")
-    private String target;
-
-    @Parameter(required = true, property = "drop", defaultValue = "true")
-    private boolean drop;
+    @Parameter(required = true, property = "path")
+    private String path;
 
     @Override
     protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
