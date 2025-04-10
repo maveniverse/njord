@@ -34,7 +34,7 @@ public class ArtifactStoreDeployer {
         deployRequest.setArtifacts(artifactStore.artifacts().stream()
                 .map(a -> a.setVersion(a.getBaseVersion()))
                 .collect(Collectors.toList()));
-        deployRequest.setRepository(repository);
+        deployRequest.setRepository(repositorySystem.newDeploymentRepository(repositorySystemSession, repository));
         deployRequest.setTrace(new RequestTrace(artifactStore));
         try {
             repositorySystem.deploy(repositorySystemSession, deployRequest);

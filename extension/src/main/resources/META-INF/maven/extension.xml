@@ -16,9 +16,6 @@
   </exportedPackages>
 
   <exportedArtifacts>
-    <exportedArtifact>eu.maveniverse.maven.njord:extension</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord:core</exportedArtifact>
-    <exportedArtifact>eu.maveniverse.maven.njord.publisher:apache</exportedArtifact>
-    <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype</exportedArtifact>
   </exportedArtifacts>
 </extension>

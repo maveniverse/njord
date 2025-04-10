@@ -1,6 +1,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.NjordUtils;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.io.IOException;
@@ -16,7 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "publish", threadSafe = true, requiresProject = false)
 public class PublishMojo extends NjordMojoSupport {
     @Inject
-    private Map<String, ArtifactStorePublisher> publishers;
+    private Map<String, ArtifactStorePublisherFactory> publishers;
 
     @Parameter(required = true, property = "store")
     private String store;
@@ -34,14 +35,20 @@ public class PublishMojo extends NjordMojoSupport {
             logger.warn("ArtifactStore with given name not found: {}", store);
             return;
         }
-        ArtifactStorePublisher publisher = publishers.get(target);
-        if (publisher == null) {
+        ArtifactStorePublisherFactory publisherFactory = publishers.get(target);
+        if (publisherFactory == null) {
             logger.warn("Target {} not found", target);
             return;
         }
         try (ArtifactStore from = storeOptional.orElseThrow()) {
-            publisher.publish(from);
+            publisherFactory
+                    .create(
+                            mavenSession.getRepositorySession(),
+                            NjordUtils.mayGetConfig(mavenSession.getRepositorySession())
+                                    .orElseThrow())
+                    .publish(from);
             if (drop) {
+                logger.info("Dropping {}", from);
                 artifactStoreManager.dropArtifactStore(from);
             }
         }

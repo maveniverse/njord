@@ -44,6 +44,7 @@ public class MergeMojo extends NjordMojoSupport {
                             new RemoteRepository.Builder(to, "default", "njord:repository:" + to).build())
                     .deploy(from);
             if (drop) {
+                logger.info("Dropping {}", from);
                 artifactStoreManager.dropArtifactStore(from);
             }
         }
