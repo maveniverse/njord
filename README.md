@@ -39,7 +39,7 @@ With Maven 3 create project-wide, or with Maven 4-rc-3+ create user-wide `~/.m2/
 That's all! No project change needed at all. Next, let's see an example of Apache Maven project (I used `maven-gpg-plugin`):
 
 1. For example’s sake, I took last release of plugin: `git checkout maven-gpg-plugin-3.2.7`
-2. Deploy it (locally stage): `mvn -P apache-release deploy -DaltDeploymentRepository=id::njord:` (The `id` is really unused, is there just to fulfil deploy plugin syntax requirement. The URL `njord:` will use "default" store template that is RELEASE. You can target other templates by using, and is equivalent of this `njord:default`. You can stage locally snapshots as well with URL `njord:snapshot`. Finally, you can target existing store with `njord:store:storename-xxx`).
+2. Deploy it (locally stage): `mvn -P apache-release deploy -DaltDeploymentRepository=id::njord:` (The `id` is really unused, is there just to fulfil deploy plugin syntax requirement. The URL `njord:` will use "default" store template that is RELEASE. You can target other templates by using, and is equivalent of this `njord:release`. You can stage locally snapshots as well with URL `njord:snapshot`. Finally, you can target existing store with `njord:store:storename-xxx`).
 3. Check staged store names: `mvn njord:list`
 4. Check locally staged content: `mvn njord:list-content -Dstore=release-xxx` (use store name from above)
 5. Publish it to `repository.apache.org`: `mvn njord:publish -Dstore=release-xxx -Dtarget=apache-rao` (use store name from above)
