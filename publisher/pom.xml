@@ -24,7 +24,16 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <modules>
-    <module>apache</module>
     <module>sonatype</module>
+    <module>apache</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>sisu-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>
