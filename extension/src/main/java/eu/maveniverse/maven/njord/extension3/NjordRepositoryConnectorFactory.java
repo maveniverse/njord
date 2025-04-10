@@ -44,7 +44,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     /**
      * {@code repoId::njord:default}
      * {@code repoId::njord:template:templateName}
-     * {@code repoId::njord:repository:storeName}
+     * {@code repoId::njord:store:storeName}
      */
     @Override
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
@@ -91,7 +91,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                             artifactStoreName = artifactStore.name();
                         }
                     }
-                } else if (uri.startsWith("repository:")) {
+                } else if (uri.startsWith("store:")) {
                     artifactStoreName = uri.substring(11);
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
