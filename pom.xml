@@ -73,7 +73,7 @@
 
     <!-- Dependency versions -->
     <version.maven>3.9.9</version.maven>
-    <version.resolver>1.9.22</version.resolver>
+    <version.resolver>2.0.7</version.resolver>
     <version.slf4j>2.0.17</version.slf4j>
     <version.mavenPluginTools>3.15.1</version.mavenPluginTools>
     <version.testcontainers>1.20.6</version.testcontainers>
