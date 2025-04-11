@@ -168,7 +168,7 @@ public final class FileUtils {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 if (predicate.test(dir)) {
-                    Path target = to.resolve(from.relativize(dir));
+                    Path target = to.resolve(from.relativize(dir).toString());
                     Files.createDirectories(target);
                     return FileVisitResult.CONTINUE;
                 } else {
@@ -179,7 +179,7 @@ public final class FileUtils {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (predicate.test(file)) {
-                    Path target = to.resolve(from.relativize(file));
+                    Path target = to.resolve(from.relativize(file).toString());
                     Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
                 }
                 return FileVisitResult.CONTINUE;
