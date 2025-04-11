@@ -23,6 +23,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 public final class FileUtils {
     // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
@@ -157,6 +158,33 @@ public final class FileUtils {
             Files.copy(src, dest);
             Files.setLastModifiedTime(dest, Files.getLastModifiedTime(src));
         }
+    }
+
+    /**
+     * Copies directory recursively.
+     */
+    public static void copyRecursively(Path from, Path to, Predicate<Path> predicate) throws IOException {
+        Files.walkFileTree(from, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (predicate.test(dir)) {
+                    Path target = to.resolve(from.relativize(dir));
+                    Files.createDirectories(target);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (predicate.test(file)) {
+                    Path target = to.resolve(from.relativize(file));
+                    Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     /**

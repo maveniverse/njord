@@ -19,8 +19,9 @@ public class DropMojo extends NjordMojoSupport {
     protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
         Optional<ArtifactStore> storeOptional = artifactStoreManager.selectArtifactStore(store);
         if (storeOptional.isPresent()) {
-            artifactStoreManager.dropArtifactStore(storeOptional.orElseThrow());
-            logger.info("Dropped ArtifactStore {}", store);
+            ArtifactStore store = storeOptional.orElseThrow();
+            logger.info("Dropping ArtifactStore {}", store);
+            artifactStoreManager.dropArtifactStore(store);
         } else {
             logger.warn("ArtifactStore with given name not found");
         }

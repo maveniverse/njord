@@ -36,6 +36,7 @@ public class MergeMojo extends NjordMojoSupport {
             return;
         }
 
+        logger.info("Merging {} -> {}", fromOptional.orElseThrow(), toOptional.orElseThrow());
         toOptional.orElseThrow().close();
         try (ArtifactStore from = fromOptional.orElseThrow()) {
             new ArtifactStoreDeployer(

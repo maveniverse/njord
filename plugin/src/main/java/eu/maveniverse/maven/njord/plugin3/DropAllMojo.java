@@ -9,7 +9,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Tabula rasa: removes all stores. To make it work you need extra {@code -Dyes}.
+ * Tabula rasa: drops all stores. For safety reasons, you need extra {@code -Dyes}.
  */
 @Mojo(name = "drop-all", threadSafe = true, requiresProject = false)
 public class DropAllMojo extends NjordMojoSupport {
