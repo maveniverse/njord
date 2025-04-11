@@ -26,6 +26,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class DefaultArtifactStore implements ArtifactStore {
@@ -145,6 +146,11 @@ public class DefaultArtifactStore implements ArtifactStore {
     public Path basedir() {
         checkClosed();
         return basedir;
+    }
+
+    @Override
+    public RemoteRepository storeRemoteRepository() {
+        return new RemoteRepository.Builder(name(), "default", "file://" + basedir()).build();
     }
 
     @Override

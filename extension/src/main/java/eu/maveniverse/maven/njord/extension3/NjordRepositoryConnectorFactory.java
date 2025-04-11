@@ -58,8 +58,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                 return new NjordRepositoryConnector(
                         artifactStore,
                         repository,
-                        basicRepositoryConnectorFactory.newInstance(
-                                session, createStoreRemoteRepository(artifactStore)));
+                        basicRepositoryConnectorFactory.newInstance(session, artifactStore.storeRemoteRepository()));
             }
         }
         throw new NoRepositoryConnectorException(repository);
@@ -68,11 +67,6 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     @Override
     public float getPriority() {
         return 10;
-    }
-
-    private RemoteRepository createStoreRemoteRepository(ArtifactStore artifactStore) {
-        return new RemoteRepository.Builder(artifactStore.name(), "default", "file://" + artifactStore.basedir())
-                .build();
     }
 
     private ArtifactStore mayCreateArtifactStore(

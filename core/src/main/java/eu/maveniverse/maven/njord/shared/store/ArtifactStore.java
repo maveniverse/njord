@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Collection;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.RemoteRepository;
 
 public interface ArtifactStore extends Closeable {
     /**
@@ -44,6 +45,11 @@ public interface ArtifactStore extends Closeable {
      * The store basedir, never {@code null}.
      */
     Path basedir();
+
+    /**
+     * The Resolver remote repository access to underlying store.
+     */
+    RemoteRepository storeRemoteRepository();
 
     /**
      * Content modifying operation handle. Caller must close this instance, even if operation is canceled.
