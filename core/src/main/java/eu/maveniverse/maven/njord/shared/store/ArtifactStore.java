@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -35,9 +36,9 @@ public interface ArtifactStore extends Closeable {
     boolean allowRedeploy();
 
     /**
-     * The checksum algorithm factories this store uses.
+     * The checksum algorithm factories this store uses, or empty if globally configured are wanted.
      */
-    List<ChecksumAlgorithmFactory> checksumAlgorithmFactories();
+    Optional<List<ChecksumAlgorithmFactory>> checksumAlgorithmFactories();
 
     /**
      * Index of artifacts in this store, never {@code null}.

@@ -87,7 +87,10 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
                 name,
                 template.repositoryMode(),
                 template.allowRedeploy(),
-                checksumAlgorithmFactorySelector.selectList(template.checksumAlgorithmFactories()),
+                template.checksumAlgorithmFactories().isPresent()
+                        ? checksumAlgorithmFactorySelector.selectList(
+                                template.checksumAlgorithmFactories().orElseThrow())
+                        : null,
                 config.basedir().resolve(name));
     }
 

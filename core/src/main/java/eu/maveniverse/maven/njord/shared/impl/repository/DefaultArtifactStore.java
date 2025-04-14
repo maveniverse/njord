@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -63,10 +64,14 @@ public class DefaultArtifactStore implements ArtifactStore {
         this.repositoryMode = requireNonNull(
                 RepositoryMode.valueOf(properties.getProperty("repositoryMode")), "RepositoryMode not provided");
         this.allowRedeploy = Boolean.parseBoolean(properties.getProperty("allowRedeploy"));
-        this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
-                        properties.getProperty("checksumAlgorithmFactories").split(","))
-                .filter(s -> !s.trim().isEmpty())
-                .collect(toList()));
+        if (properties.containsKey("checksumAlgorithms")) {
+            this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
+                            properties.getProperty("checksumAlgorithmFactories").split(","))
+                    .filter(s -> !s.trim().isEmpty())
+                    .collect(toList()));
+        } else {
+            this.checksumAlgorithmFactories = null;
+        }
         this.basedir = requireNonNull(basedir);
         this.closed = new AtomicBoolean(false);
     }
@@ -88,7 +93,7 @@ public class DefaultArtifactStore implements ArtifactStore {
             this.created = Instant.now();
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
-            this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
+            this.checksumAlgorithmFactories = checksumAlgorithmFactories;
             this.basedir = requireNonNull(basedir);
             this.closed = new AtomicBoolean(false);
 
@@ -97,11 +102,13 @@ public class DefaultArtifactStore implements ArtifactStore {
             properties.put("created", Long.toString(created.toEpochMilli()));
             properties.put("repositoryMode", repositoryMode.name());
             properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
-            properties.put(
-                    "checksumAlgorithmFactories",
-                    checksumAlgorithmFactories.stream()
-                            .map(ChecksumAlgorithmFactory::getName)
-                            .collect(Collectors.joining(",")));
+            if (checksumAlgorithmFactories != null) {
+                properties.put(
+                        "checksumAlgorithmFactories",
+                        checksumAlgorithmFactories.stream()
+                                .map(ChecksumAlgorithmFactory::getName)
+                                .collect(Collectors.joining(",")));
+            }
             Path meta = basedir.resolve(".meta").resolve("repository.properties");
             Files.createDirectories(meta.getParent());
             try (OutputStream out = Files.newOutputStream(meta, StandardOpenOption.CREATE_NEW)) {
@@ -138,9 +145,9 @@ public class DefaultArtifactStore implements ArtifactStore {
     }
 
     @Override
-    public List<ChecksumAlgorithmFactory> checksumAlgorithmFactories() {
+    public Optional<List<ChecksumAlgorithmFactory>> checksumAlgorithmFactories() {
         checkClosed();
-        return List.copyOf(checksumAlgorithmFactories);
+        return Optional.ofNullable(checksumAlgorithmFactories);
     }
 
     @Override
@@ -182,11 +189,13 @@ public class DefaultArtifactStore implements ArtifactStore {
         checkClosed();
         requireNonNull(session);
         DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession(session);
-        session2.setUserProperty(
-                "aether.checksums.algorithms",
-                checksumAlgorithmFactories().stream()
-                        .map(ChecksumAlgorithmFactory::getName)
-                        .collect(Collectors.joining(",")));
+        if (checksumAlgorithmFactories().isPresent()) {
+            session2.setUserProperty(
+                    "aether.checksums.algorithms",
+                    checksumAlgorithmFactories().orElseThrow().stream()
+                            .map(ChecksumAlgorithmFactory::getName)
+                            .collect(Collectors.joining(",")));
+        }
         return session2;
     }
 

@@ -3,6 +3,7 @@ package eu.maveniverse.maven.njord.shared.store;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ArtifactStoreTemplate {
     /**
@@ -33,9 +34,9 @@ public interface ArtifactStoreTemplate {
     boolean allowRedeploy();
 
     /**
-     * The checksum algorithm factories this template created store uses.
+     * The checksum algorithm factories this template created store uses, or empty if globally configured are wanted.
      */
-    List<String> checksumAlgorithmFactories();
+    Optional<List<String>> checksumAlgorithmFactories();
 
     ArtifactStoreTemplate RELEASE = create("release", RepositoryMode.RELEASE, false, DEFAULT_CHECKSUM_ALGORITHMS);
 
@@ -66,7 +67,7 @@ public interface ArtifactStoreTemplate {
             this.name = requireNonNull(name);
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
-            this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
+            this.checksumAlgorithmFactories = checksumAlgorithmFactories;
         }
 
         @Override
@@ -85,8 +86,12 @@ public interface ArtifactStoreTemplate {
         }
 
         @Override
-        public List<String> checksumAlgorithmFactories() {
-            return List.copyOf(checksumAlgorithmFactories);
+        public Optional<List<String>> checksumAlgorithmFactories() {
+            if (checksumAlgorithmFactories == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(checksumAlgorithmFactories);
+            }
         }
     }
 }
