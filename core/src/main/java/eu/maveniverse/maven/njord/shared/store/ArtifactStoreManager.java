@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
+import org.eclipse.aether.RepositorySystemSession;
 
 public interface ArtifactStoreManager extends Closeable {
     /**
@@ -19,12 +20,13 @@ public interface ArtifactStoreManager extends Closeable {
     /**
      * Creates store based on template name.
      */
-    ArtifactStore createArtifactStore(String templateName) throws IOException;
+    ArtifactStore createArtifactStore(RepositorySystemSession session, String templateName) throws IOException;
 
     /**
      * Creates store based on template.
      */
-    ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException;
+    ArtifactStore createArtifactStore(RepositorySystemSession session, ArtifactStoreTemplate template)
+            throws IOException;
 
     /**
      * Closes and fully deletes store.
