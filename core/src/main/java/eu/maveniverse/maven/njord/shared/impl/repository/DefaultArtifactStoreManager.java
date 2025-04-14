@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +36,7 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
 
         this.closed = new AtomicBoolean(false);
-        this.templates = new HashMap<>();
+        this.templates = new LinkedHashMap<>();
         templates.put(ArtifactStoreTemplate.RELEASE.name(), ArtifactStoreTemplate.RELEASE);
         templates.put(ArtifactStoreTemplate.RELEASE_SCA.name(), ArtifactStoreTemplate.RELEASE_SCA);
         templates.put(ArtifactStoreTemplate.RELEASE_REDEPLOY.name(), ArtifactStoreTemplate.RELEASE_REDEPLOY);
