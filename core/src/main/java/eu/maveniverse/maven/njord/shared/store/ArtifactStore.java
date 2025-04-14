@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public interface ArtifactStore extends Closeable {
     /**
@@ -32,6 +36,11 @@ public interface ArtifactStore extends Closeable {
     boolean allowRedeploy();
 
     /**
+     * The checksum algorithm factories this store uses, or empty if globally configured are wanted.
+     */
+    Optional<List<ChecksumAlgorithmFactory>> checksumAlgorithmFactories();
+
+    /**
      * Index of artifacts in this store, never {@code null}.
      */
     Collection<Artifact> artifacts();
@@ -47,7 +56,16 @@ public interface ArtifactStore extends Closeable {
     Path basedir();
 
     /**
+     * Customizes the session to access this store.
+     *
+     * @see #storeRemoteRepository()
+     */
+    RepositorySystemSession storeRepositorySession(RepositorySystemSession session);
+
+    /**
      * The Resolver remote repository access to underlying store.
+     *
+     * @see #storeRepositorySession(RepositorySystemSession)
      */
     RemoteRepository storeRemoteRepository();
 
