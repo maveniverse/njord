@@ -90,7 +90,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                         List<ArtifactStoreTemplate> templates = artifactStoreManager.listTemplates().stream()
                                 .filter(t -> t.name().equals(uri))
                                 .toList();
-                        if (templates.isEmpty()) {
+                        if (templates.size() != 1) {
                             throw new IllegalArgumentException("Unknown template: " + uri);
                         } else {
                             try (ArtifactStore artifactStore =
