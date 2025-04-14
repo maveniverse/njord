@@ -43,8 +43,6 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
         templates.put(ArtifactStoreTemplate.RELEASE_REDEPLOY_SCA.name(), ArtifactStoreTemplate.RELEASE_REDEPLOY_SCA);
         templates.put(ArtifactStoreTemplate.SNAPSHOT.name(), ArtifactStoreTemplate.SNAPSHOT);
         templates.put(ArtifactStoreTemplate.SNAPSHOT_SCA.name(), ArtifactStoreTemplate.SNAPSHOT_SCA);
-
-        templates.put("default", ArtifactStoreTemplate.RELEASE_SCA);
     }
 
     @Override
@@ -73,14 +71,13 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
     }
 
     @Override
-    public ArtifactStore createArtifactStore(RepositorySystemSession session, String templateName) throws IOException {
-        requireNonNull(templateName);
-        checkClosed();
-        ArtifactStoreTemplate template = templates.get(templateName);
-        if (template == null) {
-            throw new IllegalArgumentException("Unknown template " + templateName);
-        }
-        return createArtifactStore(session, template);
+    public ArtifactStoreTemplate defaultTemplate() {
+        return ArtifactStoreTemplate.RELEASE_SCA;
+    }
+
+    @Override
+    public Collection<ArtifactStoreTemplate> listTemplates() {
+        return List.copyOf(templates.values());
     }
 
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";

@@ -12,8 +12,10 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -78,13 +80,23 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                 String artifactStoreName;
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
-                        try (ArtifactStore artifactStore =
-                                artifactStoreManager.createArtifactStore(session, "default")) {
+                        // empty -> default
+                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore(
+                                session, artifactStoreManager.defaultTemplate())) {
                             artifactStoreName = artifactStore.name();
                         }
                     } else {
-                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore(session, uri)) {
-                            artifactStoreName = artifactStore.name();
+                        // non-empty -> template name
+                        List<ArtifactStoreTemplate> templates = artifactStoreManager.listTemplates().stream()
+                                .filter(t -> t.name().equals(uri))
+                                .toList();
+                        if (templates.size() != 1) {
+                            throw new IllegalArgumentException("Unknown template: " + uri);
+                        } else {
+                            try (ArtifactStore artifactStore =
+                                    artifactStoreManager.createArtifactStore(session, templates.get(0))) {
+                                artifactStoreName = artifactStore.name();
+                            }
                         }
                     }
                 } else if (uri.startsWith("store:")) {

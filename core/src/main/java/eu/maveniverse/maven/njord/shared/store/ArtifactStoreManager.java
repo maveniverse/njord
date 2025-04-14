@@ -18,9 +18,14 @@ public interface ArtifactStoreManager extends Closeable {
     Optional<ArtifactStore> selectArtifactStore(String name) throws IOException;
 
     /**
-     * Creates store based on template name.
+     * Returns the default template.
      */
-    ArtifactStore createArtifactStore(RepositorySystemSession session, String templateName) throws IOException;
+    ArtifactStoreTemplate defaultTemplate();
+
+    /**
+     * List templates.
+     */
+    Collection<ArtifactStoreTemplate> listTemplates();
 
     /**
      * Creates store based on template.
