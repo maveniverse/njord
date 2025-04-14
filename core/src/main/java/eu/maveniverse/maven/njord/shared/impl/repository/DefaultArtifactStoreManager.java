@@ -19,7 +19,9 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.util.ConfigUtils;
 
 public class DefaultArtifactStoreManager implements ArtifactStoreManager {
     private final Config config;
@@ -68,18 +70,26 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
     }
 
     @Override
-    public ArtifactStore createArtifactStore(String templateName) throws IOException {
+    public ArtifactStore createArtifactStore(RepositorySystemSession session, String templateName) throws IOException {
         requireNonNull(templateName);
         checkClosed();
         ArtifactStoreTemplate template = templates.get(templateName);
         if (template == null) {
             throw new IllegalArgumentException("Unknown template " + templateName);
         }
-        return createArtifactStore(template);
+        return createArtifactStore(session, template);
     }
 
+    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
+    private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+
+    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
+            "aether.checksums.omitChecksumsForExtensions";
+    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
+
     @Override
-    public ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException {
+    public ArtifactStore createArtifactStore(RepositorySystemSession session, ArtifactStoreTemplate template)
+            throws IOException {
         requireNonNull(template);
         checkClosed();
         String name = template.prefix() + "-" + UUID.randomUUID();
@@ -90,7 +100,15 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
                 template.checksumAlgorithmFactories().isPresent()
                         ? checksumAlgorithmFactorySelector.selectList(
                                 template.checksumAlgorithmFactories().orElseThrow())
-                        : null,
+                        : checksumAlgorithmFactorySelector.selectList(
+                                ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS))),
+                template.omitChecksumsForExtensions().isPresent()
+                        ? template.omitChecksumsForExtensions().orElseThrow()
+                        : ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                                session,
+                                DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
+                                CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS)),
                 config.basedir().resolve(name));
     }
 

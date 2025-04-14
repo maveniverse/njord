@@ -78,11 +78,12 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                 String artifactStoreName;
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
-                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore("default")) {
+                        try (ArtifactStore artifactStore =
+                                artifactStoreManager.createArtifactStore(session, "default")) {
                             artifactStoreName = artifactStore.name();
                         }
                     } else {
-                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore(uri)) {
+                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore(session, uri)) {
                             artifactStoreName = artifactStore.name();
                         }
                     }

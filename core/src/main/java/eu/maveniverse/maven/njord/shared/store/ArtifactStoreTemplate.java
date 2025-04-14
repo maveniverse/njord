@@ -7,9 +7,14 @@ import java.util.Optional;
 
 public interface ArtifactStoreTemplate {
     /**
-     * The Maven default checksum algorithms.
+     * The default checksum algorithms.
      */
     List<String> DEFAULT_CHECKSUM_ALGORITHMS = List.of("SHA-1", "MD5");
+
+    /**
+     * The default extensions to omit checksums for.
+     */
+    List<String> DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = List.of(".asc", ".sigstore", ".sigstore.json");
 
     /**
      * Template name.
@@ -34,23 +39,43 @@ public interface ArtifactStoreTemplate {
     boolean allowRedeploy();
 
     /**
-     * The checksum algorithm factories this template created store uses, or empty if globally configured are wanted.
+     * The checksum algorithm factories this template created store uses, or empty, if globally configured value should be used.
      */
     Optional<List<String>> checksumAlgorithmFactories();
 
-    ArtifactStoreTemplate RELEASE = create("release", RepositoryMode.RELEASE, false, DEFAULT_CHECKSUM_ALGORITHMS);
+    /**
+     * The extensions that checksum creation should be omitted for, or empty, if globally configured value should be used.
+     */
+    Optional<List<String>> omitChecksumsForExtensions();
 
-    ArtifactStoreTemplate RELEASE_REDEPLOY =
-            create("release-redeploy", RepositoryMode.RELEASE, true, DEFAULT_CHECKSUM_ALGORITHMS);
+    ArtifactStoreTemplate RELEASE = create(
+            "release",
+            RepositoryMode.RELEASE,
+            false,
+            DEFAULT_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
 
-    ArtifactStoreTemplate SNAPSHOT = create("snapshot", RepositoryMode.SNAPSHOT, false, DEFAULT_CHECKSUM_ALGORITHMS);
+    ArtifactStoreTemplate RELEASE_REDEPLOY = create(
+            "release-redeploy",
+            RepositoryMode.RELEASE,
+            true,
+            DEFAULT_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
+
+    ArtifactStoreTemplate SNAPSHOT = create(
+            "snapshot",
+            RepositoryMode.SNAPSHOT,
+            false,
+            DEFAULT_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
 
     static ArtifactStoreTemplate create(
             String name,
             RepositoryMode repositoryMode,
             boolean allowRedeploy,
-            List<String> checksumAlgorithmFactories) {
-        return new Impl(name, repositoryMode, allowRedeploy, checksumAlgorithmFactories);
+            List<String> checksumAlgorithmFactories,
+            List<String> omitChecksumsForExtensions) {
+        return new Impl(name, repositoryMode, allowRedeploy, checksumAlgorithmFactories, omitChecksumsForExtensions);
     }
 
     class Impl implements ArtifactStoreTemplate {
@@ -58,16 +83,19 @@ public interface ArtifactStoreTemplate {
         private final RepositoryMode repositoryMode;
         private final boolean allowRedeploy;
         private final List<String> checksumAlgorithmFactories;
+        private final List<String> omitChecksumsForExtensions;
 
         private Impl(
                 String name,
                 RepositoryMode repositoryMode,
                 boolean allowRedeploy,
-                List<String> checksumAlgorithmFactories) {
+                List<String> checksumAlgorithmFactories,
+                List<String> omitChecksumsForExtensions) {
             this.name = requireNonNull(name);
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
             this.checksumAlgorithmFactories = checksumAlgorithmFactories;
+            this.omitChecksumsForExtensions = omitChecksumsForExtensions;
         }
 
         @Override
@@ -87,11 +115,11 @@ public interface ArtifactStoreTemplate {
 
         @Override
         public Optional<List<String>> checksumAlgorithmFactories() {
-            if (checksumAlgorithmFactories == null) {
-                return Optional.empty();
-            } else {
-                return Optional.of(checksumAlgorithmFactories);
-            }
+            return Optional.ofNullable(checksumAlgorithmFactories);
+        }
+
+        public Optional<List<String>> omitChecksumsForExtensions() {
+            return Optional.ofNullable(omitChecksumsForExtensions);
         }
     }
 }

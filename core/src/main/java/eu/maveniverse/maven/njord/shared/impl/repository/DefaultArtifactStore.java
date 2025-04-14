@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -42,6 +41,7 @@ public class DefaultArtifactStore implements ArtifactStore {
     private final RepositoryMode repositoryMode;
     private final boolean allowRedeploy;
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
+    private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
 
     private final AtomicBoolean closed;
@@ -64,14 +64,14 @@ public class DefaultArtifactStore implements ArtifactStore {
         this.repositoryMode = requireNonNull(
                 RepositoryMode.valueOf(properties.getProperty("repositoryMode")), "RepositoryMode not provided");
         this.allowRedeploy = Boolean.parseBoolean(properties.getProperty("allowRedeploy"));
-        if (properties.containsKey("checksumAlgorithms")) {
-            this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
-                            properties.getProperty("checksumAlgorithmFactories").split(","))
-                    .filter(s -> !s.trim().isEmpty())
-                    .collect(toList()));
-        } else {
-            this.checksumAlgorithmFactories = null;
-        }
+        this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
+                        properties.getProperty("checksumAlgorithmFactories").split(","))
+                .filter(s -> !s.trim().isEmpty())
+                .collect(toList()));
+        this.omitChecksumsForExtensions = Arrays.stream(
+                        properties.getProperty("omitChecksumsForExtensions").split(","))
+                .filter(s -> !s.trim().isEmpty())
+                .collect(toList());
         this.basedir = requireNonNull(basedir);
         this.closed = new AtomicBoolean(false);
     }
@@ -84,6 +84,7 @@ public class DefaultArtifactStore implements ArtifactStore {
             RepositoryMode repositoryMode,
             boolean allowRedeploy,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+            List<String> omitChecksumsForExtensions,
             Path basedir)
             throws IOException {
         Files.createDirectories(basedir); // if brand new, we must create it first
@@ -93,7 +94,8 @@ public class DefaultArtifactStore implements ArtifactStore {
             this.created = Instant.now();
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
-            this.checksumAlgorithmFactories = checksumAlgorithmFactories;
+            this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
+            this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
             this.basedir = requireNonNull(basedir);
             this.closed = new AtomicBoolean(false);
 
@@ -102,13 +104,12 @@ public class DefaultArtifactStore implements ArtifactStore {
             properties.put("created", Long.toString(created.toEpochMilli()));
             properties.put("repositoryMode", repositoryMode.name());
             properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
-            if (checksumAlgorithmFactories != null) {
-                properties.put(
-                        "checksumAlgorithmFactories",
-                        checksumAlgorithmFactories.stream()
-                                .map(ChecksumAlgorithmFactory::getName)
-                                .collect(Collectors.joining(",")));
-            }
+            properties.put(
+                    "checksumAlgorithmFactories",
+                    checksumAlgorithmFactories.stream()
+                            .map(ChecksumAlgorithmFactory::getName)
+                            .collect(Collectors.joining(",")));
+            properties.put("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
             Path meta = basedir.resolve(".meta").resolve("repository.properties");
             Files.createDirectories(meta.getParent());
             try (OutputStream out = Files.newOutputStream(meta, StandardOpenOption.CREATE_NEW)) {
@@ -145,9 +146,15 @@ public class DefaultArtifactStore implements ArtifactStore {
     }
 
     @Override
-    public Optional<List<ChecksumAlgorithmFactory>> checksumAlgorithmFactories() {
+    public List<ChecksumAlgorithmFactory> checksumAlgorithmFactories() {
         checkClosed();
-        return Optional.ofNullable(checksumAlgorithmFactories);
+        return checksumAlgorithmFactories;
+    }
+
+    @Override
+    public List<String> omitChecksumsForExtensions() {
+        checkClosed();
+        return omitChecksumsForExtensions;
     }
 
     @Override
@@ -189,13 +196,11 @@ public class DefaultArtifactStore implements ArtifactStore {
         checkClosed();
         requireNonNull(session);
         DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession(session);
-        if (checksumAlgorithmFactories().isPresent()) {
-            session2.setUserProperty(
-                    "aether.checksums.algorithms",
-                    checksumAlgorithmFactories().orElseThrow().stream()
-                            .map(ChecksumAlgorithmFactory::getName)
-                            .collect(Collectors.joining(",")));
-        }
+        session2.setUserProperty(
+                "aether.checksums.algorithms",
+                checksumAlgorithmFactories().stream()
+                        .map(ChecksumAlgorithmFactory::getName)
+                        .collect(Collectors.joining(",")));
         return session2;
     }
 
