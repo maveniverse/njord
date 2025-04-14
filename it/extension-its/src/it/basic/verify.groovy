@@ -23,11 +23,11 @@ assert first.contains('[INFO] Using alternate deployment repository id::njord:re
 
 // second run:
 assert second.contains('[INFO] Njord enabled')
-assert second.contains('[INFO] Using alternate deployment repository id::njord:release')
+assert second.contains('[INFO] Using alternate deployment repository id::njord:release-sca')
 
 // third run:
 assert third.contains('[INFO] Njord enabled')
-assert third.contains('[INFO] Using alternate deployment repository id::njord:release')
+assert third.contains('[INFO] Using alternate deployment repository id::njord:release-redeploy-sca')
 
 // fourth run:
 assert fourth.contains('[INFO] Njord enabled')

@@ -196,11 +196,18 @@ public class DefaultArtifactStore implements ArtifactStore {
         checkClosed();
         requireNonNull(session);
         DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession(session);
-        session2.setUserProperty(
-                "aether.checksums.algorithms",
-                checksumAlgorithmFactories().stream()
-                        .map(ChecksumAlgorithmFactory::getName)
-                        .collect(Collectors.joining(",")));
+
+        // checksums
+        String caf = checksumAlgorithmFactories().stream()
+                .map(ChecksumAlgorithmFactory::getName)
+                .collect(Collectors.joining(","));
+
+        // resolver 1 and 2
+        session2.setConfigProperty("aether.checksums.algorithms", caf);
+        session2.setConfigProperty("aether.layout.maven2.checksumAlgorithms", caf);
+
+        session2.setConfigProperty(
+                "aether.checksums.omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions()));
         return session2;
     }
 

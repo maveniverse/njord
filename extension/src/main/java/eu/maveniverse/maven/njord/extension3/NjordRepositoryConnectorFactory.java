@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 @Named(NjordRepositoryConnectorFactory.NAME)
 public class NjordRepositoryConnectorFactory implements RepositoryConnectorFactory {
     public static final String NAME = "njord";
-    private static final Logger log = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
 
+    private final Logger logger = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
     private final BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
     @Inject

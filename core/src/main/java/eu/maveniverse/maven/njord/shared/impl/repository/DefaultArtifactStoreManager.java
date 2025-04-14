@@ -38,10 +38,13 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
         this.closed = new AtomicBoolean(false);
         this.templates = new HashMap<>();
         templates.put(ArtifactStoreTemplate.RELEASE.name(), ArtifactStoreTemplate.RELEASE);
+        templates.put(ArtifactStoreTemplate.RELEASE_SCA.name(), ArtifactStoreTemplate.RELEASE_SCA);
         templates.put(ArtifactStoreTemplate.RELEASE_REDEPLOY.name(), ArtifactStoreTemplate.RELEASE_REDEPLOY);
+        templates.put(ArtifactStoreTemplate.RELEASE_REDEPLOY_SCA.name(), ArtifactStoreTemplate.RELEASE_REDEPLOY_SCA);
         templates.put(ArtifactStoreTemplate.SNAPSHOT.name(), ArtifactStoreTemplate.SNAPSHOT);
+        templates.put(ArtifactStoreTemplate.SNAPSHOT_SCA.name(), ArtifactStoreTemplate.SNAPSHOT_SCA);
 
-        templates.put("default", ArtifactStoreTemplate.RELEASE);
+        templates.put("default", ArtifactStoreTemplate.RELEASE_SCA);
     }
 
     @Override

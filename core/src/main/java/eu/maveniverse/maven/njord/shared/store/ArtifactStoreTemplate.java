@@ -12,6 +12,11 @@ public interface ArtifactStoreTemplate {
     List<String> DEFAULT_CHECKSUM_ALGORITHMS = List.of("SHA-1", "MD5");
 
     /**
+     * The default checksum algorithms.
+     */
+    List<String> STRONG_CHECKSUM_ALGORITHMS = List.of("SHA-512", "SHA-256", "SHA-1", "MD5");
+
+    /**
      * The default extensions to omit checksums for.
      */
     List<String> DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = List.of(".asc", ".sigstore", ".sigstore.json");
@@ -55,6 +60,13 @@ public interface ArtifactStoreTemplate {
             DEFAULT_CHECKSUM_ALGORITHMS,
             DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
 
+    ArtifactStoreTemplate RELEASE_SCA = create(
+            "release-sca",
+            RepositoryMode.RELEASE,
+            false,
+            STRONG_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
+
     ArtifactStoreTemplate RELEASE_REDEPLOY = create(
             "release-redeploy",
             RepositoryMode.RELEASE,
@@ -62,11 +74,25 @@ public interface ArtifactStoreTemplate {
             DEFAULT_CHECKSUM_ALGORITHMS,
             DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
 
+    ArtifactStoreTemplate RELEASE_REDEPLOY_SCA = create(
+            "release-redeploy-sca",
+            RepositoryMode.RELEASE,
+            true,
+            STRONG_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
+
     ArtifactStoreTemplate SNAPSHOT = create(
             "snapshot",
             RepositoryMode.SNAPSHOT,
             false,
             DEFAULT_CHECKSUM_ALGORITHMS,
+            DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
+
+    ArtifactStoreTemplate SNAPSHOT_SCA = create(
+            "snapshot-sca",
+            RepositoryMode.SNAPSHOT,
+            false,
+            STRONG_CHECKSUM_ALGORITHMS,
             DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS);
 
     static ArtifactStoreTemplate create(
