@@ -19,14 +19,20 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 public class DefaultArtifactStoreManager implements ArtifactStoreManager {
     private final Config config;
+    private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+
     private final AtomicBoolean closed;
     private final Map<String, ArtifactStoreTemplate> templates;
 
-    public DefaultArtifactStoreManager(Config config) {
+    public DefaultArtifactStoreManager(
+            Config config, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
         this.config = requireNonNull(config);
+        this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
+
         this.closed = new AtomicBoolean(false);
         this.templates = new HashMap<>();
         templates.put(ArtifactStoreTemplate.RELEASE.name(), ArtifactStoreTemplate.RELEASE);
@@ -56,7 +62,7 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
         checkClosed();
         Path artifactStoreBasedir = config.basedir().resolve(name);
         if (Files.isDirectory(artifactStoreBasedir)) {
-            return Optional.of(new DefaultArtifactStore(artifactStoreBasedir));
+            return Optional.of(new DefaultArtifactStore(artifactStoreBasedir, checksumAlgorithmFactorySelector));
         }
         return Optional.empty();
     }
@@ -81,6 +87,7 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
                 name,
                 template.repositoryMode(),
                 template.allowRedeploy(),
+                checksumAlgorithmFactorySelector.selectList(template.checksumAlgorithmFactories()),
                 config.basedir().resolve(name));
     }
 

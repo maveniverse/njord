@@ -3,6 +3,7 @@ package eu.maveniverse.maven.njord.plugin3;
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManagerFactory;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -24,15 +25,21 @@ public abstract class NjordMojoSupport extends AbstractMojo {
     @Inject
     protected RepositorySystem repositorySystem;
 
+    @Inject
+    protected ArtifactStoreManagerFactory artifactStoreManagerFactory;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         RepositorySystemSession session = mavenSession.getRepositorySession();
-        NjordUtils.lazyInitConfig(session, () -> Config.defaults()
-                .userProperties(session.getUserProperties())
-                .systemProperties(session.getSystemProperties())
-                .build());
+        NjordUtils.lazyInitConfig(
+                session,
+                Config.defaults()
+                        .userProperties(session.getUserProperties())
+                        .systemProperties(session.getSystemProperties())
+                        .build(),
+                artifactStoreManagerFactory::create);
         Optional<ArtifactStoreManager> artifactStoreManager = NjordUtils.mayGetArtifactStoreManager(session);
-        if (!artifactStoreManager.isPresent()) {
+        if (artifactStoreManager.isEmpty()) {
             logger.warn("Not configured or explicitly disabled");
             return;
         }

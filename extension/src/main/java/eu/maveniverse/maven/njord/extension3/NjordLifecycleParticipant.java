@@ -7,10 +7,14 @@
  */
 package eu.maveniverse.maven.njord.extension3;
 
+import static java.util.Objects.requireNonNull;
+
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManagerFactory;
 import java.util.Optional;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
@@ -28,14 +32,24 @@ import org.slf4j.LoggerFactory;
 public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final ArtifactStoreManagerFactory artifactStoreManagerFactory;
+
+    @Inject
+    public NjordLifecycleParticipant(ArtifactStoreManagerFactory artifactStoreManagerFactory) {
+        this.artifactStoreManagerFactory = requireNonNull(artifactStoreManagerFactory);
+    }
+
     @Override
     public void afterSessionStart(MavenSession session) throws MavenExecutionException {
         try {
             RepositorySystemSession repoSession = session.getRepositorySession();
-            if (NjordUtils.lazyInitConfig(repoSession, () -> Config.defaults()
-                    .userProperties(repoSession.getUserProperties())
-                    .systemProperties(repoSession.getSystemProperties())
-                    .build())) {
+            if (NjordUtils.lazyInitConfig(
+                    repoSession,
+                    Config.defaults()
+                            .userProperties(repoSession.getUserProperties())
+                            .systemProperties(repoSession.getSystemProperties())
+                            .build(),
+                    artifactStoreManagerFactory::create)) {
                 logger.info("Njord enabled");
             }
         } catch (Exception e) {

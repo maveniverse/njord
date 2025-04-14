@@ -1,6 +1,7 @@
 package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -22,11 +24,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class DefaultArtifactStore implements ArtifactStore {
@@ -34,6 +40,7 @@ public class DefaultArtifactStore implements ArtifactStore {
     private final Instant created;
     private final RepositoryMode repositoryMode;
     private final boolean allowRedeploy;
+    private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final Path basedir;
 
     private final AtomicBoolean closed;
@@ -41,7 +48,8 @@ public class DefaultArtifactStore implements ArtifactStore {
     /**
      * Creates instance out for existing store.
      */
-    public DefaultArtifactStore(Path basedir) throws IOException {
+    public DefaultArtifactStore(Path basedir, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector)
+            throws IOException {
         DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
         Properties properties = new Properties();
         Path meta = basedir.resolve(".meta").resolve("repository.properties");
@@ -55,6 +63,10 @@ public class DefaultArtifactStore implements ArtifactStore {
         this.repositoryMode = requireNonNull(
                 RepositoryMode.valueOf(properties.getProperty("repositoryMode")), "RepositoryMode not provided");
         this.allowRedeploy = Boolean.parseBoolean(properties.getProperty("allowRedeploy"));
+        this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
+                        properties.getProperty("checksumAlgorithmFactories").split(","))
+                .filter(s -> !s.trim().isEmpty())
+                .collect(toList()));
         this.basedir = requireNonNull(basedir);
         this.closed = new AtomicBoolean(false);
     }
@@ -62,7 +74,12 @@ public class DefaultArtifactStore implements ArtifactStore {
     /**
      * Creates and inits brand-new store.
      */
-    public DefaultArtifactStore(String name, RepositoryMode repositoryMode, boolean allowRedeploy, Path basedir)
+    public DefaultArtifactStore(
+            String name,
+            RepositoryMode repositoryMode,
+            boolean allowRedeploy,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+            Path basedir)
             throws IOException {
         Files.createDirectories(basedir); // if brand new, we must create it first
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
@@ -71,6 +88,7 @@ public class DefaultArtifactStore implements ArtifactStore {
             this.created = Instant.now();
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
+            this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
             this.basedir = requireNonNull(basedir);
             this.closed = new AtomicBoolean(false);
 
@@ -79,6 +97,11 @@ public class DefaultArtifactStore implements ArtifactStore {
             properties.put("created", Long.toString(created.toEpochMilli()));
             properties.put("repositoryMode", repositoryMode.name());
             properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
+            properties.put(
+                    "checksumAlgorithmFactories",
+                    checksumAlgorithmFactories.stream()
+                            .map(ChecksumAlgorithmFactory::getName)
+                            .collect(Collectors.joining(",")));
             Path meta = basedir.resolve(".meta").resolve("repository.properties");
             Files.createDirectories(meta.getParent());
             try (OutputStream out = Files.newOutputStream(meta, StandardOpenOption.CREATE_NEW)) {
@@ -112,6 +135,12 @@ public class DefaultArtifactStore implements ArtifactStore {
     public boolean allowRedeploy() {
         checkClosed();
         return allowRedeploy;
+    }
+
+    @Override
+    public List<ChecksumAlgorithmFactory> checksumAlgorithmFactories() {
+        checkClosed();
+        return List.copyOf(checksumAlgorithmFactories);
     }
 
     @Override
@@ -149,6 +178,19 @@ public class DefaultArtifactStore implements ArtifactStore {
     }
 
     @Override
+    public RepositorySystemSession storeRepositorySession(RepositorySystemSession session) {
+        checkClosed();
+        requireNonNull(session);
+        DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession(session);
+        session2.setUserProperty(
+                "aether.checksums.algorithms",
+                checksumAlgorithmFactories().stream()
+                        .map(ChecksumAlgorithmFactory::getName)
+                        .collect(Collectors.joining(",")));
+        return session2;
+    }
+
+    @Override
     public RemoteRepository storeRemoteRepository() {
         return new RemoteRepository.Builder(name(), "default", "file://" + basedir()).build();
     }
@@ -169,12 +211,13 @@ public class DefaultArtifactStore implements ArtifactStore {
             throw new IllegalArgumentException("Passed in metadata must have set existing file");
         }
         // check RepositoryMode (snapshot vs release)
-        boolean expected = repositoryMode != RepositoryMode.RELEASE;
+        boolean expected = repositoryMode() != RepositoryMode.RELEASE;
         if (artifacts.stream().anyMatch(a -> a.isSnapshot() != expected)) {
             throw new IllegalArgumentException("Passed in artifacts repository policy mismatch");
         }
         // check DeployMode (already exists)
-        if (!allowRedeploy && artifacts.stream().anyMatch(a -> Files.isRegularFile(basedir.resolve(artifactPath(a))))) {
+        if (!allowRedeploy()
+                && artifacts.stream().anyMatch(a -> Files.isRegularFile(basedir.resolve(artifactPath(a))))) {
             throw new IllegalArgumentException("Redeployment is forbidden (artifact already exists)");
         }
 

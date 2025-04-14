@@ -9,26 +9,26 @@ package eu.maveniverse.maven.njord.shared;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.repository.DefaultArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 
 public final class NjordUtils {
     private NjordUtils() {}
 
     public static boolean lazyInitConfig(
-            RepositorySystemSession repositorySystemSession, Supplier<Config> configSupplier) {
+            RepositorySystemSession repositorySystemSession,
+            Config config,
+            Function<Config, ArtifactStoreManager> artifactStoreManagerFactory) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        requireNonNull(configSupplier, "configSupplier");
-        Config config = mayGetConfig(repositorySystemSession).orElse(null);
+        requireNonNull(config, "config");
+        Config oldConfig = mayGetConfig(repositorySystemSession).orElse(null);
         boolean result = false;
-        if (config == null) {
-            config = configSupplier.get();
+        if (oldConfig == null) {
             setConfig(repositorySystemSession, config);
             if (config.enabled()) {
-                setArtifactStoreManager(repositorySystemSession, new DefaultArtifactStoreManager(config));
+                setArtifactStoreManager(repositorySystemSession, artifactStoreManagerFactory.apply(config));
                 result = true;
             }
         }
