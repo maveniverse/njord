@@ -40,12 +40,12 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
                         s01Config.snapshotRepositoryId(), "default", s01Config.snapshotRepositoryUrl())
                 .build();
         return new SonatypeNx2Publisher(
+                repositorySystem,
+                session,
                 NAME,
                 "Publishes to Sonatype s01",
                 Config.CENTRAL,
                 snapshotsRepository,
-                repositorySystem,
-                session,
                 releasesRepository,
                 snapshotsRepository);
     }

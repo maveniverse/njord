@@ -13,12 +13,12 @@ import java.nio.file.Path;
 
 public interface ArtifactStoreExporter extends Closeable {
     /**
-     * Exports store as directory hierarchy using Maven remote repository layout.
+     * Exports store as directory hierarchy using Maven remote repository layout. Returns the root directory.
      */
-    void exportAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
+    Path exportAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
 
     /**
-     * Exports store as ZIP bundle.
+     * Exports store as ZIP bundle. Returns the ZIP file.
      */
-    void exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
+    Path exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
 }

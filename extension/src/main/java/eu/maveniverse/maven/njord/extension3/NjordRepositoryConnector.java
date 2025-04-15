@@ -74,13 +74,13 @@ public class NjordRepositoryConnector implements RepositoryConnector {
         } catch (IOException e) {
             if (artifactUploads != null) {
                 artifactUploads.stream()
-                        .filter(u -> u.getException() != null)
+                        .filter(u -> u.getException() == null)
                         .forEach(u ->
                                 u.setException(new ArtifactTransferException(u.getArtifact(), remoteRepository, e)));
             }
             if (metadataUploads != null) {
                 metadataUploads.stream()
-                        .filter(u -> u.getException() != null)
+                        .filter(u -> u.getException() == null)
                         .forEach(u ->
                                 u.setException(new MetadataTransferException(u.getMetadata(), remoteRepository, e)));
             }

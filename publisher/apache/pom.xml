@@ -23,6 +23,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
       <version>${project.version}</version>

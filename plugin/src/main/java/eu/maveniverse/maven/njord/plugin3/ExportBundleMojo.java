@@ -39,9 +39,12 @@ public class ExportBundleMojo extends NjordMojoSupport {
             if (!Files.isDirectory(targetDirectory)) {
                 Files.createDirectories(targetDirectory);
             }
+            Path result;
+            logger.info("Exporting store {} as bundle to {}", store, directory);
             try (ArtifactStoreExporter artifactStoreExporter = ns.createArtifactStoreExporter()) {
-                artifactStoreExporter.exportAsBundle(storeOptional.orElseThrow(), targetDirectory);
+                result = artifactStoreExporter.exportAsBundle(storeOptional.orElseThrow(), targetDirectory);
             }
+            logger.info("Exported to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");
         }
