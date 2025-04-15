@@ -10,9 +10,9 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import eu.maveniverse.maven.njord.shared.Config;
 import org.eclipse.aether.RepositorySystemSession;
 
-public interface ArtifactStorePublisherFactory {
+public interface ArtifactStoreValidatorFactory {
     /**
-     * Creates publisher instance.
+     * Creates validator instance.
      */
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
+    ArtifactStoreValidator create(RepositorySystemSession session, Config config);
 }

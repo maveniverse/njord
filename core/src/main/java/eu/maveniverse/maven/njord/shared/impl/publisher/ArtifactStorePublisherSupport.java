@@ -30,6 +30,8 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
     protected final RemoteRepository targetSnapshotRepository;
     protected final RemoteRepository serviceReleaseRepository;
     protected final RemoteRepository serviceSnapshotRepository;
+    protected final ArtifactStoreValidator releaseValidator;
+    protected final ArtifactStoreValidator snapshotValidator;
 
     protected ArtifactStorePublisherSupport(
             RepositorySystem repositorySystem,
@@ -39,7 +41,9 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
             RemoteRepository targetReleaseRepository,
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
-            RemoteRepository serviceSnapshotRepository) {
+            RemoteRepository serviceSnapshotRepository,
+            ArtifactStoreValidator releaseValidator,
+            ArtifactStoreValidator snapshotValidator) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.session = requireNonNull(session);
         this.name = requireNonNull(name);
@@ -48,6 +52,8 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
         this.targetSnapshotRepository = targetSnapshotRepository;
         this.serviceReleaseRepository = serviceReleaseRepository;
         this.serviceSnapshotRepository = serviceSnapshotRepository;
+        this.releaseValidator = releaseValidator;
+        this.snapshotValidator = snapshotValidator;
     }
 
     @Override
@@ -82,23 +88,34 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
 
     @Override
     public Optional<ArtifactStoreValidator> releaseValidator() {
-        return Optional.empty();
+        return Optional.ofNullable(releaseValidator);
     }
 
     @Override
     public Optional<ArtifactStoreValidator> snapshotValidator() {
-        return Optional.empty();
+        return Optional.ofNullable(snapshotValidator);
+    }
+
+    @Override
+    public Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException {
+        requireNonNull(artifactStore);
+        Optional<ArtifactStoreValidator> vo =
+                artifactStore.repositoryMode() == RepositoryMode.RELEASE ? releaseValidator() : snapshotValidator();
+        if (vo.isPresent()) {
+            return Optional.of(vo.orElseThrow().validate(artifactStore));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public abstract void publish(ArtifactStore artifactStore) throws IOException;
 
     protected void validateArtifactStore(ArtifactStore artifactStore) throws IOException {
-        Optional<ArtifactStoreValidator> vo =
-                artifactStore.repositoryMode() == RepositoryMode.RELEASE ? releaseValidator() : snapshotValidator();
-        if (vo.isPresent()) {
-            ArtifactStoreValidator.ValidationResult vr = vo.orElseThrow().validate(artifactStore);
-            logger.error("ArtifactStore {} validation result:", artifactStore);
+        Optional<ArtifactStoreValidator.ValidationResult> vro = validate(artifactStore);
+        if (vro.isPresent()) {
+            ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
+            logger.info("Validation results:");
             AtomicInteger counter = new AtomicInteger(0);
             for (String msg : vr.error()) {
                 logger.error("  {}. {}", counter.incrementAndGet(), msg);
@@ -112,7 +129,11 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
             if (!vr.isValid()) {
                 logger.error("ArtifactStore {} failed validation", artifactStore);
                 throw new IOException("Validation failed");
+            } else {
+                logger.info("ArtifactStore {} passed validation", artifactStore);
             }
+        } else {
+            logger.info("Not validated artifact store, no validator set for publisher {}", name());
         }
     }
 }

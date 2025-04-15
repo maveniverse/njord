@@ -9,10 +9,12 @@ package eu.maveniverse.maven.njord.shared.store;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -47,7 +49,7 @@ public interface ArtifactStore extends Closeable {
     List<ChecksumAlgorithmFactory> checksumAlgorithmFactories();
 
     /**
-     * The extensions to omit checksums for.
+     * The extensions to omit checksums for, like ".asc" (prefixed with dot).
      */
     List<String> omitChecksumsForExtensions();
 
@@ -60,6 +62,16 @@ public interface ArtifactStore extends Closeable {
      * Index of metadata in this store, never {@code null}.
      */
     Collection<Metadata> metadata();
+
+    /**
+     * Returns the artifact content, if exists.
+     */
+    Optional<InputStream> artifactContent(Artifact artifact) throws IOException;
+
+    /**
+     * Returns the artifact content, if exists.
+     */
+    Optional<InputStream> metadataContent(Metadata metadata) throws IOException;
 
     /**
      * The store basedir, never {@code null}.

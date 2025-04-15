@@ -49,5 +49,5 @@ public interface NjordSession extends Closeable {
     /**
      * Drops all session-bound artifact stores.
      */
-    void dropSessionArtifactStores();
+    boolean dropSessionArtifactStores();
 }

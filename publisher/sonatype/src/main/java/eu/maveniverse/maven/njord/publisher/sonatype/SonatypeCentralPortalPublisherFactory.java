@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
+import eu.maveniverse.maven.njord.shared.impl.publisher.CentralArtifactStoreValidatorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import javax.inject.Inject;
@@ -27,12 +28,16 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
 
     private final RepositorySystem repositorySystem;
     private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
+    private final CentralArtifactStoreValidatorFactory centralArtifactStoreValidatorFactory;
 
     @Inject
     public SonatypeCentralPortalPublisherFactory(
-            RepositorySystem repositorySystem, ArtifactStoreExporterFactory artifactStoreExporterFactory) {
+            RepositorySystem repositorySystem,
+            ArtifactStoreExporterFactory artifactStoreExporterFactory,
+            CentralArtifactStoreValidatorFactory centralArtifactStoreValidatorFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
+        this.centralArtifactStoreValidatorFactory = requireNonNull(centralArtifactStoreValidatorFactory);
     }
 
     @Override
@@ -50,6 +55,7 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
                 session,
                 releasesRepository,
                 snapshotsRepository,
+                centralArtifactStoreValidatorFactory.create(session, config),
                 artifactStoreExporterFactory);
     }
 }

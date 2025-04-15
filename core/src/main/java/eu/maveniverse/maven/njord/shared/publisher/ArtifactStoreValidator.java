@@ -16,21 +16,33 @@ public interface ArtifactStoreValidator {
      * The validation result. By default, result is valid as long as there are no errors.
      */
     interface ValidationResult {
+        /**
+         * Result is valid as long as there is no error in itself and in any of its children.
+         */
         default boolean isValid() {
-            return error().isEmpty();
+            return error().isEmpty() && children().stream().allMatch(ValidationResult::isValid);
         }
+
+        String name();
 
         Collection<String> info();
 
         Collection<String> warning();
 
         Collection<String> error();
+
+        Collection<ValidationResult> children();
     }
 
     /**
      * Validator name,
      */
     String name();
+
+    /**
+     * Validator description.
+     */
+    String description();
 
     /**
      * Performs the validation.

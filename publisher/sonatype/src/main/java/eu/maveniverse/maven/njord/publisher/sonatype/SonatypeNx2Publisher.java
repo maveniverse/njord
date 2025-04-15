@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
@@ -27,7 +28,8 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository targetReleaseRepository,
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
-            RemoteRepository serviceSnapshotRepository) {
+            RemoteRepository serviceSnapshotRepository,
+            ArtifactStoreValidator centralValidator) {
         super(
                 repositorySystem,
                 session,
@@ -36,7 +38,9 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                 targetReleaseRepository,
                 targetSnapshotRepository,
                 serviceReleaseRepository,
-                serviceSnapshotRepository);
+                serviceSnapshotRepository,
+                centralValidator,
+                null);
     }
 
     @Override

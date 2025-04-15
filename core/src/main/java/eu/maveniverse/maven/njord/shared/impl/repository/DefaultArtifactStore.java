@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -184,6 +185,28 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     @Override
+    public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
+        requireNonNull(artifact);
+        Path file = basedir.resolve(artifactPath(artifact));
+        if (Files.isRegularFile(file)) {
+            return Optional.of(Files.newInputStream(file));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<InputStream> metadataContent(Metadata metadata) throws IOException {
+        requireNonNull(metadata);
+        Path file = basedir.resolve(metadataPath(metadata));
+        if (Files.isRegularFile(file)) {
+            return Optional.of(Files.newInputStream(file));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public Path basedir() {
         checkClosed();
         return basedir;
@@ -286,21 +309,6 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         }
     }
 
-    private String metadataPath(Metadata metadata) {
-        StringBuilder path = new StringBuilder(128);
-        if (!metadata.getGroupId().isEmpty()) {
-            path.append(metadata.getGroupId().replace('.', '/')).append('/');
-            if (!metadata.getArtifactId().isEmpty()) {
-                path.append(metadata.getArtifactId()).append('/');
-                if (!metadata.getVersion().isEmpty()) {
-                    path.append(metadata.getVersion()).append('/');
-                }
-            }
-        }
-        path.append(metadata.getType());
-        return path.toString();
-    }
-
     private String artifactPath(Artifact artifact) {
         StringBuilder path = new StringBuilder(128);
         path.append(artifact.getGroupId().replace('.', '/')).append('/');
@@ -313,6 +321,21 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         if (!artifact.getExtension().isEmpty()) {
             path.append('.').append(artifact.getExtension());
         }
+        return path.toString();
+    }
+
+    private String metadataPath(Metadata metadata) {
+        StringBuilder path = new StringBuilder(128);
+        if (!metadata.getGroupId().isEmpty()) {
+            path.append(metadata.getGroupId().replace('.', '/')).append('/');
+            if (!metadata.getArtifactId().isEmpty()) {
+                path.append(metadata.getArtifactId()).append('/');
+                if (!metadata.getVersion().isEmpty()) {
+                    path.append(metadata.getVersion()).append('/');
+                }
+            }
+        }
+        path.append(metadata.getType());
         return path.toString();
     }
 

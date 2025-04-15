@@ -5,14 +5,14 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.publisher;
+package eu.maveniverse.maven.njord.shared.publisher.spi;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import org.eclipse.aether.RepositorySystemSession;
 
-public interface ArtifactStorePublisherFactory {
+public interface ValidatorFactory {
     /**
-     * Creates publisher instance.
+     * Creates instance of {@link Validator}.
      */
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
+    Validator create(RepositorySystemSession session, Config config);
 }

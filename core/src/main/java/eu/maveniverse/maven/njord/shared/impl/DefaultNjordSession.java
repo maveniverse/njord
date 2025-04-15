@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.RepositorySystemSession;
 
 public class DefaultNjordSession extends CloseableConfigSupport<Config> implements NjordSession {
@@ -133,19 +134,22 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     }
 
     @Override
-    public void dropSessionArtifactStores() {
+    public boolean dropSessionArtifactStores() {
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
                 session.getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+        AtomicBoolean result = new AtomicBoolean(false);
         sessionBoundStore.values().forEach(n -> {
             try {
                 Optional<ArtifactStore> artifactStore = internalArtifactStoreManager.selectArtifactStore(n);
                 if (artifactStore.isPresent()) {
                     internalArtifactStoreManager.dropArtifactStore(artifactStore.orElseThrow());
+                    result.set(true);
                 }
             } catch (IOException e) {
                 logger.warn("Could not select ArtifactStore with name {}", n, e);
             }
         });
+        return result.get();
     }
 
     @Override

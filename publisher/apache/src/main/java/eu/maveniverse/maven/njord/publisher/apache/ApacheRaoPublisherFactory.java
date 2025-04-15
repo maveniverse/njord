@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.impl.publisher.CentralArtifactStoreValidatorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -25,10 +26,14 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
     public static final String NAME = "apache-rao";
 
     private final RepositorySystem repositorySystem;
+    private final CentralArtifactStoreValidatorFactory centralArtifactStoreValidatorFactory;
 
     @Inject
-    public ApacheRaoPublisherFactory(RepositorySystem repositorySystem) {
+    public ApacheRaoPublisherFactory(
+            RepositorySystem repositorySystem,
+            CentralArtifactStoreValidatorFactory centralArtifactStoreValidatorFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
+        this.centralArtifactStoreValidatorFactory = requireNonNull(centralArtifactStoreValidatorFactory);
     }
 
     @Override
@@ -48,6 +53,7 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
                 Config.CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
-                snapshotsRepository);
+                snapshotsRepository,
+                centralArtifactStoreValidatorFactory.create(session, config));
     }
 }

@@ -17,6 +17,7 @@ import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -41,6 +42,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RepositorySystemSession session,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
+            ArtifactStoreValidator centralValidator,
             ArtifactStoreExporterFactory artifactStoreExporterFactory) {
         super(
                 repositorySystem,
@@ -50,7 +52,9 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 Config.CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
-                snapshotsRepository);
+                snapshotsRepository,
+                centralValidator,
+                null);
         this.config = requireNonNull(config);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
     }
