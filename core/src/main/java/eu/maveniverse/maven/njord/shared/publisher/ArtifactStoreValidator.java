@@ -6,7 +6,7 @@ import java.util.Collection;
 
 public interface ArtifactStoreValidator {
     /**
-     * The validation result. Result is valid as long as there are no errors.
+     * The validation result. By default, result is valid as long as there are no errors.
      */
     interface ValidationResult {
         default boolean isValid() {
