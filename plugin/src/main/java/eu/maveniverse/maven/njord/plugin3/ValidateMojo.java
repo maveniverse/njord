@@ -48,7 +48,7 @@ public class ValidateMojo extends NjordMojoSupport {
                 if (vro.isPresent()) {
                     ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
                     if (details) {
-                        logger.warn("Validation results for {}", store);
+                        logger.info("Validation results for {}", store);
                         dumpValidationResult("", vr);
                     }
                     if (!vr.isValid()) {
