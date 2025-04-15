@@ -44,24 +44,24 @@ public class SourceAndJavadocValidatorFactory extends ValidatorSupport implement
         for (Artifact artifact : artifactStore.artifacts()) {
             if (artifact.getClassifier().isEmpty() && "jar".equals(artifact.getExtension())) {
                 ValidationResultCollector chkCollector = collector.child(ArtifactIdUtils.toId(artifact));
-                HashSet<String> ok = new HashSet<>();
+                HashSet<String> present = new HashSet<>();
                 HashSet<String> missing = new HashSet<>();
                 Optional<InputStream> c = artifactStore.artifactContent(new SubArtifact(artifact, "sources", "jar"));
                 if (c.isPresent()) {
-                    ok.add("sources");
+                    present.add("sources");
                     c.orElseThrow().close();
                 } else {
                     missing.add("sources");
                 }
                 c = artifactStore.artifactContent(new SubArtifact(artifact, "javadoc", "jar"));
                 if (c.isPresent()) {
-                    ok.add("javadoc");
+                    present.add("javadoc");
                     c.orElseThrow().close();
                 } else {
                     missing.add("javadoc");
                 }
-                if (!ok.isEmpty()) {
-                    chkCollector.addInfo("OK: " + String.join(", ", ok));
+                if (!present.isEmpty()) {
+                    chkCollector.addInfo("PRESENT: " + String.join(", ", present));
                 }
                 if (!missing.isEmpty()) {
                     chkCollector.addError("MISSING: " + String.join(", ", missing));
