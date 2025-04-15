@@ -3,9 +3,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
-import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -26,7 +24,12 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
     }
 
     @Override
-    public ArtifactStorePublisher create(RepositorySystemSession session, Config config) throws IOException {
+    public String description() {
+        return "Publishes to Sonatype S01 at https://s01.oss.sonatype.org/";
+    }
+
+    @Override
+    public SonatypeNx2Publisher create(RepositorySystemSession session, Config config) {
         SonatypeS01PublisherConfig s01Config = SonatypeS01PublisherConfig.with(config);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())

@@ -1,9 +1,9 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.impl.FileUtils;
+import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,18 +24,15 @@ public class ExportMojo extends NjordMojoSupport {
     private String directory;
 
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException, MojoExecutionException {
-        Optional<ArtifactStore> storeOptional = artifactStoreManager.selectArtifactStore(store);
+    protected void doExecute(NjordSession ns) throws IOException, MojoExecutionException {
+        Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             Path targetDirectory = Config.getCanonicalPath(Path.of(directory).toAbsolutePath());
             if (Files.exists(targetDirectory)) {
                 throw new MojoExecutionException("Exporting to existing directory not supported");
             }
-            try (ArtifactStore store = storeOptional.orElseThrow()) {
-                logger.info("Exporting ArtifactStore {} to {}", store, targetDirectory);
-                FileUtils.copyRecursively(store.basedir(), targetDirectory, p -> !p.getFileName()
-                        .toString()
-                        .startsWith("."));
+            try (ArtifactStoreExporter artifactStoreExporter = ns.createArtifactStoreExporter()) {
+                artifactStoreExporter.exportAsDirectory(storeOptional.orElseThrow(), targetDirectory);
             }
         } else {
             logger.warn("ArtifactStore with given name not found");

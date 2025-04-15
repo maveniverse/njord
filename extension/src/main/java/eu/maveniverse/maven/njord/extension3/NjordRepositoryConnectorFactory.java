@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.extension3;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
@@ -52,9 +53,10 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
         if (NAME.equals(repository.getProtocol())) {
-            Optional<ArtifactStoreManager> asm = NjordUtils.mayGetArtifactStoreManager(session);
-            if (asm.isPresent()) {
-                ArtifactStoreManager artifactStoreManager = asm.orElseThrow();
+            Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session);
+            if (ns.isPresent()) {
+                NjordSession njord = ns.orElseThrow();
+                ArtifactStoreManager artifactStoreManager = njord.artifactStoreManager();
                 ArtifactStore artifactStore = mayCreateArtifactStore(
                         session, artifactStoreManager, repository.getUrl().substring(6));
                 return new NjordRepositoryConnector(

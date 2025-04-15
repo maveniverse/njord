@@ -4,9 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
-import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -27,7 +25,12 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
     }
 
     @Override
-    public ArtifactStorePublisher create(RepositorySystemSession session, Config config) throws IOException {
+    public String description() {
+        return "Publishes to ASF at https://repository.apache.org/";
+    }
+
+    @Override
+    public SonatypeNx2Publisher create(RepositorySystemSession session, Config config) {
         ApachePublisherConfig raoConfig = ApachePublisherConfig.with(config);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())

@@ -12,13 +12,13 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class SonatypeNx2Publisher extends CloseableSupport implements ArtifactStorePublisher {
+public class SonatypeCentralPortalPublisher extends CloseableSupport implements ArtifactStorePublisher {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession session;
     private final RemoteRepository releasesRepository;
     private final RemoteRepository snapshotsRepository;
 
-    public SonatypeNx2Publisher(
+    public SonatypeCentralPortalPublisher(
             RepositorySystem repositorySystem,
             RepositorySystemSession session,
             RemoteRepository releasesRepository,
@@ -41,6 +41,16 @@ public class SonatypeNx2Publisher extends CloseableSupport implements ArtifactSt
             throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
                     + " not supported; provide RemoteRepository for it");
         }
-        new ArtifactStoreDeployer(repositorySystem, session, repository).deploy(artifactStore);
+
+        if (repository.getPolicy(false).isEnabled()) { // release
+            // create ZIP
+            // upload ZIP (rel/snap)
+
+        } else { // snapshot
+            // just deploy to snapshots as m-deploy-p would
+            try (ArtifactStore store = artifactStore) {
+                new ArtifactStoreDeployer(repositorySystem, session, repository).deploy(store);
+            }
+        }
     }
 }

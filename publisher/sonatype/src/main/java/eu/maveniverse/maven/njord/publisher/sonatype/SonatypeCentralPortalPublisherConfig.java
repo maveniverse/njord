@@ -5,44 +5,45 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.apache;
+package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 
-public final class ApachePublisherConfig {
-    public static ApachePublisherConfig with(Config config) {
+public final class SonatypeCentralPortalPublisherConfig {
+    public static SonatypeCentralPortalPublisherConfig with(Config config) {
         requireNonNull(config, "config");
 
-        String releaseRepositoryId = "apache.releases.https";
-        String releaseRepositoryUrl = "https://repository.apache.org/service/local/staging/deploy/maven2";
-        String snapshotRepositoryId = "apache.snapshots.https";
-        String snapshotRepositoryUrl = "https://repository.apache.org/content/repositories/snapshots";
+        String releaseRepositoryId = "sonatype-cp";
+        String releaseRepositoryUrl = "https://central.sonatype.com/api/v1/publisher/upload";
+        String snapshotRepositoryId = "sonatype-cp";
+        String snapshotRepositoryUrl = "https://central.sonatype.com/repository/maven-snapshots";
 
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.releaseRepositoryId")) {
-            releaseRepositoryId = config.effectiveProperties().get("njord.publisher.apache.releaseRepositoryId");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryId")) {
+            releaseRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-s01.releaseRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.releaseRepositoryUrl")) {
-            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.apache.releaseRepositoryUrl");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryUrl")) {
+            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.sonatype-cp.releaseRepositoryUrl");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.snapshotRepositoryId")) {
-            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.apache.snapshotRepositoryId");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryId")) {
+            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.snapshotRepositoryUrl")) {
-            snapshotRepositoryUrl = config.effectiveProperties().get("njord.publisher.apache.snapshotRepositoryUrl");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryUrl")) {
+            snapshotRepositoryUrl =
+                    config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryUrl");
         }
 
-        return new ApachePublisherConfig(
+        return new SonatypeCentralPortalPublisherConfig(
                 releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
     }
 
-    public static ApachePublisherConfig of(
+    public static SonatypeCentralPortalPublisherConfig of(
             String releaseRepositoryId,
             String releaseRepositoryUrl,
             String snapshotRepositoryId,
             String snapshotRepositoryUrl) {
-        return new ApachePublisherConfig(
+        return new SonatypeCentralPortalPublisherConfig(
                 releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
     }
 
@@ -51,7 +52,7 @@ public final class ApachePublisherConfig {
     private final String snapshotRepositoryId;
     private final String snapshotRepositoryUrl;
 
-    private ApachePublisherConfig(
+    private SonatypeCentralPortalPublisherConfig(
             String releaseRepositoryId,
             String releaseRepositoryUrl,
             String snapshotRepositoryId,

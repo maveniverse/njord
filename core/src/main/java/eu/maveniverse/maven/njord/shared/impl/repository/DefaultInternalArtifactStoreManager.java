@@ -3,9 +3,10 @@ package eu.maveniverse.maven.njord.shared.impl.repository;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
+import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,26 +17,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.ConfigUtils;
 
-public class DefaultArtifactStoreManager implements ArtifactStoreManager {
-    private final Config config;
+public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<Config>
+        implements InternalArtifactStoreManager {
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
-
-    private final AtomicBoolean closed;
     private final Map<String, ArtifactStoreTemplate> templates;
 
-    public DefaultArtifactStoreManager(
+    public DefaultInternalArtifactStoreManager(
             Config config, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
-        this.config = requireNonNull(config);
+        super(config);
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
-
-        this.closed = new AtomicBoolean(false);
         this.templates = new LinkedHashMap<>();
         templates.put(ArtifactStoreTemplate.RELEASE.name(), ArtifactStoreTemplate.RELEASE);
         templates.put(ArtifactStoreTemplate.RELEASE_SCA.name(), ArtifactStoreTemplate.RELEASE_SCA);
@@ -72,18 +68,23 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
 
     @Override
     public ArtifactStoreTemplate defaultTemplate() {
+        checkClosed();
+
         return ArtifactStoreTemplate.RELEASE_SCA;
     }
 
     @Override
     public Collection<ArtifactStoreTemplate> listTemplates() {
+        checkClosed();
+
         return List.copyOf(templates.values());
     }
 
-    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
+    // copied as while it is public in Resolver 2 is not in Resolver 1
+    private static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
     private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
-    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
+    private static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
             "aether.checksums.omitChecksumsForExtensions";
     private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 
@@ -92,6 +93,7 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
             throws IOException {
         requireNonNull(template);
         checkClosed();
+
         String name = template.prefix() + "-" + UUID.randomUUID();
         return new DefaultArtifactStore(
                 name,
@@ -116,21 +118,9 @@ public class DefaultArtifactStoreManager implements ArtifactStoreManager {
     public void dropArtifactStore(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
         checkClosed();
+
         Path storeDir = artifactStore.basedir();
         artifactStore.close();
         FileUtils.deleteRecursively(storeDir);
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (closed.compareAndSet(false, true)) {
-            // nothing yet
-        }
-    }
-
-    private void checkClosed() {
-        if (closed.get()) {
-            throw new IllegalStateException("ArtifactStoreManager is closed");
-        }
     }
 }

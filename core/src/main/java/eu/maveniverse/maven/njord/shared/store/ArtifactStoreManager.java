@@ -1,12 +1,11 @@
 package eu.maveniverse.maven.njord.shared.store;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 
-public interface ArtifactStoreManager extends Closeable {
+public interface ArtifactStoreManager {
     /**
      * Lists store "probable names". Not all element name may be a store, check with {@link #selectArtifactStore(String)}.
      */

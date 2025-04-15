@@ -1,7 +1,8 @@
 package eu.maveniverse.maven.njord.plugin3;
 
+import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.IOException;
 import java.util.Optional;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -22,9 +23,9 @@ public class MergeMojo extends NjordMojoSupport {
     private boolean drop;
 
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
-        Optional<ArtifactStore> fromOptional = artifactStoreManager.selectArtifactStore(from);
-        Optional<ArtifactStore> toOptional = artifactStoreManager.selectArtifactStore(to);
+    protected void doExecute(NjordSession ns) throws IOException {
+        Optional<ArtifactStore> fromOptional = ns.artifactStoreManager().selectArtifactStore(from);
+        Optional<ArtifactStore> toOptional = ns.artifactStoreManager().selectArtifactStore(to);
         if (fromOptional.isEmpty()) {
             logger.warn("ArtifactStore with given name not found: {}", from);
             return;
@@ -34,14 +35,12 @@ public class MergeMojo extends NjordMojoSupport {
             return;
         }
 
-        logger.info("Merging {} -> {}", fromOptional.orElseThrow(), toOptional.orElseThrow());
-        toOptional.orElseThrow().close();
-        try (ArtifactStore from = fromOptional.orElseThrow()) {
-            throw new RuntimeException("not implemented");
-            // if (drop) {
-            //                logger.info("Dropping {}", from);
-            //                artifactStoreManager.dropArtifactStore(from);
-            //            }
+        try (ArtifactStoreMerger artifactStoreMerger = ns.createArtifactStoreMerger()) {
+            artifactStoreMerger.merge(fromOptional.orElseThrow(), toOptional.orElseThrow());
+        }
+        if (drop) {
+            logger.info("Dropping {}", from);
+            ns.artifactStoreManager().dropArtifactStore(fromOptional.orElseThrow());
         }
     }
 }

@@ -1,9 +1,9 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManagerFactory;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -26,30 +26,29 @@ public abstract class NjordMojoSupport extends AbstractMojo {
     protected RepositorySystem repositorySystem;
 
     @Inject
-    protected ArtifactStoreManagerFactory artifactStoreManagerFactory;
+    protected NjordSessionFactory njordSessionFactory;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         RepositorySystemSession session = mavenSession.getRepositorySession();
-        NjordUtils.lazyInitConfig(
+        NjordUtils.lazyInit(
                 session,
                 Config.defaults()
                         .userProperties(session.getUserProperties())
                         .systemProperties(session.getSystemProperties())
                         .build(),
-                artifactStoreManagerFactory::create);
-        Optional<ArtifactStoreManager> artifactStoreManager = NjordUtils.mayGetArtifactStoreManager(session);
-        if (artifactStoreManager.isEmpty()) {
-            logger.warn("Not configured or explicitly disabled");
+                c -> njordSessionFactory.create(mavenSession.getRepositorySession(), c));
+        Optional<NjordSession> njordSession = NjordUtils.mayGetNjordSession(session);
+        if (njordSession.isEmpty()) {
+            logger.warn("Njord not configured or explicitly disabled");
             return;
         }
-        try (ArtifactStoreManager storeManager = artifactStoreManager.orElseThrow()) {
-            doExecute(storeManager);
+        try (NjordSession ns = njordSession.orElseThrow()) {
+            doExecute(ns);
         } catch (IOException e) {
             throw new MojoFailureException(e);
         }
     }
 
-    protected abstract void doExecute(ArtifactStoreManager artifactStoreManager)
-            throws IOException, MojoExecutionException, MojoFailureException;
+    protected abstract void doExecute(NjordSession ns) throws IOException, MojoExecutionException, MojoFailureException;
 }

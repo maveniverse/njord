@@ -49,8 +49,6 @@ public final class SonatypeS01PublisherConfig {
                 releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
     }
 
-    public static final String NAME = "apache";
-
     private final String releaseRepositoryId;
     private final String releaseRepositoryUrl;
     private final String snapshotRepositoryId;

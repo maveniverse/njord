@@ -1,9 +1,16 @@
 package eu.maveniverse.maven.njord.shared.publisher;
 
 import eu.maveniverse.maven.njord.shared.Config;
-import java.io.IOException;
 import org.eclipse.aether.RepositorySystemSession;
 
 public interface ArtifactStorePublisherFactory {
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config) throws IOException;
+    /**
+     * Returns short description of publisher.
+     */
+    String description();
+
+    /**
+     * Creates publisher instance. Returned instance must be closed, ideally in try-with-resource.
+     */
+    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
 }
