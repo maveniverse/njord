@@ -13,7 +13,7 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
- *  Verifies that any found POM name, description and project URL is filled in.
+ *  Verifies that any found POM name, description, project URL, SCM and license is filled in.
  */
 public class PomProjectValidatorFactory implements ValidatorFactory {
     @Override
