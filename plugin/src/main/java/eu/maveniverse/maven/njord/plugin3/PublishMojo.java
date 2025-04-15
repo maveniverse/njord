@@ -27,7 +27,7 @@ public class PublishMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "target")
     private String target;
 
-    @Parameter(required = true, property = "drop", defaultValue = "true")
+    @Parameter(required = true, property = "drop", defaultValue = "false")
     private boolean drop;
 
     @Override

@@ -27,7 +27,7 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Config>
     }
 
     @Override
-    public void exportAsDirectory(ArtifactStore artifactStore, Path directory) throws IOException {
+    public Path exportAsDirectory(ArtifactStore artifactStore, Path directory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(directory);
         checkClosed();
@@ -36,16 +36,14 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Config>
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
-        try (ArtifactStore store = artifactStore) {
-            logger.info("Exporting ArtifactStore {} to {} as directory", store, targetDirectory);
-            FileUtils.copyRecursively(store.basedir(), targetDirectory, p -> !p.getFileName()
-                    .toString()
-                    .startsWith("."));
-        }
+        FileUtils.copyRecursively(artifactStore.basedir(), targetDirectory, p -> !p.getFileName()
+                .toString()
+                .startsWith("."));
+        return targetDirectory;
     }
 
     @Override
-    public void exportAsBundle(ArtifactStore artifactStore, Path directory) throws IOException {
+    public Path exportAsBundle(ArtifactStore artifactStore, Path directory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(directory);
         checkClosed();
@@ -60,11 +58,10 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Config>
         }
         try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
-            try (ArtifactStore store = artifactStore) {
-                logger.info("Exporting ArtifactStore {} to {} as bundle", store, bundleFile);
-                FileUtils.copyRecursively(
-                        store.basedir(), root, p -> !p.getFileName().toString().startsWith("."));
-            }
+            FileUtils.copyRecursively(artifactStore.basedir(), root, p -> !p.getFileName()
+                    .toString()
+                    .startsWith("."));
         }
+        return bundleFile;
     }
 }

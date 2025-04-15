@@ -9,69 +9,50 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
+import com.github.mizosoft.methanol.MediaType;
+import com.github.mizosoft.methanol.Methanol;
+import com.github.mizosoft.methanol.MultipartBodyPublisher;
+import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
+import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
-import java.util.Optional;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class SonatypeCentralPortalPublisher extends CloseableSupport implements ArtifactStorePublisher {
-    private final RepositorySystem repositorySystem;
-    private final RepositorySystemSession session;
-    private final RemoteRepository releasesRepository;
-    private final RemoteRepository snapshotsRepository;
+public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
+    private final Config config;
+    private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
 
     public SonatypeCentralPortalPublisher(
+            Config config,
             RepositorySystem repositorySystem,
             RepositorySystemSession session,
             RemoteRepository releasesRepository,
-            RemoteRepository snapshotsRepository) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.session = requireNonNull(session);
-        this.releasesRepository = releasesRepository;
-        this.snapshotsRepository = snapshotsRepository;
-    }
-
-    @Override
-    public String name() {
-        return SonatypeCentralPortalPublisherFactory.NAME;
-    }
-
-    @Override
-    public String description() {
-        return "Publishes to Sonatype Central Portal";
-    }
-
-    @Override
-    public Optional<RemoteRepository> targetReleaseRepository() {
-        return Optional.of(Config.CENTRAL);
-    }
-
-    @Override
-    public Optional<RemoteRepository> targetSnapshotRepository() {
-        return Optional.ofNullable(snapshotsRepository);
-    }
-
-    @Override
-    public Optional<RemoteRepository> serviceReleaseRepository() {
-        return Optional.ofNullable(releasesRepository);
-    }
-
-    @Override
-    public Optional<RemoteRepository> serviceSnapshotRepository() {
-        return Optional.ofNullable(snapshotsRepository);
-    }
-
-    @Override
-    public Optional<ArtifactStoreValidator> validator() {
-        return Optional.empty();
+            RemoteRepository snapshotsRepository,
+            ArtifactStoreExporterFactory artifactStoreExporterFactory) {
+        super(
+                repositorySystem,
+                session,
+                SonatypeCentralPortalPublisherFactory.NAME,
+                "Publishes to Sonatype Central Portal",
+                Config.CENTRAL,
+                snapshotsRepository,
+                releasesRepository,
+                snapshotsRepository);
+        this.config = requireNonNull(config);
+        this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
     }
 
     @Override
@@ -79,18 +60,68 @@ public class SonatypeCentralPortalPublisher extends CloseableSupport implements 
         requireNonNull(artifactStore);
         checkClosed();
 
+        logger.info("Publishing {} to {}", artifactStore, name());
+
+        validateArtifactStore(artifactStore);
+
         RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? this.releasesRepository
-                : this.snapshotsRepository;
+                ? serviceReleaseRepository
+                : serviceSnapshotRepository;
         if (repository == null) {
             throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
                     + " not supported; provide RemoteRepository for it");
         }
 
         if (repository.getPolicy(false).isEnabled()) { // release
-            // create ZIP
-            // upload ZIP (rel/snap)
+            // create ZIP bundle
+            Path tmpDir = Files.createTempDirectory(name());
+            Path bundle;
+            try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(session, config)) {
+                bundle = artifactStoreExporter.exportAsBundle(artifactStore, tmpDir);
+            }
+            if (bundle == null) {
+                throw new IllegalStateException("Bundle ZIP was not created");
+            }
 
+            // we need to use own HTTP client here
+            String authKey = "Authorization";
+            String authValue = null;
+            try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
+                    session, repositorySystem.newDeploymentRepository(session, repository))) {
+                if (repoAuthContext != null) {
+                    String username = repoAuthContext.get(AuthenticationContext.USERNAME);
+                    String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
+                    authValue = "Bearer "
+                            + Base64.getEncoder()
+                                    .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+                }
+            }
+            if (authValue == null) {
+                throw new IllegalStateException(
+                        "No authorization information found for repository " + repository.getId());
+            }
+
+            String deploymentId = null;
+            try {
+                Methanol httpClient = Methanol.create();
+                MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
+                        .filePart("bundle", bundle, MediaType.APPLICATION_OCTET_STREAM)
+                        .build();
+                HttpResponse<String> response = httpClient.send(
+                        MutableRequest.POST(repository.getUrl(), multipartBodyPublisher)
+                                .header(authKey, authValue),
+                        HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 201) {
+                    deploymentId = response.body();
+                } else {
+                    throw new IOException("Unexpected response code: " + response.statusCode() + " " + response.body());
+                }
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+                throw new IOException("Publishing interrupted", e);
+            }
+
+            logger.info("Deployment ID: {}", deploymentId);
         } else { // snapshot
             // just deploy to snapshots as m-deploy-p would
             try (ArtifactStore store = artifactStore) {

@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import javax.inject.Inject;
@@ -25,10 +26,13 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
     public static final String NAME = "sonatype-cp";
 
     private final RepositorySystem repositorySystem;
+    private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
 
     @Inject
-    public SonatypeCentralPortalPublisherFactory(RepositorySystem repositorySystem) {
+    public SonatypeCentralPortalPublisherFactory(
+            RepositorySystem repositorySystem, ArtifactStoreExporterFactory artifactStoreExporterFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
+        this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
     }
 
     @Override
@@ -40,6 +44,12 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
         RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
                         cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
                 .build();
-        return new SonatypeCentralPortalPublisher(repositorySystem, session, releasesRepository, snapshotsRepository);
+        return new SonatypeCentralPortalPublisher(
+                config,
+                repositorySystem,
+                session,
+                releasesRepository,
+                snapshotsRepository,
+                artifactStoreExporterFactory);
     }
 }

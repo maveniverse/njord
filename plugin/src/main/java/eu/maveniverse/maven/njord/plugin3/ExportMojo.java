@@ -38,9 +38,12 @@ public class ExportMojo extends NjordMojoSupport {
             if (Files.exists(targetDirectory)) {
                 throw new MojoExecutionException("Exporting to existing directory not supported");
             }
+            Path result;
+            logger.info("Exporting store {} as directory to {}", store, directory);
             try (ArtifactStoreExporter artifactStoreExporter = ns.createArtifactStoreExporter()) {
-                artifactStoreExporter.exportAsDirectory(storeOptional.orElseThrow(), targetDirectory);
+                result = artifactStoreExporter.exportAsDirectory(storeOptional.orElseThrow(), targetDirectory);
             }
+            logger.info("Exported to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");
         }

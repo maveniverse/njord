@@ -41,12 +41,12 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
                         raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
                 .build();
         return new SonatypeNx2Publisher(
+                repositorySystem,
+                session,
                 NAME,
                 "Publishes to ASF",
                 Config.CENTRAL,
                 snapshotsRepository,
-                repositorySystem,
-                session,
                 releasesRepository,
                 snapshotsRepository);
     }

@@ -127,37 +127,31 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
 
     @Override
     public String name() {
-        checkClosed();
         return name;
     }
 
     @Override
     public Instant created() {
-        checkClosed();
         return created;
     }
 
     @Override
     public RepositoryMode repositoryMode() {
-        checkClosed();
         return repositoryMode;
     }
 
     @Override
     public boolean allowRedeploy() {
-        checkClosed();
         return allowRedeploy;
     }
 
     @Override
     public List<ChecksumAlgorithmFactory> checksumAlgorithmFactories() {
-        checkClosed();
         return checksumAlgorithmFactories;
     }
 
     @Override
     public List<String> omitChecksumsForExtensions() {
-        checkClosed();
         return omitChecksumsForExtensions;
     }
 
@@ -276,10 +270,20 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     @Override
+    protected void doClose() throws IOException {
+        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+    }
+
+    @Override
     public String toString() {
-        return String.format(
-                "%s (%s, %s, %s artifacts)",
-                name(), created(), repositoryMode().name(), artifacts().size());
+        if (closed.get()) {
+            return String.format(
+                    "%s (%s, %s, closed)", name(), created(), repositoryMode().name());
+        } else {
+            return String.format(
+                    "%s (%s, %s, %s artifacts)",
+                    name(), created(), repositoryMode().name(), artifacts().size());
+        }
     }
 
     private String metadataPath(Metadata metadata) {
@@ -326,12 +330,14 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     private <E> void appendIndex(String what, Collection<E> entries, Function<E, String> transform) throws IOException {
-        Path index = basedir.resolve(".meta").resolve(what);
-        if (!entries.isEmpty() && !Files.isRegularFile(index)) {
-            Files.createDirectories(index.getParent());
-            Files.createFile(index);
+        if (!entries.isEmpty()) {
+            Path index = basedir.resolve(".meta").resolve(what);
+            if (!Files.isRegularFile(index)) {
+                Files.createDirectories(index.getParent());
+                Files.createFile(index);
+            }
+            List<String> lines = entries.stream().map(transform).toList();
+            Files.write(index, lines, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
         }
-        List<String> lines = entries.stream().map(transform).toList();
-        Files.write(index, lines, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 }

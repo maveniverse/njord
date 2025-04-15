@@ -23,6 +23,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
       <version>${project.version}</version>
@@ -39,6 +43,12 @@
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.mizosoft.methanol</groupId>
+      <artifactId>methanol</artifactId>
+      <version>1.8.2</version>
+    </dependency>
+
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
