@@ -16,12 +16,18 @@ import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFacto
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.aether.RepositorySystemSession;
 
 public class DefaultNjordSession extends CloseableConfigSupport<Config> implements NjordSession {
@@ -75,6 +81,71 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
         return artifactStorePublisherFactories.values().stream()
                 .map(f -> f.create(session, config))
                 .toList();
+    }
+
+    private static final String SESSION_BOUND_STORES_KEY = NjordSession.class.getName() + "." + ArtifactStore.class;
+
+    @Override
+    public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
+        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
+                session.getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+        String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
+            try {
+                String artifactStoreName;
+                if (!uri.contains(":")) {
+                    if (uri.isEmpty()) {
+                        // empty -> default
+                        try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(
+                                session, internalArtifactStoreManager.defaultTemplate())) {
+                            artifactStoreName = artifactStore.name();
+                        }
+                    } else {
+                        // non-empty -> template name
+                        List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
+                                .filter(t -> t.name().equals(uri))
+                                .toList();
+                        if (templates.size() != 1) {
+                            throw new IllegalArgumentException("Unknown template: " + uri);
+                        } else {
+                            try (ArtifactStore artifactStore =
+                                    internalArtifactStoreManager.createArtifactStore(session, templates.get(0))) {
+                                artifactStoreName = artifactStore.name();
+                            }
+                        }
+                    }
+                } else if (uri.startsWith("store:")) {
+                    artifactStoreName = uri.substring(11);
+                } else {
+                    throw new IllegalArgumentException("Invalid repository URI: " + uri);
+                }
+                return artifactStoreName;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+        try {
+            return internalArtifactStoreManager
+                    .selectArtifactStore(storeName)
+                    .orElseThrow(() -> new IllegalArgumentException("No such store: " + storeName));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void dropSessionArtifactStores() {
+        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
+                session.getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+        sessionBoundStore.values().forEach(n -> {
+            try {
+                Optional<ArtifactStore> artifactStore = internalArtifactStoreManager.selectArtifactStore(n);
+                if (artifactStore.isPresent()) {
+                    internalArtifactStoreManager.dropArtifactStore(artifactStore.orElseThrow());
+                }
+            } catch (IOException e) {
+                logger.warn("Could not select ArtifactStore with name {}", n, e);
+            }
+        });
     }
 
     @Override
