@@ -1,6 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 Maveniverse Org.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
 import java.util.Collection;
@@ -12,10 +19,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "list-templates", threadSafe = true, requiresProject = false)
 public class ListTemplatesMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(ArtifactStoreManager artifactStoreManager) throws IOException {
+    protected void doExecute(NjordSession ns) throws IOException {
         logger.info("List of existing ArtifactStoreTemplate:");
-        Collection<ArtifactStoreTemplate> templates = artifactStoreManager.listTemplates();
-        ArtifactStoreTemplate defaultTemplate = artifactStoreManager.defaultTemplate();
+        Collection<ArtifactStoreTemplate> templates = ns.artifactStoreManager().listTemplates();
+        ArtifactStoreTemplate defaultTemplate = ns.artifactStoreManager().defaultTemplate();
         for (ArtifactStoreTemplate template : templates) {
             logger.info("- {} {}", template.name(), template == defaultTemplate ? " (default)" : " ");
             logger.info("    Prefix: {}", template.prefix());

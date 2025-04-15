@@ -1,8 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 Maveniverse Org.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ */
 package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
+import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -35,7 +43,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class DefaultArtifactStore implements ArtifactStore {
+public class DefaultArtifactStore extends CloseableSupport implements ArtifactStore {
     private final String name;
     private final Instant created;
     private final RepositoryMode repositoryMode;
@@ -43,8 +51,6 @@ public class DefaultArtifactStore implements ArtifactStore {
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
-
-    private final AtomicBoolean closed;
 
     /**
      * Creates instance out for existing store.
@@ -73,7 +79,6 @@ public class DefaultArtifactStore implements ArtifactStore {
                 .filter(s -> !s.trim().isEmpty())
                 .collect(toList());
         this.basedir = requireNonNull(basedir);
-        this.closed = new AtomicBoolean(false);
     }
 
     /**
@@ -97,7 +102,6 @@ public class DefaultArtifactStore implements ArtifactStore {
             this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
             this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
             this.basedir = requireNonNull(basedir);
-            this.closed = new AtomicBoolean(false);
 
             Properties properties = new Properties();
             properties.put("name", name);
@@ -272,23 +276,10 @@ public class DefaultArtifactStore implements ArtifactStore {
     }
 
     @Override
-    public void close() throws IOException {
-        if (closed.compareAndSet(false, true)) {
-            DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-        }
-    }
-
-    @Override
     public String toString() {
         return String.format(
                 "%s (%s, %s, %s artifacts)",
                 name(), created(), repositoryMode().name(), artifacts().size());
-    }
-
-    private void checkClosed() {
-        if (closed.get()) {
-            throw new IllegalStateException("ArtifactStore is closed");
-        }
     }
 
     private String metadataPath(Metadata metadata) {

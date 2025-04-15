@@ -5,14 +5,13 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.publisher;
+package eu.maveniverse.maven.njord.shared;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import org.eclipse.aether.RepositorySystemSession;
 
-public interface ArtifactStorePublisherFactory {
+public interface NjordSessionFactory {
     /**
-     * Creates publisher instance. Returned instance must be closed, ideally in try-with-resource.
+     * Creates Njord session. Session must be closed once done with it.
      */
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
+    NjordSession create(RepositorySystemSession session, Config config);
 }

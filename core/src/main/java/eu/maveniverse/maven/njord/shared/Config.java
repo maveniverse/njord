@@ -21,11 +21,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Simple Mimir configuration.
+ * Simple Njord configuration.
  */
 public interface Config {
+    RemoteRepository CENTRAL =
+            new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
+
     boolean enabled();
 
     Optional<String> version();
@@ -148,10 +152,10 @@ public interface Config {
                 requireNonNull(propertiesPath, "propertiesPath");
                 this.propertiesPath = getCanonicalPath(basedir.resolve(propertiesPath));
 
-                Properties mimirProperties = new Properties();
+                Properties properties = new Properties();
                 if (Files.isRegularFile(this.propertiesPath)) {
                     try (InputStream inputStream = Files.newInputStream(this.propertiesPath)) {
-                        mimirProperties.load(inputStream);
+                        properties.load(inputStream);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }
@@ -161,7 +165,7 @@ public interface Config {
                 this.systemProperties = Map.copyOf(requireNonNull(systemProperties, "systemProperties"));
                 HashMap<String, String> eff = new HashMap<>();
                 eff.putAll(systemProperties);
-                eff.putAll(toMap(mimirProperties));
+                eff.putAll(toMap(properties));
                 eff.putAll(userProperties);
                 this.effectiveProperties = Map.copyOf(eff);
             }

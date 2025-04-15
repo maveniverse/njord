@@ -5,9 +5,9 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.store;
+package eu.maveniverse.maven.njord.shared.impl;
 
-public enum RepositoryMode {
-    RELEASE,
-    SNAPSHOT
-}
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import java.io.Closeable;
+
+public interface InternalArtifactStoreManager extends ArtifactStoreManager, Closeable {}

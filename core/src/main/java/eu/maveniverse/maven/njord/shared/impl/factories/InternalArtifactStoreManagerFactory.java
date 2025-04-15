@@ -5,14 +5,14 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.publisher;
+package eu.maveniverse.maven.njord.shared.impl.factories;
 
 import eu.maveniverse.maven.njord.shared.Config;
-import org.eclipse.aether.RepositorySystemSession;
+import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
 
-public interface ArtifactStorePublisherFactory {
+public interface InternalArtifactStoreManagerFactory {
     /**
-     * Creates publisher instance. Returned instance must be closed, ideally in try-with-resource.
+     * Creates instance of artifact store manager.
      */
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
+    InternalArtifactStoreManager create(Config config);
 }

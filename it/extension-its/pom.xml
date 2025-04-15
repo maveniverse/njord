@@ -126,13 +126,13 @@
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                   <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
                   <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
-                  <properties>
-                    <mimir.daemon.passOnBasedir>true</mimir.daemon.passOnBasedir>
-                  </properties>
                   <cloneClean>true</cloneClean>
                   <pomIncludes>
                     <pomInclude>*/pom.xml</pomInclude>
                   </pomIncludes>
+                  <scriptVariables>
+                    <projectVersion>${project.version}</projectVersion>
+                  </scriptVariables>
                   <preBuildHookScript>setup</preBuildHookScript>
                   <postBuildHookScript>verify</postBuildHookScript>
                   <addTestClassPath>false</addTestClassPath>
@@ -150,13 +150,13 @@
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                   <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
                   <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
-                  <properties>
-                    <mimir.daemon.passOnBasedir>true</mimir.daemon.passOnBasedir>
-                  </properties>
                   <cloneClean>true</cloneClean>
                   <pomIncludes>
                     <pomInclude>*/pom.xml</pomInclude>
                   </pomIncludes>
+                  <scriptVariables>
+                    <projectVersion>${project.version}</projectVersion>
+                  </scriptVariables>
                   <preBuildHookScript>setup</preBuildHookScript>
                   <postBuildHookScript>verify</postBuildHookScript>
                   <addTestClassPath>false</addTestClassPath>

@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.shared;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import java.util.Optional;
 import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
@@ -17,10 +16,10 @@ import org.eclipse.aether.RepositorySystemSession;
 public final class NjordUtils {
     private NjordUtils() {}
 
-    public static boolean lazyInitConfig(
+    public static boolean lazyInit(
             RepositorySystemSession repositorySystemSession,
             Config config,
-            Function<Config, ArtifactStoreManager> artifactStoreManagerFactory) {
+            Function<Config, NjordSession> njordSessionFactory) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
         requireNonNull(config, "config");
         Config oldConfig = mayGetConfig(repositorySystemSession).orElse(null);
@@ -28,7 +27,7 @@ public final class NjordUtils {
         if (oldConfig == null) {
             setConfig(repositorySystemSession, config);
             if (config.enabled()) {
-                setArtifactStoreManager(repositorySystemSession, artifactStoreManagerFactory.apply(config));
+                setNjordSession(repositorySystemSession, njordSessionFactory.apply(config));
                 result = true;
             }
         }
@@ -45,16 +44,14 @@ public final class NjordUtils {
         repositorySystemSession.getData().set(Config.class, config);
     }
 
-    public static void setArtifactStoreManager(
-            RepositorySystemSession repositorySystemSession, ArtifactStoreManager artifactStoreManager) {
+    public static void setNjordSession(RepositorySystemSession repositorySystemSession, NjordSession njordSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        requireNonNull(artifactStoreManager, "artifactStoreManager");
-        ArtifactStoreManager asm =
-                (ArtifactStoreManager) repositorySystemSession.getData().get(ArtifactStoreManager.class);
-        if (asm != null) {
-            throw new IllegalStateException("Njord ArtifactStoreManager already present");
+        requireNonNull(njordSession, "njordSession");
+        NjordSession ns = (NjordSession) repositorySystemSession.getData().get(NjordSession.class);
+        if (ns != null) {
+            throw new IllegalStateException("Njord session already present");
         }
-        repositorySystemSession.getData().set(ArtifactStoreManager.class, artifactStoreManager);
+        repositorySystemSession.getData().set(NjordSession.class, njordSession);
     }
 
     public static Optional<Config> mayGetConfig(RepositorySystemSession repositorySystemSession) {
@@ -66,14 +63,12 @@ public final class NjordUtils {
         return Optional.of(config);
     }
 
-    public static Optional<ArtifactStoreManager> mayGetArtifactStoreManager(
-            RepositorySystemSession repositorySystemSession) {
+    public static Optional<NjordSession> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        ArtifactStoreManager asm =
-                (ArtifactStoreManager) repositorySystemSession.getData().get(ArtifactStoreManager.class);
-        if (asm == null) {
+        NjordSession ns = (NjordSession) repositorySystemSession.getData().get(NjordSession.class);
+        if (ns == null) {
             return Optional.empty();
         }
-        return Optional.of(asm);
+        return Optional.of(ns);
     }
 }

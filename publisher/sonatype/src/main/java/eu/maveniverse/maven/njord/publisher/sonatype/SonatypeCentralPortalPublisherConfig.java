@@ -11,41 +11,39 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 
-public final class SonatypeS01PublisherConfig {
-    public static SonatypeS01PublisherConfig with(Config config) {
+public final class SonatypeCentralPortalPublisherConfig {
+    public static SonatypeCentralPortalPublisherConfig with(Config config) {
         requireNonNull(config, "config");
 
-        String releaseRepositoryId = "sonatype-s01";
-        String releaseRepositoryUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2";
-        String snapshotRepositoryId = "sonatype-s01";
-        String snapshotRepositoryUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots";
+        String releaseRepositoryId = "sonatype-cp";
+        String releaseRepositoryUrl = "https://central.sonatype.com/api/v1/publisher/upload";
+        String snapshotRepositoryId = "sonatype-cp";
+        String snapshotRepositoryUrl = "https://central.sonatype.com/repository/maven-snapshots";
 
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-s01.releaseRepositoryId")) {
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryId")) {
             releaseRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-s01.releaseRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-s01.releaseRepositoryUrl")) {
-            releaseRepositoryUrl =
-                    config.effectiveProperties().get("njord.publisher.sonatype-s01.releaseRepositoryUrl");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryUrl")) {
+            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.sonatype-cp.releaseRepositoryUrl");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-s01.snapshotRepositoryId")) {
-            snapshotRepositoryId =
-                    config.effectiveProperties().get("njord.publisher.sonatype-s01.snapshotRepositoryId");
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryId")) {
+            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-s01.snapshotRepositoryUrl")) {
+        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryUrl")) {
             snapshotRepositoryUrl =
-                    config.effectiveProperties().get("njord.publisher.sonatype-s01.snapshotRepositoryUrl");
+                    config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryUrl");
         }
 
-        return new SonatypeS01PublisherConfig(
+        return new SonatypeCentralPortalPublisherConfig(
                 releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
     }
 
-    public static SonatypeS01PublisherConfig of(
+    public static SonatypeCentralPortalPublisherConfig of(
             String releaseRepositoryId,
             String releaseRepositoryUrl,
             String snapshotRepositoryId,
             String snapshotRepositoryUrl) {
-        return new SonatypeS01PublisherConfig(
+        return new SonatypeCentralPortalPublisherConfig(
                 releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
     }
 
@@ -54,7 +52,7 @@ public final class SonatypeS01PublisherConfig {
     private final String snapshotRepositoryId;
     private final String snapshotRepositoryUrl;
 
-    private SonatypeS01PublisherConfig(
+    private SonatypeCentralPortalPublisherConfig(
             String releaseRepositoryId,
             String releaseRepositoryUrl,
             String snapshotRepositoryId,
