@@ -20,17 +20,18 @@ public final class ApachePublisherConfig {
         String snapshotRepositoryId = "apache.snapshots.https";
         String snapshotRepositoryUrl = "https://repository.apache.org/content/repositories/snapshots";
 
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.releaseRepositoryId")) {
-            releaseRepositoryId = config.effectiveProperties().get("njord.publisher.apache.releaseRepositoryId");
+        if (config.effectiveProperties().containsKey("njord.publisher.apache-rao.releaseRepositoryId")) {
+            releaseRepositoryId = config.effectiveProperties().get("njord.publisher.apache-rao.releaseRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.releaseRepositoryUrl")) {
-            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.apache.releaseRepositoryUrl");
+        if (config.effectiveProperties().containsKey("njord.publisher.apache-rao.releaseRepositoryUrl")) {
+            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.apache-rao.releaseRepositoryUrl");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.snapshotRepositoryId")) {
-            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.apache.snapshotRepositoryId");
+        if (config.effectiveProperties().containsKey("njord.publisher.apache-rao.snapshotRepositoryId")) {
+            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.apache-rao.snapshotRepositoryId");
         }
-        if (config.effectiveProperties().containsKey("njord.publisher.apache.snapshotRepositoryUrl")) {
-            snapshotRepositoryUrl = config.effectiveProperties().get("njord.publisher.apache.snapshotRepositoryUrl");
+        if (config.effectiveProperties().containsKey("njord.publisher.apache-rao.snapshotRepositoryUrl")) {
+            snapshotRepositoryUrl =
+                    config.effectiveProperties().get("njord.publisher.apache-rao.snapshotRepositoryUrl");
         }
 
         return new ApachePublisherConfig(

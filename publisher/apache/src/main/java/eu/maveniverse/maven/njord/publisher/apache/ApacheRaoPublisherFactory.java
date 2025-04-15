@@ -25,11 +25,6 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
     }
 
     @Override
-    public String description() {
-        return "Publishes to ASF at https://repository.apache.org/";
-    }
-
-    @Override
     public SonatypeNx2Publisher create(RepositorySystemSession session, Config config) {
         ApachePublisherConfig raoConfig = ApachePublisherConfig.with(config);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
@@ -38,6 +33,14 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
         RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
                         raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
                 .build();
-        return new SonatypeNx2Publisher(repositorySystem, session, releasesRepository, snapshotsRepository);
+        return new SonatypeNx2Publisher(
+                NAME,
+                "Publishes to ASF",
+                Config.CENTRAL,
+                snapshotsRepository,
+                repositorySystem,
+                session,
+                releasesRepository,
+                snapshotsRepository);
     }
 }

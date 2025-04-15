@@ -2,12 +2,15 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
+import java.util.Optional;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -27,6 +30,41 @@ public class SonatypeCentralPortalPublisher extends CloseableSupport implements 
         this.session = requireNonNull(session);
         this.releasesRepository = releasesRepository;
         this.snapshotsRepository = snapshotsRepository;
+    }
+
+    @Override
+    public String name() {
+        return SonatypeCentralPortalPublisherFactory.NAME;
+    }
+
+    @Override
+    public String description() {
+        return "Publishes to Sonatype Central Portal";
+    }
+
+    @Override
+    public Optional<RemoteRepository> targetReleaseRepository() {
+        return Optional.of(Config.CENTRAL);
+    }
+
+    @Override
+    public Optional<RemoteRepository> targetSnapshotRepository() {
+        return Optional.ofNullable(snapshotsRepository);
+    }
+
+    @Override
+    public Optional<RemoteRepository> serviceReleaseRepository() {
+        return Optional.ofNullable(releasesRepository);
+    }
+
+    @Override
+    public Optional<RemoteRepository> serviceSnapshotRepository() {
+        return Optional.ofNullable(snapshotsRepository);
+    }
+
+    @Override
+    public Optional<ArtifactStoreValidator> validator() {
+        return Optional.empty();
     }
 
     @Override

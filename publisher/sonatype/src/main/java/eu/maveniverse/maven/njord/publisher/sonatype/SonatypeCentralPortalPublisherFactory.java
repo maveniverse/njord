@@ -25,11 +25,6 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
     }
 
     @Override
-    public String description() {
-        return "Publishes to Sonatype Central Portal at https://central.sonatype.com/";
-    }
-
-    @Override
     public ArtifactStorePublisher create(RepositorySystemSession session, Config config) {
         SonatypeCentralPortalPublisherConfig cpConfig = SonatypeCentralPortalPublisherConfig.with(config);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(

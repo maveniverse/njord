@@ -30,11 +30,12 @@ public class PublishMojo extends NjordMojoSupport {
             logger.warn("ArtifactStore with given name not found: {}", store);
             return;
         }
-        Optional<ArtifactStorePublisher> po = ns.createArtifactStorePublisher(target);
+        Optional<ArtifactStorePublisher> po = ns.availablePublishers().stream()
+                .filter(p -> target.equals(p.name()))
+                .findFirst();
         if (po.isPresent()) {
-            try (ArtifactStore from = storeOptional.orElseThrow();
-                    ArtifactStorePublisher publisher = po.orElseThrow()) {
-                publisher.publish(from);
+            try (ArtifactStore from = storeOptional.orElseThrow()) {
+                po.orElseThrow().publish(from);
                 if (drop) {
                     logger.info("Dropping {}", from);
                     ns.artifactStoreManager().dropArtifactStore(from);

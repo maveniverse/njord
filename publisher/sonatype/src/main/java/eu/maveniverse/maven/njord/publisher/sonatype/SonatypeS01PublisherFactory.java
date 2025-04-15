@@ -24,11 +24,6 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
     }
 
     @Override
-    public String description() {
-        return "Publishes to Sonatype S01 at https://s01.oss.sonatype.org/";
-    }
-
-    @Override
     public SonatypeNx2Publisher create(RepositorySystemSession session, Config config) {
         SonatypeS01PublisherConfig s01Config = SonatypeS01PublisherConfig.with(config);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
@@ -37,6 +32,14 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
         RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
                         s01Config.snapshotRepositoryId(), "default", s01Config.snapshotRepositoryUrl())
                 .build();
-        return new SonatypeNx2Publisher(repositorySystem, session, releasesRepository, snapshotsRepository);
+        return new SonatypeNx2Publisher(
+                NAME,
+                "Publishes to Sonatype s01",
+                Config.CENTRAL,
+                snapshotsRepository,
+                repositorySystem,
+                session,
+                releasesRepository,
+                snapshotsRepository);
     }
 }

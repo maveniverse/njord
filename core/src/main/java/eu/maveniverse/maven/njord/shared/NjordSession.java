@@ -5,10 +5,14 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.Closeable;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Collection;
 
 public interface NjordSession extends Closeable {
+    /**
+     * Returns the effective configuration.
+     */
+    Config config();
+
     /**
      * Returns store manager.
      */
@@ -25,13 +29,7 @@ public interface NjordSession extends Closeable {
     ArtifactStoreMerger createArtifactStoreMerger();
 
     /**
-     * Returns a collection of available (configured) publisher factories. Map keys are expected as input
-     * for {@link #createArtifactStorePublisher(String)}.
+     * Returns a collection of available (configured) publishers.
      */
-    Map<String, String> availablePublishers();
-
-    /**
-     * Creates artifact store publisher. Returned instance must be closed, ideally in try-with-resource.
-     */
-    Optional<ArtifactStorePublisher> createArtifactStorePublisher(String target);
+    Collection<ArtifactStorePublisher> availablePublishers();
 }

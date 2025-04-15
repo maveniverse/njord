@@ -1,7 +1,6 @@
 package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toMap;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
@@ -14,9 +13,8 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.IOException;
-import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 
 public class DefaultNjordSession extends CloseableConfigSupport<Config> implements NjordSession {
@@ -42,6 +40,11 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     }
 
     @Override
+    public Config config() {
+        return config;
+    }
+
+    @Override
     public ArtifactStoreManager artifactStoreManager() {
         checkClosed();
         return internalArtifactStoreManager;
@@ -60,24 +63,11 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     }
 
     @Override
-    public Map<String, String> availablePublishers() {
+    public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
-        return artifactStorePublisherFactories.entrySet().stream()
-                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().description()))
-                .collect(toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
-    }
-
-    @Override
-    public Optional<ArtifactStorePublisher> createArtifactStorePublisher(String target) {
-        requireNonNull(target);
-        checkClosed();
-
-        ArtifactStorePublisherFactory publisherFactory = artifactStorePublisherFactories.get(target);
-        if (publisherFactory == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(publisherFactory.create(session, config));
-        }
+        return artifactStorePublisherFactories.values().stream()
+                .map(f -> f.create(session, config))
+                .toList();
     }
 
     @Override
