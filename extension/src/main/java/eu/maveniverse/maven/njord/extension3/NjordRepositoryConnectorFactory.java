@@ -12,11 +12,6 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,10 +50,8 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         if (NAME.equals(repository.getProtocol())) {
             Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session);
             if (ns.isPresent()) {
-                NjordSession njord = ns.orElseThrow();
-                ArtifactStoreManager artifactStoreManager = njord.artifactStoreManager();
-                ArtifactStore artifactStore = mayCreateArtifactStore(
-                        session, artifactStoreManager, repository.getUrl().substring(6));
+                ArtifactStore artifactStore = ns.orElseThrow()
+                        .getOrCreateSessionArtifactStore(repository.getUrl().substring(6));
                 return new NjordRepositoryConnector(
                         artifactStore,
                         repository,
@@ -72,51 +65,5 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     @Override
     public float getPriority() {
         return 10;
-    }
-
-    private ArtifactStore mayCreateArtifactStore(
-            RepositorySystemSession session, ArtifactStoreManager artifactStoreManager, String uri) {
-        String nameKey = NjordRepositoryConnectorFactory.class.getName() + "." + uri;
-        String storeName = (String) session.getData().computeIfAbsent(nameKey, () -> {
-            try {
-                String artifactStoreName;
-                if (!uri.contains(":")) {
-                    if (uri.isEmpty()) {
-                        // empty -> default
-                        try (ArtifactStore artifactStore = artifactStoreManager.createArtifactStore(
-                                session, artifactStoreManager.defaultTemplate())) {
-                            artifactStoreName = artifactStore.name();
-                        }
-                    } else {
-                        // non-empty -> template name
-                        List<ArtifactStoreTemplate> templates = artifactStoreManager.listTemplates().stream()
-                                .filter(t -> t.name().equals(uri))
-                                .toList();
-                        if (templates.size() != 1) {
-                            throw new IllegalArgumentException("Unknown template: " + uri);
-                        } else {
-                            try (ArtifactStore artifactStore =
-                                    artifactStoreManager.createArtifactStore(session, templates.get(0))) {
-                                artifactStoreName = artifactStore.name();
-                            }
-                        }
-                    }
-                } else if (uri.startsWith("store:")) {
-                    artifactStoreName = uri.substring(11);
-                } else {
-                    throw new IllegalArgumentException("Invalid repository URI: " + uri);
-                }
-                return artifactStoreName;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
-        try {
-            return artifactStoreManager
-                    .selectArtifactStore(storeName)
-                    .orElseThrow(() -> new IllegalArgumentException("No such store: " + storeName));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }

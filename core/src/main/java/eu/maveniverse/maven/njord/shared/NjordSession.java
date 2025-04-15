@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.shared;
 
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
@@ -39,4 +40,14 @@ public interface NjordSession extends Closeable {
      * Returns a collection of available (configured) publishers.
      */
     Collection<ArtifactStorePublisher> availablePublishers();
+
+    /**
+     * Creates session-bound artifact store and memoize it during session.
+     */
+    ArtifactStore getOrCreateSessionArtifactStore(String uri);
+
+    /**
+     * Drops all session-bound artifact stores.
+     */
+    void dropSessionArtifactStores();
 }

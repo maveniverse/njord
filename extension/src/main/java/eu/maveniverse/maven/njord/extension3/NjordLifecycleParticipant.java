@@ -61,7 +61,13 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
         try {
             Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                ns.orElseThrow().close();
+                NjordSession njordSession = ns.orElseThrow();
+                if (session.getResult().hasExceptions()) {
+                    logger.warn("Session failed; dropping session created stores");
+                    njordSession.dropSessionArtifactStores();
+                }
+                logger.info("Njord session closed");
+                njordSession.close();
             }
         } catch (Exception e) {
             throw new MavenExecutionException("Error closing Njord", e);
