@@ -96,7 +96,7 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                                 chkCollector.addError(
                                         "INVALID " + signatureValidator.type().name());
                             } else {
-                                chkCollector.addInfo("PRESENT (not validated) "
+                                chkCollector.addInfo("PRESENT (not validated by validator) "
                                         + signatureValidator.type().name());
                             }
                         }

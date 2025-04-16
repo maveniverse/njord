@@ -54,22 +54,22 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
             if (mo.isPresent()) {
                 Model m = mo.orElseThrow();
                 if (m.getName() != null && !m.getName().trim().isEmpty()) {
-                    collector.addInfo("POM project/name OK");
+                    collector.addInfo("VALID project/name");
                 } else {
-                    collector.addError("POM project/name MISSING");
+                    collector.addError("MISSING project/name");
                 }
                 if (m.getDescription() != null && !m.getDescription().trim().isEmpty()) {
-                    collector.addInfo("POM project/description OK");
+                    collector.addInfo("VALID project/description");
                 } else {
-                    collector.addError("POM project/description MISSING");
+                    collector.addError("MISSING project/description");
                 }
                 if (m.getUrl() != null && !m.getUrl().trim().isEmpty()) {
-                    collector.addInfo("POM project/url OK");
+                    collector.addInfo("VALID project/url");
                 } else {
-                    collector.addError("POM project/url MISSING");
+                    collector.addError("MISSING project/url");
                 }
                 if (m.getLicenses().isEmpty()) {
-                    collector.addError("POM project/licenses MISSING");
+                    collector.addError("MISSING project/licenses");
                 } else {
                     boolean ok = true;
                     for (License license : m.getLicenses()) {
@@ -78,15 +78,15 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                                 || (license.getUrl() == null
                                         || license.getUrl().trim().isEmpty())) {
                             ok = false;
-                            collector.addError("POM project/licenses/license MISSING (incomplete)");
+                            collector.addError("MISSING (incomplete) project/licenses/license");
                         }
                     }
                     if (ok) {
-                        collector.addInfo("POM project/licenses OK");
+                        collector.addInfo("VALID project/licenses");
                     }
                 }
                 if (m.getDevelopers().isEmpty()) {
-                    collector.addError("POM project/developers MISSING");
+                    collector.addError("MISSING project/developers");
                 } else {
                     boolean ok = true;
                     for (Developer developer : m.getDevelopers()) {
@@ -95,15 +95,15 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                                 || (developer.getEmail() == null
                                         || developer.getEmail().trim().isEmpty())) {
                             ok = false;
-                            collector.addError("POM project/developers/developer MISSING (incomplete)");
+                            collector.addError("MISSING (incomplete) project/developers/developer");
                         }
                     }
                     if (ok) {
-                        collector.addInfo("POM project/licenses OK");
+                        collector.addInfo("VALID project/licenses");
                     }
                 }
                 if (m.getScm() == null) {
-                    collector.addError("POM project/scm MISSING");
+                    collector.addError("MISSING project/scm");
                 } else {
                     Scm scm = m.getScm();
                     if ((scm.getUrl() == null || scm.getUrl().trim().isEmpty())
@@ -111,7 +111,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                                     || scm.getConnection().trim().isEmpty())
                             || (scm.getDeveloperConnection() == null
                                     || scm.getDeveloperConnection().trim().isEmpty())) {
-                        collector.addError("POM project/scm MISSING (incomplete)");
+                        collector.addError("MISSING (incomplete) project/scm");
                     }
                 }
             } else {
