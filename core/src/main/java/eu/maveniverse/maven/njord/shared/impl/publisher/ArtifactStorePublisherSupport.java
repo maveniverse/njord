@@ -11,18 +11,16 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
-import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public abstract class ArtifactStorePublisherSupport extends CloseableSupport implements ArtifactStorePublisher {
     protected final RepositorySystem repositorySystem;
@@ -33,12 +31,7 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
     protected final RemoteRepository targetSnapshotRepository;
     protected final RemoteRepository serviceReleaseRepository;
     protected final RemoteRepository serviceSnapshotRepository;
-    protected final List<ChecksumAlgorithmFactory> mandatoryChecksumAlgorithms;
-    protected final List<ChecksumAlgorithmFactory> optionalChecksumAlgorithms;
-    protected final List<SignatureType> mandatorySignatureAlgorithms;
-    protected final List<SignatureType> optionalSignatureAlgorithms;
-    protected final ArtifactStoreValidator releaseValidator;
-    protected final ArtifactStoreValidator snapshotValidator;
+    protected final ArtifactStoreRequirements artifactStoreRequirements;
 
     protected ArtifactStorePublisherSupport(
             RepositorySystem repositorySystem,
@@ -49,12 +42,7 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
-            List<ChecksumAlgorithmFactory> mandatoryChecksumAlgorithms,
-            List<ChecksumAlgorithmFactory> optionalChecksumAlgorithms,
-            List<SignatureType> mandatorySignatureAlgorithms,
-            List<SignatureType> optionalSignatureAlgorithms,
-            ArtifactStoreValidator releaseValidator,
-            ArtifactStoreValidator snapshotValidator) {
+            ArtifactStoreRequirements artifactStoreRequirements) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.session = requireNonNull(session);
         this.name = requireNonNull(name);
@@ -63,12 +51,7 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
         this.targetSnapshotRepository = targetSnapshotRepository;
         this.serviceReleaseRepository = serviceReleaseRepository;
         this.serviceSnapshotRepository = serviceSnapshotRepository;
-        this.mandatoryChecksumAlgorithms = mandatoryChecksumAlgorithms;
-        this.optionalChecksumAlgorithms = optionalChecksumAlgorithms;
-        this.mandatorySignatureAlgorithms = mandatorySignatureAlgorithms;
-        this.optionalSignatureAlgorithms = optionalSignatureAlgorithms;
-        this.releaseValidator = releaseValidator;
-        this.snapshotValidator = snapshotValidator;
+        this.artifactStoreRequirements = requireNonNull(artifactStoreRequirements);
     }
 
     @Override
@@ -102,40 +85,16 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
     }
 
     @Override
-    public Optional<List<ChecksumAlgorithmFactory>> mandatoryChecksumAlgorithms() {
-        return Optional.ofNullable(mandatoryChecksumAlgorithms);
-    }
-
-    @Override
-    public Optional<List<ChecksumAlgorithmFactory>> optionalChecksumAlgorithms() {
-        return Optional.ofNullable(optionalChecksumAlgorithms);
-    }
-
-    @Override
-    public Optional<List<SignatureType>> mandatorySignatureAlgorithms() {
-        return Optional.ofNullable(mandatorySignatureAlgorithms);
-    }
-
-    @Override
-    public Optional<List<SignatureType>> optionalSignatureAlgorithms() {
-        return Optional.ofNullable(optionalSignatureAlgorithms);
-    }
-
-    @Override
-    public Optional<ArtifactStoreValidator> releaseValidator() {
-        return Optional.ofNullable(releaseValidator);
-    }
-
-    @Override
-    public Optional<ArtifactStoreValidator> snapshotValidator() {
-        return Optional.ofNullable(snapshotValidator);
+    public ArtifactStoreRequirements artifactStoreRequirements() {
+        return artifactStoreRequirements;
     }
 
     @Override
     public Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        Optional<ArtifactStoreValidator> vo =
-                artifactStore.repositoryMode() == RepositoryMode.RELEASE ? releaseValidator() : snapshotValidator();
+        Optional<ArtifactStoreValidator> vo = artifactStore.repositoryMode() == RepositoryMode.RELEASE
+                ? artifactStoreRequirements.releaseValidator()
+                : artifactStoreRequirements.snapshotValidator();
         if (vo.isPresent()) {
             return Optional.of(vo.orElseThrow().validate(artifactStore));
         } else {

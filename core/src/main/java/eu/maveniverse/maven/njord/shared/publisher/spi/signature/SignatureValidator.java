@@ -11,7 +11,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
-public interface SignatureValidator extends SignatureType, Closeable {
+public interface SignatureValidator extends Closeable {
+    /**
+     * The type this validator validates.
+     */
+    SignatureType type();
+
     /**
      * Verifies received content against received signature. May perform much more, like fetching key and so on.
      * If it returns {@code true}, then and only then is signature accepted as "verified".

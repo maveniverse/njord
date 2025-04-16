@@ -7,27 +7,12 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
-import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class SigstoreSignatureValidator extends CloseableSupport implements SignatureValidator {
-    public static final String NAME = "Sigstore";
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
-    public String description() {
-        return "Sigstore JSON signature";
-    }
-
-    @Override
-    public String extension() {
-        return "sigstore.json";
+public class SigstoreSignatureValidator extends SignatureValidatorSupport {
+    public SigstoreSignatureValidator() {
+        super(new SigstoreSignatureType());
     }
 
     @Override

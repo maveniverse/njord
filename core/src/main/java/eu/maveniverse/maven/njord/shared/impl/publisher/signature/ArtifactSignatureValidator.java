@@ -62,8 +62,10 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
             ValidationResultCollector chkCollector)
             throws IOException {
         for (SignatureValidator signatureValidator : signatureValidators) {
-            Artifact signature =
-                    new SubArtifact(artifact, "*", artifact.getExtension() + "." + signatureValidator.extension());
+            Artifact signature = new SubArtifact(
+                    artifact,
+                    "*",
+                    artifact.getExtension() + "." + signatureValidator.type().extension());
             Optional<InputStream> so = artifactStore.artifactContent(signature);
             if (so.isPresent()) {
                 final InputStream signatureContent;
@@ -74,15 +76,16 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                 }
                 if (signatureValidator.verifySignature(
                         artifactStore.artifactContent(artifact).orElseThrow(), signatureContent)) {
-                    chkCollector.addInfo("VALID " + signatureValidator.name());
+                    chkCollector.addInfo("VALID " + signatureValidator.type().name());
                 } else {
-                    chkCollector.addError("MISMATCH " + signatureValidator.name());
+                    chkCollector.addError(
+                            "MISMATCH " + signatureValidator.type().name());
                 }
             } else {
                 if (mandatory) {
-                    chkCollector.addError("MISSING " + signatureValidator.name());
+                    chkCollector.addError("MISSING " + signatureValidator.type().name());
                 } else {
-                    chkCollector.addInfo("MISSING " + signatureValidator.name());
+                    chkCollector.addInfo("MISSING " + signatureValidator.type().name());
                 }
             }
         }

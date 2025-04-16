@@ -7,13 +7,10 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher;
 
-import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public interface ArtifactStorePublisher {
     /**
@@ -47,34 +44,9 @@ public interface ArtifactStorePublisher {
     Optional<RemoteRepository> serviceSnapshotRepository();
 
     /**
-     * Returns the list of mandatory checksum algorithms.
+     * The requirements this publisher has.
      */
-    Optional<List<ChecksumAlgorithmFactory>> mandatoryChecksumAlgorithms();
-
-    /**
-     * Returns the list of supported and optional checksum algorithms.
-     */
-    Optional<List<ChecksumAlgorithmFactory>> optionalChecksumAlgorithms();
-
-    /**
-     * Returns the list of mandatory signature types.
-     */
-    Optional<List<SignatureType>> mandatorySignatureAlgorithms();
-
-    /**
-     * Returns the list of supported and optional signature types.
-     */
-    Optional<List<SignatureType>> optionalSignatureAlgorithms();
-
-    /**
-     * The validator that must be applied to release store before publishing.
-     */
-    Optional<ArtifactStoreValidator> releaseValidator();
-
-    /**
-     * The validator that must be applied to snapshot store before publishing.
-     */
-    Optional<ArtifactStoreValidator> snapshotValidator();
+    ArtifactStoreRequirements artifactStoreRequirements();
 
     /**
      * Performs a non-disruptive validation of artifact store, if validator present, or empty.

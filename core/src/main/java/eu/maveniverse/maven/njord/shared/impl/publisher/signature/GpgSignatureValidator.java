@@ -7,27 +7,12 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
-import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class GpgSignatureValidator extends CloseableSupport implements SignatureValidator {
-    public static final String NAME = "GPG";
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
-    public String description() {
-        return "GPG detached and armored signature";
-    }
-
-    @Override
-    public String extension() {
-        return "asc";
+public class GpgSignatureValidator extends SignatureValidatorSupport {
+    public GpgSignatureValidator() {
+        super(new GpgSignatureType());
     }
 
     @Override
