@@ -19,7 +19,9 @@ import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomCoordinatesVali
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomProjectValidatorFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.SourceJarValidatorFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.ArtifactSignatureValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureType;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.signature.SigstoreSignatureType;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.SigstoreSignatureValidator;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
@@ -53,14 +55,10 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
         this.optionalChecksumAlgorithms = checksumAlgorithmFactorySelector.selectList(List.of("SHA-512", "SHA-256"));
 
         // signatures
+        this.mandatorySignatureTypes = List.of(new GpgSignatureType());
+        this.optionalSignatureTypes = List.of(new SigstoreSignatureType());
         List<SignatureValidator> mandatorySignatureValidators = List.of(new GpgSignatureValidator());
         List<SignatureValidator> optionalSignatureValidators = List.of(new SigstoreSignatureValidator());
-        this.mandatorySignatureTypes = mandatorySignatureValidators.stream()
-                .map(SignatureValidator::type)
-                .toList();
-        this.optionalSignatureTypes = optionalSignatureValidators.stream()
-                .map(SignatureValidator::type)
-                .toList();
 
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
@@ -74,7 +72,11 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
         validators.add((s, c) -> new ArtifactChecksumValidator(
                 "Checksum Validation", mandatoryChecksumAlgorithms, optionalChecksumAlgorithms));
         validators.add((s, c) -> new ArtifactSignatureValidator(
-                "Signature Validation", mandatorySignatureValidators, optionalSignatureValidators));
+                "Signature Validation",
+                mandatorySignatureTypes,
+                mandatorySignatureValidators,
+                optionalSignatureTypes,
+                optionalSignatureValidators));
 
         this.releaseValidator = new DefaultArtifactStoreValidator(
                 "central", "Central Requirements", session, config, List.of(), validators);

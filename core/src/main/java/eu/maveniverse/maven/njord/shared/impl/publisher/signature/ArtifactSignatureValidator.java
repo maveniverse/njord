@@ -11,16 +11,15 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
+import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
@@ -28,15 +27,21 @@ import org.eclipse.aether.util.artifact.SubArtifact;
  * Pluggable signature validator.
  */
 public class ArtifactSignatureValidator extends ValidatorSupport {
+    private final List<SignatureType> mandatorySignatureTypes;
     private final List<SignatureValidator> mandatorySignatureValidators;
+    private final List<SignatureType> optionalSignatureTypes;
     private final List<SignatureValidator> optionalSignatureValidators;
 
     public ArtifactSignatureValidator(
             String name,
+            List<SignatureType> mandatorySignatureTypes,
             List<SignatureValidator> mandatorySignatureValidators,
+            List<SignatureType> optionalSignatureTypes,
             List<SignatureValidator> optionalSignatureValidators) {
         super(name);
+        this.mandatorySignatureTypes = mandatorySignatureTypes;
         this.mandatorySignatureValidators = requireNonNull(mandatorySignatureValidators);
+        this.optionalSignatureTypes = optionalSignatureTypes;
         this.optionalSignatureValidators = requireNonNull(optionalSignatureValidators);
     }
 
@@ -45,52 +50,63 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
             throws IOException {
         if (artifactStore.omitChecksumsForExtensions().stream()
                 .noneMatch(e -> artifact.getExtension().endsWith(e))) {
-            validateSignature(artifactStore, artifact, mandatorySignatureValidators, true, collector);
-            validateSignature(artifactStore, artifact, optionalSignatureValidators, false, collector);
+            validateSignature(
+                    artifactStore, artifact, mandatorySignatureTypes, mandatorySignatureValidators, true, collector);
+            validateSignature(
+                    artifactStore, artifact, optionalSignatureTypes, optionalSignatureValidators, false, collector);
         }
     }
 
     private void validateSignature(
             ArtifactStore artifactStore,
             Artifact artifact,
+            Collection<SignatureType> signatureTypes,
             Collection<SignatureValidator> signatureValidators,
             boolean mandatory,
             ValidationContext chkCollector)
             throws IOException {
-        for (SignatureValidator signatureValidator : signatureValidators) {
-            Artifact signature = new SubArtifact(
-                    artifact,
-                    "*",
-                    artifact.getExtension() + "." + signatureValidator.type().extension());
-            Optional<InputStream> so = artifactStore.artifactContent(signature);
-            if (so.isPresent()) {
-                final InputStream signatureContent;
-                try (InputStream in = so.orElseThrow()) {
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    in.transferTo(bos);
-                    signatureContent = new ByteArrayInputStream(bos.toByteArray());
-                }
-                SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
-                        artifactStore,
-                        artifact,
-                        signature,
-                        artifactStore.artifactContent(artifact).orElseThrow(),
-                        signatureContent,
-                        chkCollector);
-                if (outcome == SignatureValidator.Outcome.VALID) {
-                    chkCollector.addInfo("VALID " + signatureValidator.type().name());
-                } else if (outcome == SignatureValidator.Outcome.INVALID) {
-                    chkCollector.addError("INVALID " + signatureValidator.type().name());
+        for (SignatureType signatureType : signatureTypes) {
+            Artifact signature =
+                    new SubArtifact(artifact, "*", artifact.getExtension() + "." + signatureType.extension());
+            Collection<SignatureValidator> typeSignatureValidator = signatureValidators.stream()
+                    .filter(v -> Objects.equals(v.type().name(), signatureType.name()))
+                    .toList();
+            boolean present = artifactStore.artifactPresent(signature);
+            // signature validation as well
+            if (present) {
+                if (typeSignatureValidator.isEmpty()) {
+                    chkCollector.addInfo("PRESENT (not validated) " + signatureType.name());
                 } else {
-                    chkCollector.addInfo("PRESENT (not validated) "
-                            + signatureValidator.type().name());
+                    for (SignatureValidator signatureValidator : typeSignatureValidator) {
+                        try (InputStream artifactContent =
+                                        artifactStore.artifactContent(artifact).orElseThrow();
+                                InputStream signatureContent =
+                                        artifactStore.artifactContent(signature).orElseThrow()) {
+                            SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
+                                    artifactStore,
+                                    artifact,
+                                    signature,
+                                    artifactContent,
+                                    signatureContent,
+                                    chkCollector);
+                            if (outcome == SignatureValidator.Outcome.VALID) {
+                                chkCollector.addInfo(
+                                        "VALID " + signatureValidator.type().name());
+                            } else if (outcome == SignatureValidator.Outcome.INVALID) {
+                                chkCollector.addError(
+                                        "INVALID " + signatureValidator.type().name());
+                            } else {
+                                chkCollector.addInfo("PRESENT (not validated) "
+                                        + signatureValidator.type().name());
+                            }
+                        }
+                    }
                 }
             } else {
                 if (mandatory) {
-                    chkCollector.addError("MISSING " + signatureValidator.type().name());
+                    chkCollector.addError("MISSING " + signatureType.name());
                 } else {
-                    chkCollector.addInfo(
-                            "MISSING (optional) " + signatureValidator.type().name());
+                    chkCollector.addInfo("MISSING (optional) " + signatureType.name());
                 }
             }
         }

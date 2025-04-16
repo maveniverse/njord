@@ -25,7 +25,7 @@ public class ArchiveValidator extends ValidatorSupport {
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         if ("jar".equals(artifact.getExtension())) {
-            collector.addInfo("TODO");
+            // TODO
         }
     }
 }
