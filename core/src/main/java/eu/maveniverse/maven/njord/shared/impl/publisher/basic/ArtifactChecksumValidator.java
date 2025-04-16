@@ -94,7 +94,7 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
             }
         }
         if (!algOk.isEmpty()) {
-            chkCollector.addInfo("OK: " + String.join(", ", algOk));
+            chkCollector.addInfo("VALID: " + String.join(", ", algOk));
         }
         if (mandatory && !algMissing.isEmpty()) {
             chkCollector.addError("MISSING: " + String.join(", ", algMissing));

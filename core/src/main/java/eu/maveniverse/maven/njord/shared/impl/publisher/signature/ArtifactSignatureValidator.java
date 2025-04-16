@@ -74,13 +74,15 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                 }
                 if (signatureValidator.verifySignature(
                         artifactStore.artifactContent(artifact).orElseThrow(), signatureContent)) {
-                    chkCollector.addInfo("Signature " + signatureValidator.name() + " VERIFIED");
+                    chkCollector.addInfo("VALID " + signatureValidator.name());
                 } else {
-                    chkCollector.addError("Signature " + signatureValidator.name() + " FAILED");
+                    chkCollector.addError("MISMATCH " + signatureValidator.name());
                 }
             } else {
                 if (mandatory) {
-                    chkCollector.addError("Mandatory signature " + signatureValidator.name() + " MISSING");
+                    chkCollector.addError("MISSING " + signatureValidator.name());
+                } else {
+                    chkCollector.addInfo("MISSING " + signatureValidator.name());
                 }
             }
         }

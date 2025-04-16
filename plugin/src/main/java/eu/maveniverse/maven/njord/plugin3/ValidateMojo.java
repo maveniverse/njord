@@ -69,19 +69,16 @@ public class ValidateMojo extends NjordMojoSupport {
     private void dumpValidationResult(String prefix, ArtifactStoreValidator.ValidationResult vr) {
         logger.info("{} {}", prefix, vr.name());
         if (!vr.error().isEmpty()) {
-            logger.error("{}  Errors:", prefix);
             for (String msg : vr.error()) {
                 logger.error("{}    {}", prefix, msg);
             }
         }
         if (!vr.warning().isEmpty()) {
-            logger.warn("{}  Warnings:", prefix);
             for (String msg : vr.warning()) {
                 logger.warn("{}    {}", prefix, msg);
             }
         }
         if (!vr.info().isEmpty()) {
-            logger.info("{}  Info:", prefix);
             for (String msg : vr.info()) {
                 logger.info("{}    {}", prefix, msg);
             }
