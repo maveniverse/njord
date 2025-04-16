@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.spi.signature;
 
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.Closeable;
 import java.io.IOException;
@@ -36,6 +36,6 @@ public interface SignatureValidator extends Closeable {
             Artifact signatureArtifact,
             InputStream artifactContent,
             InputStream signatureContent,
-            ValidationResultCollector collector)
+            ValidationContext collector)
             throws IOException;
 }

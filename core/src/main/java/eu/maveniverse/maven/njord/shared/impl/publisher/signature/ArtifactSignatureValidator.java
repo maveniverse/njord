@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.ByteArrayInputStream;
@@ -41,7 +41,7 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
     }
 
     @Override
-    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
+    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         if (artifactStore.omitChecksumsForExtensions().stream()
                 .noneMatch(e -> artifact.getExtension().endsWith(e))) {
@@ -55,7 +55,7 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
             Artifact artifact,
             Collection<SignatureValidator> signatureValidators,
             boolean mandatory,
-            ValidationResultCollector chkCollector)
+            ValidationContext chkCollector)
             throws IOException {
         for (SignatureValidator signatureValidator : signatureValidators) {
             Artifact signature = new SubArtifact(

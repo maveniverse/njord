@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,7 @@ public class GpgSignatureValidator extends SignatureValidatorSupport {
             Artifact signatureArtifact,
             InputStream artifactContent,
             InputStream signatureContent,
-            ValidationResultCollector collector)
+            ValidationContext collector)
             throws IOException {
         return Outcome.SKIPPED;
     }

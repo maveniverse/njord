@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import javax.inject.Inject;
@@ -24,14 +25,17 @@ public class SonatypeCentralRequirementsFactory implements ArtifactStoreRequirem
     public static final String NAME = "central";
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+    private final ModelProvider modelProvider;
 
     @Inject
-    public SonatypeCentralRequirementsFactory(ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
+    public SonatypeCentralRequirementsFactory(
+            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector, ModelProvider modelProvider) {
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
+        this.modelProvider = requireNonNull(modelProvider);
     }
 
     @Override
     public ArtifactStoreRequirements create(RepositorySystemSession session, Config config) {
-        return new SonatypeCentralRequirements(session, config, checksumAlgorithmFactorySelector);
+        return new SonatypeCentralRequirements(session, config, checksumAlgorithmFactorySelector, modelProvider);
     }
 }

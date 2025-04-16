@@ -8,7 +8,7 @@
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
@@ -27,7 +27,7 @@ public class JavadocJarValidatorFactory extends ValidatorSupport {
     }
 
     @Override
-    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
+    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         if (artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension())) {
             if (artifactStore.artifactPresent(new SubArtifact(artifact, JAVADOC, JAR))) {

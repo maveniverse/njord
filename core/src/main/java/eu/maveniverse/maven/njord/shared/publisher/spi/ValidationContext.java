@@ -10,24 +10,24 @@ package eu.maveniverse.maven.njord.shared.publisher.spi;
 /**
  * Validation result collector.
  */
-public interface ValidationResultCollector {
+public interface ValidationContext {
     /**
      * Records an info message and returns {@code this} instance.
      */
-    ValidationResultCollector addInfo(String msg);
+    ValidationContext addInfo(String msg);
 
     /**
      * Records an warning message and returns {@code this} instance.
      */
-    ValidationResultCollector addWarning(String msg);
+    ValidationContext addWarning(String msg);
 
     /**
      * Records an error message and returns {@code this} instance.
      */
-    ValidationResultCollector addError(String msg);
+    ValidationContext addError(String msg);
 
     /**
      * Creates child collector and returns newly created instance.
      */
-    ValidationResultCollector child(String name);
+    ValidationContext child(String name);
 }

@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArchiveValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArtifactChecksumValidator;
@@ -43,7 +44,8 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
     public SonatypeCentralRequirements(
             RepositorySystemSession session,
             Config config,
-            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
+            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
+            ModelProvider modelProvider) {
         requireNonNull(checksumAlgorithmFactorySelector);
 
         // checksums
@@ -62,8 +64,10 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
 
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
-        validators.add((s, c) -> new PomCoordinatesValidatorFactory("POM Coordinates"));
-        validators.add((s, c) -> new PomProjectValidatorFactory("POM Complete"));
+        validators.add((s, c) ->
+                new PomCoordinatesValidatorFactory("POM Coordinates", session, List.of(Config.CENTRAL), modelProvider));
+        validators.add((s, c) ->
+                new PomProjectValidatorFactory("POM Complete", session, List.of(Config.CENTRAL), modelProvider));
         validators.add((s, c) -> new JavadocJarValidatorFactory("Javadoc Jar"));
         validators.add((s, c) -> new SourceJarValidatorFactory("Source Jar"));
         validators.add((s, c) -> new ArchiveValidator("Archive"));

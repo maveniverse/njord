@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
     }
 
     @Override
-    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
+    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         List<ChecksumAlgorithmFactory> extraChecksums = artifactStore.checksumAlgorithmFactories().stream()
                 .filter(a -> mandatoryChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
@@ -62,7 +62,7 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
             Artifact artifact,
             List<ChecksumAlgorithmFactory> algorithms,
             boolean mandatory,
-            ValidationResultCollector chkCollector)
+            ValidationContext chkCollector)
             throws IOException {
         Map<String, String> checksums = ChecksumAlgorithmHelper.calculate(artifact.getFile(), algorithms);
         HashSet<String> algOk = new HashSet<>();

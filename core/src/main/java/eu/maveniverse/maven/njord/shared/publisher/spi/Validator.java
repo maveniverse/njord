@@ -22,6 +22,5 @@ public interface Validator extends Closeable {
      * Performs the validation, if applicable. All the validation actions should be recorded against passed in
      * collector.
      */
-    void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
-            throws IOException;
+    void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector) throws IOException;
 }

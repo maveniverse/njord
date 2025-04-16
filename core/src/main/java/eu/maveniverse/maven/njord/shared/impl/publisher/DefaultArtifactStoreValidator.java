@@ -13,7 +13,7 @@ import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidatorFactory;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -105,7 +105,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
         return vr;
     }
 
-    private static final class VR implements ValidationResult, ValidationResultCollector {
+    private static final class VR implements ValidationResult, ValidationContext {
         private final String name;
         private final ArrayList<String> info = new ArrayList<>();
         private final ArrayList<String> warnings = new ArrayList<>();

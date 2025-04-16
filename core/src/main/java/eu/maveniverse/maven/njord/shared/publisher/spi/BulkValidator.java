@@ -26,5 +26,5 @@ public interface BulkValidator extends Closeable {
      * Performs the validation, if applicable. All the validation actions should be recorded against passed in
      * collector.
      */
-    void validate(ArtifactStore artifactStore, ValidationResultCollector collector) throws IOException;
+    void validate(ArtifactStore artifactStore, ValidationContext collector) throws IOException;
 }
