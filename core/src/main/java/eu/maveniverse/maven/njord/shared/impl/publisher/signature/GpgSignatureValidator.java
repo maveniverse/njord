@@ -7,8 +7,11 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.io.InputStream;
+import org.eclipse.aether.artifact.Artifact;
 
 public class GpgSignatureValidator extends SignatureValidatorSupport {
     public GpgSignatureValidator() {
@@ -16,7 +19,14 @@ public class GpgSignatureValidator extends SignatureValidatorSupport {
     }
 
     @Override
-    public boolean verifySignature(InputStream content, InputStream signature) throws IOException {
-        return true;
+    public Outcome verifySignature(
+            ArtifactStore artifactStore,
+            Artifact artifact,
+            Artifact signatureArtifact,
+            InputStream artifactContent,
+            InputStream signatureContent,
+            ValidationResultCollector collector)
+            throws IOException {
+        return Outcome.SKIPPED;
     }
 }

@@ -70,12 +70,20 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                     in.transferTo(bos);
                     signatureContent = new ByteArrayInputStream(bos.toByteArray());
                 }
-                if (signatureValidator.verifySignature(
-                        artifactStore.artifactContent(artifact).orElseThrow(), signatureContent)) {
+                SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
+                        artifactStore,
+                        artifact,
+                        signature,
+                        artifactStore.artifactContent(artifact).orElseThrow(),
+                        signatureContent,
+                        chkCollector);
+                if (outcome == SignatureValidator.Outcome.VALID) {
                     chkCollector.addInfo("VALID " + signatureValidator.type().name());
+                } else if (outcome == SignatureValidator.Outcome.INVALID) {
+                    chkCollector.addError("INVALID " + signatureValidator.type().name());
                 } else {
-                    chkCollector.addError(
-                            "MISMATCH " + signatureValidator.type().name());
+                    chkCollector.addInfo("PRESENT (not validated) "
+                            + signatureValidator.type().name());
                 }
             } else {
                 if (mandatory) {

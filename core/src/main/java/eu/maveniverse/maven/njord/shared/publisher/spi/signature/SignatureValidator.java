@@ -7,9 +7,12 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.spi.signature;
 
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import org.eclipse.aether.artifact.Artifact;
 
 public interface SignatureValidator extends Closeable {
     /**
@@ -17,9 +20,22 @@ public interface SignatureValidator extends Closeable {
      */
     SignatureType type();
 
+    enum Outcome {
+        SKIPPED,
+        VALID,
+        INVALID
+    }
+
     /**
      * Verifies received content against received signature. May perform much more, like fetching key and so on.
      * If it returns {@code true}, then and only then is signature accepted as "verified".
      */
-    boolean verifySignature(InputStream content, InputStream signature) throws IOException;
+    Outcome verifySignature(
+            ArtifactStore artifactStore,
+            Artifact artifact,
+            Artifact signatureArtifact,
+            InputStream artifactContent,
+            InputStream signatureContent,
+            ValidationResultCollector collector)
+            throws IOException;
 }
