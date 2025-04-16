@@ -7,17 +7,23 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
-import org.eclipse.aether.RepositorySystemSession;
+import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import java.io.IOException;
 
 /**
  *  Verifies that any found POM name, description, project URL, SCM and license is filled in.
  */
-public class PomProjectValidatorFactory implements ValidatorFactory {
+public class PomProjectValidatorFactory extends ValidatorSupport {
+    public static final String NAME = "pom-project";
+
+    public PomProjectValidatorFactory() {
+        super(NAME, "POM Project Validator");
+    }
+
     @Override
-    public Validator create(RepositorySystemSession session, Config config) {
-        return null;
+    public void validate(ArtifactStore artifactStore, ValidationResultCollector collector) throws IOException {
+        collector.addWarning("Not implemented yet");
     }
 }

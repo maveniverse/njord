@@ -12,12 +12,15 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
+import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
+import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
     public SonatypeNx2Publisher(
@@ -29,6 +32,10 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
+            List<ChecksumAlgorithmFactory> mandatoryChecksumAlgorithms,
+            List<ChecksumAlgorithmFactory> optionalChecksumAlgorithms,
+            List<SignatureType> mandatorySignatureAlgorithms,
+            List<SignatureType> optionalSignatureAlgorithms,
             ArtifactStoreValidator centralValidator) {
         super(
                 repositorySystem,
@@ -39,6 +46,10 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                 targetSnapshotRepository,
                 serviceReleaseRepository,
                 serviceSnapshotRepository,
+                mandatoryChecksumAlgorithms,
+                optionalChecksumAlgorithms,
+                mandatorySignatureAlgorithms,
+                optionalSignatureAlgorithms,
                 centralValidator,
                 null);
     }

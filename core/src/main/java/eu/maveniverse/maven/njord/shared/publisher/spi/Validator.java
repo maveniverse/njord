@@ -12,30 +12,6 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public interface Validator extends Closeable {
-    /**
-     * Validation result collector.
-     */
-    interface ValidationResultCollector {
-        /**
-         * Records an info message and returns {@code this} instance.
-         */
-        ValidationResultCollector addInfo(String msg);
-
-        /**
-         * Records an warning message and returns {@code this} instance.
-         */
-        ValidationResultCollector addWarning(String msg);
-
-        /**
-         * Records an error message and returns {@code this} instance.
-         */
-        ValidationResultCollector addError(String msg);
-
-        /**
-         * Creates child collector and returns newly created instance.
-         */
-        ValidationResultCollector child(String name);
-    }
 
     /**
      * Validator name,

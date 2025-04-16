@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -66,7 +67,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
         return vr;
     }
 
-    private static final class VR implements ValidationResult, Validator.ValidationResultCollector {
+    private static final class VR implements ValidationResult, ValidationResultCollector {
         private final String name;
         private final CopyOnWriteArrayList<String> info = new CopyOnWriteArrayList<>();
         private final CopyOnWriteArrayList<String> warnings = new CopyOnWriteArrayList<>();
@@ -103,25 +104,25 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
         }
 
         @Override
-        public Validator.ValidationResultCollector addInfo(String msg) {
+        public ValidationResultCollector addInfo(String msg) {
             info.add(msg);
             return this;
         }
 
         @Override
-        public Validator.ValidationResultCollector addWarning(String msg) {
+        public ValidationResultCollector addWarning(String msg) {
             warnings.add(msg);
             return this;
         }
 
         @Override
-        public Validator.ValidationResultCollector addError(String msg) {
+        public ValidationResultCollector addError(String msg) {
             errors.add(msg);
             return this;
         }
 
         @Override
-        public Validator.ValidationResultCollector child(String name) {
+        public ValidationResultCollector child(String name) {
             VR child = new VR(name);
             children.put(name, child);
             return child;

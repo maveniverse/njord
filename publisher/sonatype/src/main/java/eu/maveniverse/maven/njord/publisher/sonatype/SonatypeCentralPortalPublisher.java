@@ -18,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFac
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
+import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -27,10 +28,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private final Config config;
@@ -42,6 +45,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RepositorySystemSession session,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
+            List<ChecksumAlgorithmFactory> mandatoryChecksumAlgorithms,
+            List<ChecksumAlgorithmFactory> optionalChecksumAlgorithms,
+            List<SignatureType> mandatorySignatureAlgorithms,
+            List<SignatureType> optionalSignatureAlgorithms,
             ArtifactStoreValidator centralValidator,
             ArtifactStoreExporterFactory artifactStoreExporterFactory) {
         super(
@@ -53,6 +60,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
+                mandatoryChecksumAlgorithms,
+                optionalChecksumAlgorithms,
+                mandatorySignatureAlgorithms,
+                optionalSignatureAlgorithms,
                 centralValidator,
                 null);
         this.config = requireNonNull(config);
@@ -105,7 +116,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                         "No authorization information found for repository " + repository.getId());
             }
 
-            String deploymentId = null;
+            String deploymentId;
             try {
                 Methanol httpClient = Methanol.create();
                 MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()

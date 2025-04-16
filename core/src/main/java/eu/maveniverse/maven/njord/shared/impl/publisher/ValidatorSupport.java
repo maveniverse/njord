@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
+package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 

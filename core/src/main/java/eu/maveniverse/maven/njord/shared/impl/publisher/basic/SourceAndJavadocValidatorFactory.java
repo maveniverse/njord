@@ -7,17 +7,13 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
-import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
+import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Optional;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.artifact.SubArtifact;
@@ -25,9 +21,7 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 /**
  * Verifies presence of source and javadoc for every main artifact.
  */
-@Singleton
-@Named(SourceAndJavadocValidatorFactory.NAME)
-public class SourceAndJavadocValidatorFactory extends ValidatorSupport implements ValidatorFactory {
+public class SourceAndJavadocValidatorFactory extends ValidatorSupport {
     public static final String NAME = "source-javadoc";
 
     private static final String JAR = "jar";
@@ -36,11 +30,6 @@ public class SourceAndJavadocValidatorFactory extends ValidatorSupport implement
 
     public SourceAndJavadocValidatorFactory() {
         super(NAME, "Source and Javadoc presence");
-    }
-
-    @Override
-    public Validator create(RepositorySystemSession session, Config config) {
-        return this;
     }
 
     @Override
@@ -73,10 +62,4 @@ public class SourceAndJavadocValidatorFactory extends ValidatorSupport implement
             }
         }
     }
-
-    /**
-     * This validator is stateless.
-     */
-    @Override
-    public void close() throws IOException {}
 }
