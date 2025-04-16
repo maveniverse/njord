@@ -75,7 +75,7 @@ public class ValidateMojo extends NjordMojoSupport {
             }
         }
         if (!vr.warning().isEmpty()) {
-            logger.warn("{}  Errors:", prefix);
+            logger.warn("{}  Warnings:", prefix);
             for (String msg : vr.warning()) {
                 logger.warn("{}    {}", prefix, msg);
             }
