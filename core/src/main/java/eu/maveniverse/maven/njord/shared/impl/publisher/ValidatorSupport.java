@@ -17,20 +17,13 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
  */
 public abstract class ValidatorSupport extends CloseableSupport implements Validator {
     private final String name;
-    private final String description;
 
-    public ValidatorSupport(String name, String description) {
+    public ValidatorSupport(String name) {
         this.name = requireNonNull(name);
-        this.description = requireNonNull(description);
     }
 
     @Override
     public String name() {
         return name;
-    }
-
-    @Override
-    public String description() {
-        return description;
     }
 }

@@ -14,24 +14,18 @@ import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Verifies any found POM that its coordinates matches layout.
+ * Verifies any found and support archive for proper paths.
  */
-public class PomCoordinatesValidatorFactory extends ValidatorSupport {
-    public PomCoordinatesValidatorFactory(String name) {
+public class ArchiveValidator extends ValidatorSupport {
+    public ArchiveValidator(String name) {
         super(name);
     }
 
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && "pom".equals(artifact.getExtension())) {
+        if ("jar".equals(artifact.getExtension())) {
             collector.addInfo("TODO");
         }
     }
-
-    /**
-     * This validator is stateless.
-     */
-    @Override
-    public void close() throws IOException {}
 }

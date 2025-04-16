@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
@@ -36,28 +35,25 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
 
     public ArtifactChecksumValidator(
             String name,
-            String description,
             List<ChecksumAlgorithmFactory> mandatoryChecksums,
             List<ChecksumAlgorithmFactory> optionalChecksums) {
-        super(name, description);
+        super(name);
         this.mandatoryChecksums = requireNonNull(mandatoryChecksums);
         this.optionalChecksums = requireNonNull(optionalChecksums);
     }
 
     @Override
-    public void validate(ArtifactStore artifactStore, ValidationResultCollector collector) throws IOException {
+    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
+            throws IOException {
         List<ChecksumAlgorithmFactory> extraChecksums = artifactStore.checksumAlgorithmFactories().stream()
                 .filter(a -> mandatoryChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
                 .filter(a -> optionalChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
                 .toList();
-        for (Artifact artifact : artifactStore.artifacts()) {
-            if (artifactStore.omitChecksumsForExtensions().stream()
-                    .noneMatch(e -> artifact.getExtension().endsWith(e))) {
-                ValidationResultCollector chkCollector = collector.child(ArtifactIdUtils.toId(artifact));
-                validateArtifact(artifactStore, artifact, mandatoryChecksums, true, chkCollector);
-                validateArtifact(artifactStore, artifact, optionalChecksums, false, chkCollector);
-                validateArtifact(artifactStore, artifact, extraChecksums, false, chkCollector);
-            }
+        if (artifactStore.omitChecksumsForExtensions().stream()
+                .noneMatch(e -> artifact.getExtension().endsWith(e))) {
+            validateArtifact(artifactStore, artifact, mandatoryChecksums, true, collector);
+            validateArtifact(artifactStore, artifact, optionalChecksums, false, collector);
+            validateArtifact(artifactStore, artifact, extraChecksums, false, collector);
         }
     }
 
@@ -94,7 +90,11 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
             }
         }
         if (!algOk.isEmpty()) {
-            chkCollector.addInfo("VALID: " + String.join(", ", algOk));
+            if (mandatory) {
+                chkCollector.addInfo("VALID: " + String.join(", ", algOk));
+            } else {
+                chkCollector.addInfo("VALID (optional): " + String.join(", ", algOk));
+            }
         }
         if (mandatory && !algMissing.isEmpty()) {
             chkCollector.addError("MISSING: " + String.join(", ", algMissing));

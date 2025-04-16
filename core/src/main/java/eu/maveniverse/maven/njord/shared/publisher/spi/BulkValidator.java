@@ -10,18 +10,21 @@ package eu.maveniverse.maven.njord.shared.publisher.spi;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.Closeable;
 import java.io.IOException;
-import org.eclipse.aether.artifact.Artifact;
 
-public interface Validator extends Closeable {
+public interface BulkValidator extends Closeable {
     /**
      * Validator name,
      */
     String name();
 
     /**
+     * Validator description.
+     */
+    String description();
+
+    /**
      * Performs the validation, if applicable. All the validation actions should be recorded against passed in
      * collector.
      */
-    void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
-            throws IOException;
+    void validate(ArtifactStore artifactStore, ValidationResultCollector collector) throws IOException;
 }

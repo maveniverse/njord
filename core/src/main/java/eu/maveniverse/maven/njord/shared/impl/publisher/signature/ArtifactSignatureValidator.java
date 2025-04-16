@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
@@ -34,23 +33,20 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
 
     public ArtifactSignatureValidator(
             String name,
-            String description,
             List<SignatureValidator> mandatorySignatureValidators,
             List<SignatureValidator> optionalSignatureValidators) {
-        super(name, description);
+        super(name);
         this.mandatorySignatureValidators = requireNonNull(mandatorySignatureValidators);
         this.optionalSignatureValidators = requireNonNull(optionalSignatureValidators);
     }
 
     @Override
-    public void validate(ArtifactStore artifactStore, ValidationResultCollector collector) throws IOException {
-        for (Artifact artifact : artifactStore.artifacts()) {
-            if (artifactStore.omitChecksumsForExtensions().stream()
-                    .noneMatch(e -> artifact.getExtension().endsWith(e))) {
-                ValidationResultCollector chkCollector = collector.child(ArtifactIdUtils.toId(artifact));
-                validateSignature(artifactStore, artifact, mandatorySignatureValidators, true, chkCollector);
-                validateSignature(artifactStore, artifact, optionalSignatureValidators, false, chkCollector);
-            }
+    public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
+            throws IOException {
+        if (artifactStore.omitChecksumsForExtensions().stream()
+                .noneMatch(e -> artifact.getExtension().endsWith(e))) {
+            validateSignature(artifactStore, artifact, mandatorySignatureValidators, true, collector);
+            validateSignature(artifactStore, artifact, optionalSignatureValidators, false, collector);
         }
     }
 
