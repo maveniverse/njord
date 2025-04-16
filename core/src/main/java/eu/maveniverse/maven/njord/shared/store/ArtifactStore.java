@@ -54,12 +54,12 @@ public interface ArtifactStore extends Closeable {
     List<String> omitChecksumsForExtensions();
 
     /**
-     * Index of artifacts in this store, never {@code null}.
+     * Index of artifacts in this store (except checksums), never {@code null}.
      */
     Collection<Artifact> artifacts();
 
     /**
-     * Index of metadata in this store, never {@code null}.
+     * Index of metadata in this store (except checksums), never {@code null}.
      */
     Collection<Metadata> metadata();
 

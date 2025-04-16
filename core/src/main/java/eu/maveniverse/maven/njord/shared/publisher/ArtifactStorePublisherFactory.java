@@ -7,12 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import org.eclipse.aether.RepositorySystemSession;
+import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
 
-public interface ArtifactStorePublisherFactory {
-    /**
-     * Creates publisher instance.
-     */
-    ArtifactStorePublisher create(RepositorySystemSession session, Config config);
-}
+public interface ArtifactStorePublisherFactory extends SessionConfigAwareFactory<ArtifactStorePublisher> {}

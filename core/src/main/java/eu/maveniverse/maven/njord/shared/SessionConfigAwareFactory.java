@@ -5,9 +5,13 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.factories;
+package eu.maveniverse.maven.njord.shared;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import org.eclipse.aether.RepositorySystemSession;
 
-public interface ArtifactStoreMergerFactory extends SessionConfigAwareFactory<ArtifactStoreMerger> {}
+public interface SessionConfigAwareFactory<E> {
+    /**
+     * Creates component that is session and config aware.
+     */
+    E create(RepositorySystemSession session, Config config);
+}

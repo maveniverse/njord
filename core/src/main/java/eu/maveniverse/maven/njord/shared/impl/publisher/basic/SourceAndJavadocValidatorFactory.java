@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher.spi;
+package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
@@ -30,6 +30,10 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 public class SourceAndJavadocValidatorFactory extends ValidatorSupport implements ValidatorFactory {
     public static final String NAME = "source-javadoc";
 
+    private static final String JAR = "jar";
+    private static final String SOURCES = "sources";
+    private static final String JAVADOC = "javadoc";
+
     public SourceAndJavadocValidatorFactory() {
         super(NAME, "Source and Javadoc presence");
     }
@@ -46,19 +50,19 @@ public class SourceAndJavadocValidatorFactory extends ValidatorSupport implement
                 ValidationResultCollector chkCollector = collector.child(ArtifactIdUtils.toId(artifact));
                 HashSet<String> present = new HashSet<>();
                 HashSet<String> missing = new HashSet<>();
-                Optional<InputStream> c = artifactStore.artifactContent(new SubArtifact(artifact, "sources", "jar"));
+                Optional<InputStream> c = artifactStore.artifactContent(new SubArtifact(artifact, SOURCES, JAR));
                 if (c.isPresent()) {
-                    present.add("sources");
+                    present.add(SOURCES);
                     c.orElseThrow().close();
                 } else {
-                    missing.add("sources");
+                    missing.add(SOURCES);
                 }
-                c = artifactStore.artifactContent(new SubArtifact(artifact, "javadoc", "jar"));
+                c = artifactStore.artifactContent(new SubArtifact(artifact, JAVADOC, JAR));
                 if (c.isPresent()) {
-                    present.add("javadoc");
+                    present.add(JAVADOC);
                     c.orElseThrow().close();
                 } else {
-                    missing.add("javadoc");
+                    missing.add(JAVADOC);
                 }
                 if (!present.isEmpty()) {
                     chkCollector.addInfo("PRESENT: " + String.join(", ", present));
@@ -69,4 +73,10 @@ public class SourceAndJavadocValidatorFactory extends ValidatorSupport implement
             }
         }
     }
+
+    /**
+     * This validator is stateless.
+     */
+    @Override
+    public void close() throws IOException {}
 }

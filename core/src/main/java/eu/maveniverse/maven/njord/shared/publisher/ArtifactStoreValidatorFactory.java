@@ -7,12 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import org.eclipse.aether.RepositorySystemSession;
+import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
 
-public interface ArtifactStoreValidatorFactory {
-    /**
-     * Creates validator instance.
-     */
-    ArtifactStoreValidator create(RepositorySystemSession session, Config config);
-}
+public interface ArtifactStoreValidatorFactory extends SessionConfigAwareFactory<ArtifactStoreValidator> {}

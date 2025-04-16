@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher.spi;
+package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
@@ -13,9 +13,9 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
- * Verifies Sigstore signatures.
+ * Verifies any found POM that its coordinates matches layout.
  */
-public class SigstoreSignatureValidatorFactory implements ValidatorFactory {
+public class PomCoordinatesValidatorFactory implements ValidatorFactory {
     @Override
     public Validator create(RepositorySystemSession session, Config config) {
         return null;

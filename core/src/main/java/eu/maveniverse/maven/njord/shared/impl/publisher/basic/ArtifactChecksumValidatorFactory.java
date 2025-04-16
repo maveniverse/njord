@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher.spi;
+package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
@@ -89,4 +89,10 @@ public class ArtifactChecksumValidatorFactory extends ValidatorSupport implement
             }
         }
     }
+
+    /**
+     * This validator is stateless.
+     */
+    @Override
+    public void close() throws IOException {}
 }

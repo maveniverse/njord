@@ -15,6 +15,7 @@ import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreMan
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 @Singleton
@@ -29,7 +30,7 @@ public class DefaultInternalArtifactStoreManagerFactory implements InternalArtif
     }
 
     @Override
-    public InternalArtifactStoreManager create(Config config) {
+    public InternalArtifactStoreManager create(RepositorySystemSession session, Config config) {
         return new DefaultInternalArtifactStoreManager(config, checksumAlgorithmFactorySelector);
     }
 }

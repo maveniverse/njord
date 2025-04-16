@@ -47,7 +47,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
         super(config);
         this.session = requireNonNull(session);
-        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(config);
+        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(session, config);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);

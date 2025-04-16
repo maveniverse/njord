@@ -9,14 +9,17 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
+import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.eclipse.aether.RepositorySystemSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +28,21 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
 
     private final String name;
     private final String description;
-    private final Collection<Validator> validators;
+    private final RepositorySystemSession session;
+    private final Config config;
+    private final Collection<ValidatorFactory> validatorFactories;
 
-    public DefaultArtifactStoreValidator(String name, String description, Collection<Validator> validators) {
+    public DefaultArtifactStoreValidator(
+            String name,
+            String description,
+            RepositorySystemSession session,
+            Config config,
+            Collection<ValidatorFactory> validatorFactories) {
         this.name = requireNonNull(name);
         this.description = requireNonNull(description);
-        this.validators = requireNonNull(validators);
+        this.session = requireNonNull(session);
+        this.config = requireNonNull(config);
+        this.validatorFactories = requireNonNull(validatorFactories);
     }
 
     @Override
@@ -46,8 +58,10 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
     @Override
     public ValidationResult validate(ArtifactStore artifactStore) throws IOException {
         VR vr = new VR(description());
-        for (Validator validator : validators) {
-            validator.validate(artifactStore, vr.child(validator.description()));
+        for (ValidatorFactory validatorFactory : validatorFactories) {
+            try (Validator validator = validatorFactory.create(session, config)) {
+                validator.validate(artifactStore, vr.child(validator.description()));
+            }
         }
         return vr;
     }

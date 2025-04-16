@@ -7,12 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.spi;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import org.eclipse.aether.RepositorySystemSession;
+import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
 
-public interface ValidatorFactory {
-    /**
-     * Creates instance of {@link Validator}.
-     */
-    Validator create(RepositorySystemSession session, Config config);
-}
+public interface ValidatorFactory extends SessionConfigAwareFactory<Validator> {}

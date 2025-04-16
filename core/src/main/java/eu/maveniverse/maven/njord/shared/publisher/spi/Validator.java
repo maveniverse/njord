@@ -8,9 +8,10 @@
 package eu.maveniverse.maven.njord.shared.publisher.spi;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import java.io.Closeable;
 import java.io.IOException;
 
-public interface Validator {
+public interface Validator extends Closeable {
     /**
      * Validation result collector.
      */

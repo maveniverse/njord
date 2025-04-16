@@ -5,16 +5,17 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher.spi;
+package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 
 /**
  * Verifies checksum for every artifact.
  */
-public abstract class ValidatorSupport implements Validator {
+public abstract class ValidatorSupport extends CloseableSupport implements Validator {
     private final String name;
     private final String description;
 

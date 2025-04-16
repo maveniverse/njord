@@ -12,9 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidatorFactory;
-import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -35,10 +33,6 @@ public class CentralArtifactStoreValidatorFactory implements ArtifactStoreValida
 
     @Override
     public ArtifactStoreValidator create(RepositorySystemSession session, Config config) {
-        ArrayList<Validator> validators = new ArrayList<>();
-        for (ValidatorFactory factory : this.validatorFactories) {
-            validators.add(factory.create(session, config));
-        }
-        return new DefaultArtifactStoreValidator(NAME, "Central Validator", validators);
+        return new DefaultArtifactStoreValidator(NAME, "Central Validator", session, config, validatorFactories);
     }
 }
