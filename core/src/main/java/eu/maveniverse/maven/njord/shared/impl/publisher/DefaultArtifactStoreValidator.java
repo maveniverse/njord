@@ -20,9 +20,8 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
@@ -108,10 +107,10 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
 
     private static final class VR implements ValidationResult, ValidationResultCollector {
         private final String name;
-        private final CopyOnWriteArrayList<String> info = new CopyOnWriteArrayList<>();
-        private final CopyOnWriteArrayList<String> warnings = new CopyOnWriteArrayList<>();
-        private final CopyOnWriteArrayList<String> errors = new CopyOnWriteArrayList<>();
-        private final ConcurrentHashMap<String, VR> children = new ConcurrentHashMap<>();
+        private final ArrayList<String> info = new ArrayList<>();
+        private final ArrayList<String> warnings = new ArrayList<>();
+        private final ArrayList<String> errors = new ArrayList<>();
+        private final LinkedHashMap<String, VR> children = new LinkedHashMap<>();
 
         private VR(String name) {
             this.name = requireNonNull(name);

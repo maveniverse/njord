@@ -11,9 +11,6 @@ import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationResultCollector;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Optional;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
@@ -32,20 +29,10 @@ public class JavadocJarValidatorFactory extends ValidatorSupport {
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationResultCollector collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && "jar".equals(artifact.getExtension())) {
-            HashSet<String> present = new HashSet<>();
-            HashSet<String> missing = new HashSet<>();
-            Optional<InputStream> c = artifactStore.artifactContent(new SubArtifact(artifact, JAVADOC, JAR));
-            if (c.isPresent()) {
-                present.add(JAVADOC);
-                c.orElseThrow().close();
-            } else {
-                missing.add(JAVADOC);
-            }
-            if (!present.isEmpty()) {
+        if (artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension())) {
+            if (artifactStore.artifactPresent(new SubArtifact(artifact, JAVADOC, JAR))) {
                 collector.addInfo("PRESENT");
-            }
-            if (!missing.isEmpty()) {
+            } else {
                 collector.addError("MISSING");
             }
         }

@@ -81,7 +81,8 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                 if (mandatory) {
                     chkCollector.addError("MISSING " + signatureValidator.type().name());
                 } else {
-                    chkCollector.addInfo("MISSING " + signatureValidator.type().name());
+                    chkCollector.addInfo(
+                            "MISSING (optional) " + signatureValidator.type().name());
                 }
             }
         }

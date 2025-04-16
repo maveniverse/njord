@@ -64,6 +64,16 @@ public interface ArtifactStore extends Closeable {
     Collection<Metadata> metadata();
 
     /**
+     * Returns {@code true} if exists.
+     */
+    boolean artifactPresent(Artifact artifact) throws IOException;
+
+    /**
+     * Returns {@code true} if exists.
+     */
+    boolean metadataPresent(Metadata metadata) throws IOException;
+
+    /**
      * Returns the artifact content, if exists.
      */
     Optional<InputStream> artifactContent(Artifact artifact) throws IOException;

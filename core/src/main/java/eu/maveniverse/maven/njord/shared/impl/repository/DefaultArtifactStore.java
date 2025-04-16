@@ -185,6 +185,20 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     @Override
+    public boolean artifactPresent(Artifact artifact) throws IOException {
+        requireNonNull(artifact);
+        Path file = basedir.resolve(artifactPath(artifact));
+        return Files.isRegularFile(file);
+    }
+
+    @Override
+    public boolean metadataPresent(Metadata metadata) throws IOException {
+        requireNonNull(metadata);
+        Path file = basedir.resolve(metadataPath(metadata));
+        return Files.isRegularFile(file);
+    }
+
+    @Override
     public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
         requireNonNull(artifact);
         Path file = basedir.resolve(artifactPath(artifact));

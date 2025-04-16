@@ -28,10 +28,4 @@ public class PomCoordinatesValidatorFactory extends ValidatorSupport {
             collector.addInfo("TODO");
         }
     }
-
-    /**
-     * This validator is stateless.
-     */
-    @Override
-    public void close() throws IOException {}
 }
