@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
+import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
@@ -48,9 +49,6 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
 
-    /**
-     * Creates and inits brand-new store.
-     */
     public DefaultArtifactStore(
             String name,
             Instant created,
@@ -190,6 +188,16 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     @Override
     public RemoteRepository storeRemoteRepository() {
         return new RemoteRepository.Builder(name(), "default", "file://" + basedir()).build();
+    }
+
+    @Override
+    public void writeTo(Path directory) throws IOException {
+        requireNonNull(directory);
+        if (!Files.isDirectory(directory)) {
+            throw new IOException("Directory does not exist");
+        }
+        FileUtils.copyRecursively(
+                basedir(), directory, p -> !p.getFileName().toString().startsWith("."));
     }
 
     @Override

@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.store;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -95,6 +96,11 @@ public interface ArtifactStore extends Closeable {
      * @see #storeRepositorySession(RepositorySystemSession)
      */
     RemoteRepository storeRemoteRepository();
+
+    /**
+     * Writes out the whole store to given directory retaining the layout of the store. The directory must exist.
+     */
+    void writeTo(Path directory) throws IOException;
 
     /**
      * Content modifying operation handle. Caller must close this instance, even if operation is canceled.

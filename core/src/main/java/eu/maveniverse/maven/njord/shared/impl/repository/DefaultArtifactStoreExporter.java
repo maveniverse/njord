@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
-import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import java.io.IOException;
@@ -36,9 +35,7 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Config>
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
-        FileUtils.copyRecursively(artifactStore.basedir(), targetDirectory, p -> !p.getFileName()
-                .toString()
-                .startsWith("."));
+        artifactStore.writeTo(targetDirectory);
         return targetDirectory;
     }
 
@@ -58,9 +55,7 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Config>
         }
         try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
-            FileUtils.copyRecursively(artifactStore.basedir(), root, p -> !p.getFileName()
-                    .toString()
-                    .startsWith("."));
+            artifactStore.writeTo(root);
         }
         return bundleFile;
     }

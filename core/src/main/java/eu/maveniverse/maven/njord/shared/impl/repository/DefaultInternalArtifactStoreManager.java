@@ -163,10 +163,14 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path basedir = config.basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
-            Path meta = basedir.resolve(".meta").resolve("repository.properties");
-            if (!Files.exists(meta)) {
-                FileUtils.deleteRecursively(basedir);
-                return true;
+            try {
+                Path meta = basedir.resolve(".meta").resolve("repository.properties");
+                if (Files.exists(meta)) {
+                    FileUtils.deleteRecursively(basedir);
+                    return true;
+                }
+            } finally {
+                DirectoryLocker.INSTANCE.unlockDirectory(basedir);
             }
         }
         return false;
