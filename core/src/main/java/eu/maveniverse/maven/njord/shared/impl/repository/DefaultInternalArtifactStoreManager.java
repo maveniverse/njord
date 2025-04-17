@@ -27,12 +27,12 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -106,7 +106,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         requireNonNull(template);
         checkClosed();
 
-        String name = template.prefix() + "-" + UUID.randomUUID();
+        String name = newArtifactStoreName(template.prefix());
         Path basedir = config.config().basedir().resolve(name);
         Files.createDirectories(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
@@ -176,7 +176,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         return false;
     }
 
-    public DefaultArtifactStore existingArtifactStore(String name) throws IOException {
+    private DefaultArtifactStore existingArtifactStore(String name) throws IOException {
         Path basedir = config.config().basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
@@ -204,5 +204,22 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                     basedir);
         }
         return null;
+    }
+
+    private String newArtifactStoreName(String prefix) throws IOException {
+        String prefixDash = prefix + "-";
+        int num = 0;
+        try (Stream<Path> candidates = Files.list(config.config().basedir())
+                .filter(Files::isDirectory)
+                .filter(d -> d.getFileName().toString().startsWith(prefixDash))
+                .filter(d -> Files.isRegularFile(d.resolve(".meta").resolve("repository.properties")))
+                .sorted(Comparator.reverseOrder())) {
+            Optional<Path> greatest = candidates.findFirst();
+            if (greatest.isPresent()) {
+                num = Integer.parseInt(
+                        greatest.orElseThrow().getFileName().toString().substring(prefixDash.length()));
+            }
+        }
+        return prefixDash + String.format("%05d", num + 1);
     }
 }
