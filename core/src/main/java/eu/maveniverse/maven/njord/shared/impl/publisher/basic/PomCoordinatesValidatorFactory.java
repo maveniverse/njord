@@ -59,7 +59,7 @@ public class PomCoordinatesValidatorFactory extends ValidatorSupport {
                     collector.addError("MISMATCH");
                 }
             } else {
-                collector.addError("Could not get effective model");
+                collector.addWarning("Could not get effective model");
             }
         }
     }

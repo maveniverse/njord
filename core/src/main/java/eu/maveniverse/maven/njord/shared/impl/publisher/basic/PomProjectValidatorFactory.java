@@ -115,7 +115,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                     }
                 }
             } else {
-                collector.addError("Could not get effective model");
+                collector.addWarning("Could not get effective model");
             }
         }
     }
