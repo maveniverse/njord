@@ -1,3 +1,3 @@
 # Redeploy Release
 
-Tests basic usage of Njord.
+Tests redeploy usage of Njord.
