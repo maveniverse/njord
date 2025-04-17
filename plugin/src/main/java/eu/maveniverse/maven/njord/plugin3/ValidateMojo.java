@@ -38,15 +38,13 @@ public class ValidateMojo extends NjordMojoSupport {
             logger.warn("ArtifactStore with given name not found: {}", store);
             return;
         }
-        Optional<ArtifactStorePublisher> po = ns.availablePublishers().stream()
-                .filter(p -> target.equals(p.name()))
-                .findFirst();
+        Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(target);
         if (po.isPresent()) {
+            ArtifactStorePublisher p = po.orElseThrow();
             try (ArtifactStore from = storeOptional.orElseThrow()) {
-                ArtifactStorePublisher p = po.orElseThrow();
-                Optional<ArtifactStoreValidator.ValidationResult> vro = p.validate(from);
-                if (vro.isPresent()) {
-                    ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
+                Optional<ArtifactStoreValidator> v = p.validatorFor(from);
+                if (v.isPresent()) {
+                    ArtifactStoreValidator.ValidationResult vr = v.orElseThrow().validate(from);
                     if (details) {
                         logger.info("Validation results for {}", store);
                         dumpValidationResult("", vr);

@@ -15,6 +15,7 @@ import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
@@ -59,58 +60,66 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
-            Path tmpDir = Files.createTempDirectory(name());
-            Path bundle;
-            try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(config)) {
-                bundle = artifactStoreExporter.exportAsBundle(artifactStore, tmpDir);
-            }
-            if (bundle == null) {
-                throw new IllegalStateException("Bundle ZIP was not created");
-            }
-
-            // we need to use own HTTP client here
-            String authKey = "Authorization";
-            String authValue = null;
-            try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
-                    config.session(), repositorySystem.newDeploymentRepository(config.session(), repository))) {
-                if (repoAuthContext != null) {
-                    String username = repoAuthContext.get(AuthenticationContext.USERNAME);
-                    String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
-                    authValue = "Bearer "
-                            + Base64.getEncoder()
-                                    .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
-                }
-            }
-            if (authValue == null) {
-                throw new IllegalStateException(
-                        "No authorization information found for repository " + repository.getId());
-            }
-
-            String deploymentId;
+            Path tmpDir = Files.createTempDirectory(name);
             try {
-                Methanol httpClient = Methanol.create();
-                MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
-                        .filePart("bundle", bundle, MediaType.APPLICATION_OCTET_STREAM)
-                        .build();
-                HttpResponse<String> response = httpClient.send(
-                        MutableRequest.POST(repository.getUrl(), multipartBodyPublisher)
-                                .header(authKey, authValue),
-                        HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 201) {
-                    deploymentId = response.body();
-                } else {
-                    throw new IOException("Unexpected response code: " + response.statusCode() + " " + response.body());
+                Path bundle;
+                try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(sessionConfig)) {
+                    bundle = artifactStoreExporter.exportAsBundle(artifactStore, tmpDir);
                 }
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage(), e);
-                throw new IOException("Publishing interrupted", e);
-            }
+                if (bundle == null) {
+                    throw new IllegalStateException("Bundle ZIP was not created");
+                }
 
-            logger.info("Deployment ID: {}", deploymentId);
+                // we need to use own HTTP client here
+                String authKey = "Authorization";
+                String authValue = null;
+                try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
+                        sessionConfig.session(),
+                        repositorySystem.newDeploymentRepository(sessionConfig.session(), repository))) {
+                    if (repoAuthContext != null) {
+                        String username = repoAuthContext.get(AuthenticationContext.USERNAME);
+                        String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
+                        authValue = "Bearer "
+                                + Base64.getEncoder()
+                                        .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+                if (authValue == null) {
+                    throw new IllegalStateException(
+                            "No authorization information found for repository " + repository.getId());
+                }
+
+                String deploymentId;
+                try {
+                    Methanol httpClient = Methanol.create();
+                    MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
+                            .filePart("bundle", bundle, MediaType.APPLICATION_OCTET_STREAM)
+                            .build();
+                    HttpResponse<String> response = httpClient.send(
+                            MutableRequest.POST(repository.getUrl(), multipartBodyPublisher)
+                                    .header(authKey, authValue),
+                            HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() == 201) {
+                        deploymentId = response.body();
+                    } else {
+                        throw new IOException(
+                                "Unexpected response code: " + response.statusCode() + " " + response.body());
+                    }
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                    throw new IOException("Publishing interrupted", e);
+                }
+
+                logger.info("Deployment ID: {}", deploymentId);
+            } finally {
+                if (Files.isDirectory(tmpDir)) {
+                    FileUtils.deleteRecursively(tmpDir);
+                }
+            }
         } else { // snapshot
             // just deploy to snapshots as m-deploy-p would
             try (ArtifactStore store = artifactStore) {
-                new ArtifactStoreDeployer(repositorySystem, config.session(), repository).deploy(store);
+                new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(store);
             }
         }
     }

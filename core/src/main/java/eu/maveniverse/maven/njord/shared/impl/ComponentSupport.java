@@ -5,8 +5,11 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.publisher;
+package eu.maveniverse.maven.njord.shared.impl;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface ArtifactStoreValidatorFactory extends SessionConfigAwareFactory<ArtifactStoreValidator> {}
+public abstract class ComponentSupport {
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+}

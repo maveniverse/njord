@@ -8,12 +8,11 @@
 package eu.maveniverse.maven.njord.shared.publisher;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public interface ArtifactStorePublisher extends Closeable {
+public interface ArtifactStorePublisher {
     /**
      * Publisher name.
      */
@@ -52,7 +51,7 @@ public interface ArtifactStorePublisher extends Closeable {
     /**
      * Performs a non-disruptive validation of artifact store, if validator present, or empty.
      */
-    Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException;
+    Optional<ArtifactStoreValidator> validatorFor(ArtifactStore artifactStore) throws IOException;
 
     /**
      * Performs the publishing.

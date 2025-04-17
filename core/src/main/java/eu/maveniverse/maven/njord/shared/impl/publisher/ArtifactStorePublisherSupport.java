@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
+import eu.maveniverse.maven.njord.shared.impl.ComponentSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
@@ -21,8 +21,8 @@ import java.util.Optional;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public abstract class ArtifactStorePublisherSupport extends CloseableConfigSupport<SessionConfig>
-        implements ArtifactStorePublisher {
+public abstract class ArtifactStorePublisherSupport extends ComponentSupport implements ArtifactStorePublisher {
+    protected final SessionConfig sessionConfig;
     protected final RepositorySystem repositorySystem;
     protected final String name;
     protected final String description;
@@ -42,7 +42,7 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements) {
-        super(sessionConfig);
+        this.sessionConfig = requireNonNull(sessionConfig);
         this.repositorySystem = requireNonNull(repositorySystem);
         this.name = requireNonNull(name);
         this.description = requireNonNull(description);
@@ -89,22 +89,16 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
     }
 
     @Override
-    public Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException {
+    public Optional<ArtifactStoreValidator> validatorFor(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        checkClosed();
-
-        Optional<ArtifactStoreValidator> vo = selectArtifactStoreValidator(artifactStore);
-        if (vo.isPresent()) {
-            return Optional.of(vo.orElseThrow().validate(artifactStore));
-        } else {
-            return Optional.empty();
-        }
+        return artifactStore.repositoryMode() == RepositoryMode.RELEASE
+                ? artifactStoreRequirements.releaseValidator()
+                : artifactStoreRequirements.snapshotValidator();
     }
 
     @Override
     public void publish(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        checkClosed();
         logger.info("Validating {} for {}", artifactStore, name());
         if (validateArtifactStore(artifactStore)) {
             logger.info("Publishing {} to {}", artifactStore, name());
@@ -113,12 +107,6 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
     }
 
     protected abstract void doPublish(ArtifactStore artifactStore) throws IOException;
-
-    protected Optional<ArtifactStoreValidator> selectArtifactStoreValidator(ArtifactStore artifactStore) {
-        return artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? artifactStoreRequirements.releaseValidator()
-                : artifactStoreRequirements.snapshotValidator();
-    }
 
     protected RemoteRepository selectRemoteRepositoryFor(ArtifactStore artifactStore) {
         RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
@@ -132,9 +120,9 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
     }
 
     protected boolean validateArtifactStore(ArtifactStore artifactStore) throws IOException {
-        Optional<ArtifactStoreValidator.ValidationResult> vro = validate(artifactStore);
-        if (vro.isPresent()) {
-            ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
+        Optional<ArtifactStoreValidator> vo = validatorFor(artifactStore);
+        if (vo.isPresent()) {
+            ArtifactStoreValidator.ValidationResult vr = vo.orElseThrow().validate(artifactStore);
             if (!vr.isValid()) {
                 logger.error("ArtifactStore {} failed validation", artifactStore);
                 return false;

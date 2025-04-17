@@ -41,7 +41,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        new ArtifactStoreDeployer(repositorySystem, config.session(), selectRemoteRepositoryFor(artifactStore))
+        new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), selectRemoteRepositoryFor(artifactStore))
                 .deploy(artifactStore);
     }
 }
