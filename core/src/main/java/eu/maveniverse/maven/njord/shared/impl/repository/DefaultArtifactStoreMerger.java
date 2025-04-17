@@ -93,13 +93,13 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
                 }
 
                 if (!Objects.equals(sourceSha1, targetSha1)) {
-                    throw new IOException("Conflict: Both stores contains " + ArtifactIdUtils.toId(sourceArtifact)
-                            + " with different content");
+                    throw new IOException(String.format(
+                            "Conflict: both stores contains %s with different content (%s vs %s)",
+                            ArtifactIdUtils.toId(sourceArtifact), sourceSha1, targetSha1));
                 }
             }
         }
 
-        logger.info("Merging {} -> {}", source, target);
         String targetName = target.name();
         target.close();
         try (ArtifactStore from = source) {
@@ -121,6 +121,6 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
             }
             alg.update(ByteBuffer.wrap(buffer, 0, read));
         }
-        return alg.toString();
+        return alg.checksum();
     }
 }

@@ -110,7 +110,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
                         }
                     }
                 } else if (uri.startsWith("store:")) {
-                    artifactStoreName = uri.substring(11);
+                    artifactStoreName = uri.substring(6);
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
                 }
