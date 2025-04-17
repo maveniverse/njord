@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import javax.inject.Inject;
@@ -29,7 +29,7 @@ public class DefaultInternalArtifactStoreManagerFactory implements InternalArtif
     }
 
     @Override
-    public InternalArtifactStoreManager create(Config config) {
-        return new DefaultInternalArtifactStoreManager(config, checksumAlgorithmFactorySelector);
+    public InternalArtifactStoreManager create(SessionConfig sessionConfig) {
+        return new DefaultInternalArtifactStoreManager(sessionConfig, checksumAlgorithmFactorySelector);
     }
 }

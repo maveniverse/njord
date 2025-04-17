@@ -43,10 +43,10 @@ public class PublishMojo extends NjordMojoSupport {
         if (po.isPresent()) {
             try (ArtifactStore from = storeOptional.orElseThrow()) {
                 po.orElseThrow().publish(from);
-                if (drop) {
-                    logger.info("Dropping {}", from);
-                    ns.artifactStoreManager().dropArtifactStore(from);
-                }
+            }
+            if (drop) {
+                logger.info("Dropping {}", store);
+                ns.artifactStoreManager().dropArtifactStore(store);
             }
         } else {
             throw new MojoFailureException("Publisher not found");

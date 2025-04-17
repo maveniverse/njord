@@ -13,14 +13,15 @@ import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
+import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
-import org.eclipse.aether.RepositorySystemSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +43,17 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
     @Override
     public void afterSessionStart(MavenSession session) throws MavenExecutionException {
         try {
-            RepositorySystemSession repoSession = session.getRepositorySession();
             Config config = Config.defaults()
-                    .userProperties(repoSession.getUserProperties())
-                    .systemProperties(repoSession.getSystemProperties())
+                    .userProperties(session.getRepositorySession().getUserProperties())
+                    .systemProperties(session.getRepositorySession().getSystemProperties())
                     .build();
-            if (NjordUtils.lazyInit(
-                    repoSession, config, c -> njordSessionFactory.create(session.getRepositorySession(), c))) {
+            SessionConfig sessionConfig = SessionConfig.builder()
+                    .session(session.getRepositorySession())
+                    .remoteRepositories(
+                            RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
+                    .config(config)
+                    .build();
+            if (NjordUtils.lazyInit(sessionConfig, njordSessionFactory::create)) {
                 logger.info("Njord {} session created", config.version().orElse("UNKNOWN"));
             }
         } catch (Exception e) {
@@ -62,9 +67,8 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
             Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
                 NjordSession njordSession = ns.orElseThrow();
-                if (session.getResult().hasExceptions()) {
-                    logger.warn("Session failed; dropping session created stores");
-                    njordSession.dropSessionArtifactStores();
+                if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
+                    logger.warn("Session failed; dropped stores created in failed session");
                 }
                 logger.info("Njord session closed");
                 njordSession.close();

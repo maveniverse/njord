@@ -17,9 +17,9 @@ import java.util.Collection;
 
 public interface NjordSession extends Closeable {
     /**
-     * Returns the effective configuration.
+     * Returns the session configuration.
      */
-    Config config();
+    SessionConfig sessionConfig();
 
     /**
      * Returns store manager.
@@ -49,5 +49,5 @@ public interface NjordSession extends Closeable {
     /**
      * Drops all session-bound artifact stores.
      */
-    void dropSessionArtifactStores();
+    boolean dropSessionArtifactStores();
 }

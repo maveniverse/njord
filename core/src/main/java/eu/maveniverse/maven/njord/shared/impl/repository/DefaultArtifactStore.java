@@ -8,26 +8,24 @@
 package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
+import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +38,6 @@ import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class DefaultArtifactStore extends CloseableSupport implements ArtifactStore {
@@ -52,77 +49,26 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
 
-    /**
-     * Creates instance out for existing store.
-     */
-    public DefaultArtifactStore(Path basedir, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector)
-            throws IOException {
-        DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
-        Properties properties = new Properties();
-        Path meta = basedir.resolve(".meta").resolve("repository.properties");
-        try (InputStream in = Files.newInputStream(meta)) {
-            properties.load(in);
-        }
-
-        this.name = requireNonNull(properties.getProperty("name"), "Name not provided");
-        this.created = Instant.ofEpochMilli(
-                Long.parseLong(requireNonNull(properties.getProperty("created"), "Created not provided")));
-        this.repositoryMode = requireNonNull(
-                RepositoryMode.valueOf(properties.getProperty("repositoryMode")), "RepositoryMode not provided");
-        this.allowRedeploy = Boolean.parseBoolean(properties.getProperty("allowRedeploy"));
-        this.checksumAlgorithmFactories = checksumAlgorithmFactorySelector.selectList(Arrays.stream(
-                        properties.getProperty("checksumAlgorithmFactories").split(","))
-                .filter(s -> !s.trim().isEmpty())
-                .collect(toList()));
-        this.omitChecksumsForExtensions = Arrays.stream(
-                        properties.getProperty("omitChecksumsForExtensions").split(","))
-                .filter(s -> !s.trim().isEmpty())
-                .collect(toList());
-        this.basedir = requireNonNull(basedir);
-    }
-
-    /**
-     * Creates and inits brand-new store.
-     */
     public DefaultArtifactStore(
             String name,
+            Instant created,
             RepositoryMode repositoryMode,
             boolean allowRedeploy,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
             List<String> omitChecksumsForExtensions,
-            Path basedir)
-            throws IOException {
-        Files.createDirectories(basedir); // if brand new, we must create it first
-        DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
-        try {
-            this.name = requireNonNull(name);
-            this.created = Instant.now();
-            this.repositoryMode = requireNonNull(repositoryMode);
-            this.allowRedeploy = allowRedeploy;
-            this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
-            this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
-            this.basedir = requireNonNull(basedir);
+            Path basedir) {
+        this.name = requireNonNull(name);
+        this.created = requireNonNull(created);
+        this.repositoryMode = requireNonNull(repositoryMode);
+        this.allowRedeploy = allowRedeploy;
+        this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
+        this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
+        this.basedir = requireNonNull(basedir);
+    }
 
-            Properties properties = new Properties();
-            properties.put("name", name);
-            properties.put("created", Long.toString(created.toEpochMilli()));
-            properties.put("repositoryMode", repositoryMode.name());
-            properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
-            properties.put(
-                    "checksumAlgorithmFactories",
-                    checksumAlgorithmFactories.stream()
-                            .map(ChecksumAlgorithmFactory::getName)
-                            .collect(Collectors.joining(",")));
-            properties.put("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
-            Path meta = basedir.resolve(".meta").resolve("repository.properties");
-            Files.createDirectories(meta.getParent());
-            try (OutputStream out = Files.newOutputStream(meta, StandardOpenOption.CREATE_NEW)) {
-                properties.store(out, null);
-            }
-        } finally {
-            DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-            DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
-        }
+    public Path basedir() {
+        checkClosed();
+        return basedir;
     }
 
     @Override
@@ -184,9 +130,39 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     @Override
-    public Path basedir() {
-        checkClosed();
-        return basedir;
+    public boolean artifactPresent(Artifact artifact) throws IOException {
+        requireNonNull(artifact);
+        Path file = basedir.resolve(artifactPath(artifact));
+        return Files.isRegularFile(file);
+    }
+
+    @Override
+    public boolean metadataPresent(Metadata metadata) throws IOException {
+        requireNonNull(metadata);
+        Path file = basedir.resolve(metadataPath(metadata));
+        return Files.isRegularFile(file);
+    }
+
+    @Override
+    public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
+        requireNonNull(artifact);
+        Path file = basedir.resolve(artifactPath(artifact));
+        if (Files.isRegularFile(file)) {
+            return Optional.of(Files.newInputStream(file));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<InputStream> metadataContent(Metadata metadata) throws IOException {
+        requireNonNull(metadata);
+        Path file = basedir.resolve(metadataPath(metadata));
+        if (Files.isRegularFile(file)) {
+            return Optional.of(Files.newInputStream(file));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -212,6 +188,16 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     @Override
     public RemoteRepository storeRemoteRepository() {
         return new RemoteRepository.Builder(name(), "default", "file://" + basedir()).build();
+    }
+
+    @Override
+    public void writeTo(Path directory) throws IOException {
+        requireNonNull(directory);
+        if (!Files.isDirectory(directory)) {
+            throw new IOException("Directory does not exist");
+        }
+        FileUtils.copyRecursively(
+                basedir(), directory, p -> !p.getFileName().toString().startsWith("."));
     }
 
     @Override
@@ -286,21 +272,6 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         }
     }
 
-    private String metadataPath(Metadata metadata) {
-        StringBuilder path = new StringBuilder(128);
-        if (!metadata.getGroupId().isEmpty()) {
-            path.append(metadata.getGroupId().replace('.', '/')).append('/');
-            if (!metadata.getArtifactId().isEmpty()) {
-                path.append(metadata.getArtifactId()).append('/');
-                if (!metadata.getVersion().isEmpty()) {
-                    path.append(metadata.getVersion()).append('/');
-                }
-            }
-        }
-        path.append(metadata.getType());
-        return path.toString();
-    }
-
     private String artifactPath(Artifact artifact) {
         StringBuilder path = new StringBuilder(128);
         path.append(artifact.getGroupId().replace('.', '/')).append('/');
@@ -313,6 +284,21 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         if (!artifact.getExtension().isEmpty()) {
             path.append('.').append(artifact.getExtension());
         }
+        return path.toString();
+    }
+
+    private String metadataPath(Metadata metadata) {
+        StringBuilder path = new StringBuilder(128);
+        if (!metadata.getGroupId().isEmpty()) {
+            path.append(metadata.getGroupId().replace('.', '/')).append('/');
+            if (!metadata.getArtifactId().isEmpty()) {
+                path.append(metadata.getArtifactId()).append('/');
+                if (!metadata.getVersion().isEmpty()) {
+                    path.append(metadata.getVersion()).append('/');
+                }
+            }
+        }
+        path.append(metadata.getType());
         return path.toString();
     }
 

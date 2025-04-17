@@ -9,9 +9,9 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
@@ -20,7 +20,6 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import org.eclipse.aether.RepositorySystemSession;
 
 @Singleton
 @Named
@@ -43,10 +42,9 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
     }
 
     @Override
-    public NjordSession create(RepositorySystemSession session, Config config) {
+    public NjordSession create(SessionConfig sessionConfig) {
         return new DefaultNjordSession(
-                session,
-                config,
+                sessionConfig,
                 internalArtifactStoreManagerFactory,
                 artifactStoreExporterFactory,
                 artifactStoreMergerFactory,

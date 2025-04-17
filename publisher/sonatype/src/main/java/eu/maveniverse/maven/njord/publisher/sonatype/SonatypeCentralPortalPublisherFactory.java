@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
@@ -27,29 +26,35 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
 
     private final RepositorySystem repositorySystem;
     private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
+    private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
     public SonatypeCentralPortalPublisherFactory(
-            RepositorySystem repositorySystem, ArtifactStoreExporterFactory artifactStoreExporterFactory) {
+            RepositorySystem repositorySystem,
+            ArtifactStoreExporterFactory artifactStoreExporterFactory,
+            SonatypeCentralRequirementsFactory centralRequirementsFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
+        this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
     }
 
     @Override
-    public ArtifactStorePublisher create(RepositorySystemSession session, Config config) {
-        SonatypeCentralPortalPublisherConfig cpConfig = SonatypeCentralPortalPublisherConfig.with(config);
+    public ArtifactStorePublisher create(SessionConfig sessionConfig) {
+        SonatypeCentralPortalPublisherConfig cpConfig =
+                SonatypeCentralPortalPublisherConfig.with(sessionConfig.config());
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
                 .build();
         RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
                         cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
                 .build();
+
         return new SonatypeCentralPortalPublisher(
-                config,
+                sessionConfig,
                 repositorySystem,
-                session,
                 releasesRepository,
                 snapshotsRepository,
+                centralRequirementsFactory.create(sessionConfig),
                 artifactStoreExporterFactory);
     }
 }

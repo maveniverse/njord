@@ -9,14 +9,15 @@ package eu.maveniverse.maven.njord.publisher.apache;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeCentralRequirementsFactory;
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
@@ -25,29 +26,34 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
     public static final String NAME = "apache-rao";
 
     private final RepositorySystem repositorySystem;
+    private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
-    public ApacheRaoPublisherFactory(RepositorySystem repositorySystem) {
+    public ApacheRaoPublisherFactory(
+            RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
+        this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
     }
 
     @Override
-    public SonatypeNx2Publisher create(RepositorySystemSession session, Config config) {
-        ApachePublisherConfig raoConfig = ApachePublisherConfig.with(config);
+    public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
+        ApachePublisherConfig raoConfig = ApachePublisherConfig.with(sessionConfig.config());
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
                 .build();
         RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
                         raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
                 .build();
+
         return new SonatypeNx2Publisher(
+                sessionConfig,
                 repositorySystem,
-                session,
                 NAME,
                 "Publishes to ASF",
                 Config.CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
-                snapshotsRepository);
+                snapshotsRepository,
+                centralRequirementsFactory.create(sessionConfig));
     }
 }

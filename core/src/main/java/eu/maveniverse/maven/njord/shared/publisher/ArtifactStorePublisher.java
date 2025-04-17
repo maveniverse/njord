@@ -44,14 +44,14 @@ public interface ArtifactStorePublisher {
     Optional<RemoteRepository> serviceSnapshotRepository();
 
     /**
-     * The validator that must be applied to release store before publishing.
+     * The requirements this publisher has.
      */
-    Optional<ArtifactStoreValidator> releaseValidator();
+    ArtifactStoreRequirements artifactStoreRequirements();
 
     /**
-     * The validator that must be applied to snapshot store before publishing.
+     * Performs a non-disruptive validation of artifact store, if validator present, or empty.
      */
-    Optional<ArtifactStoreValidator> snapshotValidator();
+    Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException;
 
     /**
      * Performs the publishing.

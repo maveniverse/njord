@@ -9,24 +9,20 @@ package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.IOException;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class DefaultArtifactStoreMerger extends CloseableConfigSupport<Config> implements ArtifactStoreMerger {
+public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionConfig> implements ArtifactStoreMerger {
     private final RepositorySystem repositorySystem;
-    private final RepositorySystemSession session;
 
-    public DefaultArtifactStoreMerger(
-            Config config, RepositorySystem repositorySystem, RepositorySystemSession session) {
-        super(config);
+    public DefaultArtifactStoreMerger(SessionConfig sessionConfig, RepositorySystem repositorySystem) {
+        super(sessionConfig);
         this.repositorySystem = requireNonNull(repositorySystem);
-        this.session = requireNonNull(session);
     }
 
     @Override
@@ -41,7 +37,7 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<Config> i
         try (ArtifactStore from = source; ) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            session,
+                            config.session(),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build())
                     .deploy(from);
         }
