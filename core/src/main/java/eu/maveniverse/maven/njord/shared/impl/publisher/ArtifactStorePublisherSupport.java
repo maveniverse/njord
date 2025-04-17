@@ -9,7 +9,8 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
@@ -19,12 +20,11 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public abstract class ArtifactStorePublisherSupport extends CloseableSupport implements ArtifactStorePublisher {
+public abstract class ArtifactStorePublisherSupport extends CloseableConfigSupport<SessionConfig>
+        implements ArtifactStorePublisher {
     protected final RepositorySystem repositorySystem;
-    protected final RepositorySystemSession session;
     protected final String name;
     protected final String description;
     protected final RemoteRepository targetReleaseRepository;
@@ -34,8 +34,8 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
     protected final ArtifactStoreRequirements artifactStoreRequirements;
 
     protected ArtifactStorePublisherSupport(
+            SessionConfig sessionConfig,
             RepositorySystem repositorySystem,
-            RepositorySystemSession session,
             String name,
             String description,
             RemoteRepository targetReleaseRepository,
@@ -43,8 +43,8 @@ public abstract class ArtifactStorePublisherSupport extends CloseableSupport imp
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements) {
+        super(sessionConfig);
         this.repositorySystem = requireNonNull(repositorySystem);
-        this.session = requireNonNull(session);
         this.name = requireNonNull(name);
         this.description = requireNonNull(description);
         this.targetReleaseRepository = targetReleaseRepository;

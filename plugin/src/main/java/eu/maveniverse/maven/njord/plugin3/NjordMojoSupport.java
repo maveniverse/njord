@@ -11,15 +11,16 @@ import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
+import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,15 +38,20 @@ public abstract class NjordMojoSupport extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        RepositorySystemSession session = mavenSession.getRepositorySession();
-        NjordUtils.lazyInit(
-                session,
-                Config.defaults()
-                        .userProperties(session.getUserProperties())
-                        .systemProperties(session.getSystemProperties())
-                        .build(),
-                c -> njordSessionFactory.create(mavenSession.getRepositorySession(), c));
-        Optional<NjordSession> njordSession = NjordUtils.mayGetNjordSession(session);
+        Config config = Config.defaults()
+                .userProperties(mavenSession.getRepositorySession().getUserProperties())
+                .systemProperties(mavenSession.getRepositorySession().getSystemProperties())
+                .build();
+        SessionConfig sessionConfig = SessionConfig.builder()
+                .session(mavenSession.getRepositorySession())
+                .remoteRepositories(
+                        RepositoryUtils.toRepos(mavenSession.getRequest().getRemoteRepositories()))
+                .config(config)
+                .build();
+        if (NjordUtils.lazyInit(sessionConfig, njordSessionFactory::create)) {
+            logger.info("Njord {} session created", config.version().orElse("UNKNOWN"));
+        }
+        Optional<NjordSession> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
         if (njordSession.isEmpty()) {
             logger.warn("Njord not configured or explicitly disabled");
             return;

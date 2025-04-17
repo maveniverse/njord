@@ -9,14 +9,13 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 @Singleton
@@ -35,7 +34,7 @@ public class SonatypeCentralRequirementsFactory implements ArtifactStoreRequirem
     }
 
     @Override
-    public ArtifactStoreRequirements create(RepositorySystemSession session, Config config) {
-        return new SonatypeCentralRequirements(session, config, checksumAlgorithmFactorySelector, modelProvider);
+    public ArtifactStoreRequirements create(SessionConfig sessionConfig) {
+        return new SonatypeCentralRequirements(sessionConfig, checksumAlgorithmFactorySelector, modelProvider);
     }
 }

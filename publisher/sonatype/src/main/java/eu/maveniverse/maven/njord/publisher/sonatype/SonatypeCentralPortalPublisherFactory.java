@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
@@ -40,8 +39,9 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
     }
 
     @Override
-    public ArtifactStorePublisher create(RepositorySystemSession session, Config config) {
-        SonatypeCentralPortalPublisherConfig cpConfig = SonatypeCentralPortalPublisherConfig.with(config);
+    public ArtifactStorePublisher create(SessionConfig sessionConfig) {
+        SonatypeCentralPortalPublisherConfig cpConfig =
+                SonatypeCentralPortalPublisherConfig.with(sessionConfig.config());
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
                 .build();
@@ -50,12 +50,11 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
                 .build();
 
         return new SonatypeCentralPortalPublisher(
-                config,
+                sessionConfig,
                 repositorySystem,
-                session,
                 releasesRepository,
                 snapshotsRepository,
-                centralRequirementsFactory.create(session, config),
+                centralRequirementsFactory.create(sessionConfig),
                 artifactStoreExporterFactory);
     }
 }

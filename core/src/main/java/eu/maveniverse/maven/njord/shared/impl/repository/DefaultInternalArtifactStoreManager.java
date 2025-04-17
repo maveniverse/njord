@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.repository;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
@@ -35,19 +35,18 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.ConfigUtils;
 
-public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<Config>
+public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<SessionConfig>
         implements InternalArtifactStoreManager {
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
     private final Map<String, ArtifactStoreTemplate> templates;
 
     public DefaultInternalArtifactStoreManager(
-            Config config, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
-        super(config);
+            SessionConfig sessionConfig, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
+        super(sessionConfig);
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
         this.templates = new LinkedHashMap<>();
         templates.put(ArtifactStoreTemplate.RELEASE.name(), ArtifactStoreTemplate.RELEASE);
@@ -61,8 +60,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     @Override
     public Collection<String> listArtifactStoreNames() throws IOException {
         checkClosed();
-        if (Files.isDirectory(config.basedir())) {
-            try (Stream<Path> stream = Files.list(config.basedir())) {
+        if (Files.isDirectory(config.config().basedir())) {
+            try (Stream<Path> stream = Files.list(config.config().basedir())) {
                 return stream.filter(Files::isDirectory)
                         .filter(p -> Files.isRegularFile(p.resolve(".meta").resolve("repository.properties")))
                         .map(p -> p.getFileName().toString())
@@ -103,30 +102,31 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 
     @Override
-    public ArtifactStore createArtifactStore(RepositorySystemSession session, ArtifactStoreTemplate template)
-            throws IOException {
+    public ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException {
         requireNonNull(template);
         checkClosed();
 
         String name = template.prefix() + "-" + UUID.randomUUID();
-        Path basedir = config.basedir().resolve(name);
+        Path basedir = config.config().basedir().resolve(name);
         Files.createDirectories(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         Instant created = Instant.now();
         RepositoryMode repositoryMode = template.repositoryMode();
         boolean allowRedeploy = template.allowRedeploy();
-        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories =
-                template.checksumAlgorithmFactories().isPresent()
-                        ? checksumAlgorithmFactorySelector.selectList(
-                                template.checksumAlgorithmFactories().orElseThrow())
-                        : checksumAlgorithmFactorySelector.selectList(
-                                ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
-        List<String> omitChecksumsForExtensions = template.omitChecksumsForExtensions()
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = template.checksumAlgorithmFactories()
                         .isPresent()
-                ? template.omitChecksumsForExtensions().orElseThrow()
-                : ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS));
+                ? checksumAlgorithmFactorySelector.selectList(
+                        template.checksumAlgorithmFactories().orElseThrow())
+                : checksumAlgorithmFactorySelector.selectList(
+                        ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                                config.session(), DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
+        List<String> omitChecksumsForExtensions =
+                template.omitChecksumsForExtensions().isPresent()
+                        ? template.omitChecksumsForExtensions().orElseThrow()
+                        : ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                                config.session(),
+                                DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
+                                CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS));
 
         Properties properties = new Properties();
         properties.put("name", name);
@@ -160,7 +160,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         requireNonNull(name);
         checkClosed();
 
-        Path basedir = config.basedir().resolve(name);
+        Path basedir = config.config().basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
             try {
@@ -177,7 +177,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     public DefaultArtifactStore existingArtifactStore(String name) throws IOException {
-        Path basedir = config.basedir().resolve(name);
+        Path basedir = config.config().basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
             Properties properties = new Properties();

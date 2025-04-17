@@ -10,7 +10,6 @@ package eu.maveniverse.maven.njord.shared.store;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
-import org.eclipse.aether.RepositorySystemSession;
 
 public interface ArtifactStoreManager {
     /**
@@ -36,8 +35,7 @@ public interface ArtifactStoreManager {
     /**
      * Creates store based on template.
      */
-    ArtifactStore createArtifactStore(RepositorySystemSession session, ArtifactStoreTemplate template)
-            throws IOException;
+    ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException;
 
     /**
      * Fully deletes store.

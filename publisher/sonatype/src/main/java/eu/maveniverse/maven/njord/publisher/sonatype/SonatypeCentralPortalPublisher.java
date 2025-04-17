@@ -14,6 +14,7 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
@@ -28,25 +29,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
-    private final Config config;
     private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
 
     public SonatypeCentralPortalPublisher(
-            Config config,
+            SessionConfig sessionConfig,
             RepositorySystem repositorySystem,
-            RepositorySystemSession session,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
             ArtifactStoreExporterFactory artifactStoreExporterFactory) {
         super(
+                sessionConfig,
                 repositorySystem,
-                session,
                 SonatypeCentralPortalPublisherFactory.NAME,
                 "Publishes to Sonatype Central Portal",
                 Config.CENTRAL,
@@ -54,7 +52,6 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
-        this.config = requireNonNull(config);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
     }
 
@@ -79,7 +76,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             // create ZIP bundle
             Path tmpDir = Files.createTempDirectory(name());
             Path bundle;
-            try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(session, config)) {
+            try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(config)) {
                 bundle = artifactStoreExporter.exportAsBundle(artifactStore, tmpDir);
             }
             if (bundle == null) {
@@ -90,7 +87,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             String authKey = "Authorization";
             String authValue = null;
             try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
-                    session, repositorySystem.newDeploymentRepository(session, repository))) {
+                    config.session(), repositorySystem.newDeploymentRepository(config.session(), repository))) {
                 if (repoAuthContext != null) {
                     String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                     String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
@@ -128,7 +125,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         } else { // snapshot
             // just deploy to snapshots as m-deploy-p would
             try (ArtifactStore store = artifactStore) {
-                new ArtifactStoreDeployer(repositorySystem, session, repository).deploy(store);
+                new ArtifactStoreDeployer(repositorySystem, config.session(), repository).deploy(store);
             }
         }
     }

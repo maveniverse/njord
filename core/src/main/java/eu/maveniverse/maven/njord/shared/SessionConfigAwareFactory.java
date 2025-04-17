@@ -7,11 +7,9 @@
  */
 package eu.maveniverse.maven.njord.shared;
 
-import org.eclipse.aether.RepositorySystemSession;
-
 public interface SessionConfigAwareFactory<E> {
     /**
      * Creates component that is session and config aware.
      */
-    E create(RepositorySystemSession session, Config config);
+    E create(SessionConfig sessionConfig);
 }

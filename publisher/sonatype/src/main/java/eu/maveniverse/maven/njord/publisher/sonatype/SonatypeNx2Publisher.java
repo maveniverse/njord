@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -16,13 +17,12 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
     public SonatypeNx2Publisher(
+            SessionConfig sessionConfig,
             RepositorySystem repositorySystem,
-            RepositorySystemSession session,
             String serviceName,
             String serviceDescription,
             RemoteRepository targetReleaseRepository,
@@ -31,8 +31,8 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements) {
         super(
+                sessionConfig,
                 repositorySystem,
-                session,
                 serviceName,
                 serviceDescription,
                 targetReleaseRepository,
@@ -58,6 +58,6 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
                     + " not supported; provide RemoteRepository for it");
         }
-        new ArtifactStoreDeployer(repositorySystem, session, repository).deploy(artifactStore);
+        new ArtifactStoreDeployer(repositorySystem, config.session(), repository).deploy(artifactStore);
     }
 }

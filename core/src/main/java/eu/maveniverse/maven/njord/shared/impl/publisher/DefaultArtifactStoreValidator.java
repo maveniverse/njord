@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidatorFactory;
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
@@ -31,24 +30,21 @@ import org.slf4j.LoggerFactory;
 public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final SessionConfig sessionConfig;
     private final String name;
     private final String description;
-    private final RepositorySystemSession session;
-    private final Config config;
     private final Collection<BulkValidatorFactory> bulkValidatorFactories;
     private final Collection<ValidatorFactory> validatorFactories;
 
     public DefaultArtifactStoreValidator(
+            SessionConfig sessionConfig,
             String name,
             String description,
-            RepositorySystemSession session,
-            Config config,
             Collection<BulkValidatorFactory> bulkValidatorFactories,
             Collection<ValidatorFactory> validatorFactories) {
+        this.sessionConfig = requireNonNull(sessionConfig);
         this.name = requireNonNull(name);
         this.description = requireNonNull(description);
-        this.session = requireNonNull(session);
-        this.config = requireNonNull(config);
         this.bulkValidatorFactories = requireNonNull(bulkValidatorFactories);
         this.validatorFactories = requireNonNull(validatorFactories);
     }
@@ -67,7 +63,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
     public ValidationResult validate(ArtifactStore artifactStore) throws IOException {
         VR vr = new VR(description());
         for (BulkValidatorFactory bulkValidatorFactory : bulkValidatorFactories) {
-            try (BulkValidator bulkValidator = bulkValidatorFactory.create(session, config)) {
+            try (BulkValidator bulkValidator = bulkValidatorFactory.create(sessionConfig)) {
                 VR child = vr.child(bulkValidator.name());
                 bulkValidator.validate(artifactStore, child);
                 vr.dropIfEmpty(child);
@@ -77,7 +73,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
         ArrayList<IOException> closeErrors = new ArrayList<>();
         try {
             for (ValidatorFactory validatorFactory : validatorFactories) {
-                validators.add(validatorFactory.create(session, config));
+                validators.add(validatorFactory.create(sessionConfig));
             }
             for (Artifact artifact : artifactStore.artifacts()) {
                 VR vvr = vr.child(ArtifactIdUtils.toId(artifact));

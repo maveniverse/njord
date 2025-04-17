@@ -9,8 +9,8 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
@@ -28,32 +28,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.eclipse.aether.RepositorySystemSession;
 
-public class DefaultNjordSession extends CloseableConfigSupport<Config> implements NjordSession {
-    private final RepositorySystemSession session;
+public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> implements NjordSession {
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
 
     public DefaultNjordSession(
-            RepositorySystemSession session,
-            Config config,
+            SessionConfig sessionConfig,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreExporterFactory artifactStoreExporterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
-        super(config);
-        this.session = requireNonNull(session);
-        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(session, config);
+        super(sessionConfig);
+        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
     }
 
     @Override
-    public Config config() {
+    public SessionConfig sessionConfig() {
         return config;
     }
 
@@ -66,20 +62,20 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     @Override
     public ArtifactStoreExporter createArtifactStoreExporter() {
         checkClosed();
-        return artifactStoreExporterFactory.create(session, config);
+        return artifactStoreExporterFactory.create(sessionConfig());
     }
 
     @Override
     public ArtifactStoreMerger createArtifactStoreMerger() {
         checkClosed();
-        return artifactStoreMergerFactory.create(session, config);
+        return artifactStoreMergerFactory.create(sessionConfig());
     }
 
     @Override
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
         return artifactStorePublisherFactories.values().stream()
-                .map(f -> f.create(session, config))
+                .map(f -> f.create(sessionConfig()))
                 .toList();
     }
 
@@ -88,7 +84,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                session.getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
         String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
             try {
                 String artifactStoreName;
@@ -96,7 +92,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
                     if (uri.isEmpty()) {
                         // empty -> default
                         try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(
-                                session, internalArtifactStoreManager.defaultTemplate())) {
+                                internalArtifactStoreManager.defaultTemplate())) {
                             artifactStoreName = artifactStore.name();
                         }
                     } else {
@@ -108,7 +104,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
                             throw new IllegalArgumentException("Unknown template: " + uri);
                         } else {
                             try (ArtifactStore artifactStore =
-                                    internalArtifactStoreManager.createArtifactStore(session, templates.get(0))) {
+                                    internalArtifactStoreManager.createArtifactStore(templates.get(0))) {
                                 artifactStoreName = artifactStore.name();
                             }
                         }
@@ -135,7 +131,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
     @Override
     public boolean dropSessionArtifactStores() {
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                session.getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
         AtomicBoolean result = new AtomicBoolean(false);
         sessionBoundStore.values().forEach(n -> {
             try {
