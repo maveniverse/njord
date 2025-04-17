@@ -16,19 +16,23 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 @Singleton
 @Named
 public class DefaultArtifactStoreMergerFactory implements ArtifactStoreMergerFactory {
     private final RepositorySystem repositorySystem;
+    private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
     @Inject
-    public DefaultArtifactStoreMergerFactory(RepositorySystem repositorySystem) {
+    public DefaultArtifactStoreMergerFactory(
+            RepositorySystem repositorySystem, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
         this.repositorySystem = requireNonNull(repositorySystem);
+        this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
     }
 
     @Override
     public ArtifactStoreMerger create(SessionConfig sessionConfig) {
-        return new DefaultArtifactStoreMerger(sessionConfig, repositorySystem);
+        return new DefaultArtifactStoreMerger(sessionConfig, repositorySystem, checksumAlgorithmFactorySelector);
     }
 }
