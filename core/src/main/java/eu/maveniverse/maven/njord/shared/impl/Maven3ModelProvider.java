@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -36,13 +37,14 @@ public class Maven3ModelProvider implements ModelProvider {
     @Override
     public Optional<Model> readEffectiveModel(
             RepositorySystemSession session, Artifact artifact, List<RemoteRepository> remoteRepositories) {
+        AtomicReference<Model> modelRef = new AtomicReference<>(null);
         DefaultRepositorySystemSession ourSession = new DefaultRepositorySystemSession(session);
         ourSession.setConfigProperty(
                 ArtifactDescriptorReaderDelegate.class.getName(), new ArtifactDescriptorReaderDelegate() {
                     @Override
                     public void populateResult(
                             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
-                        session.getData().set(Maven3ModelProvider.class, model);
+                        modelRef.set(model);
                         super.populateResult(session, result, model);
                     }
                 });
@@ -52,9 +54,8 @@ public class Maven3ModelProvider implements ModelProvider {
         adr.setRepositories(remoteRepositories);
         adr.setRequestContext("njord");
         try {
-            ArtifactDescriptorResult result =
-                    repositorySystem.readArtifactDescriptor(ourSession, adr); // ignore result; is in session.data
-            return Optional.ofNullable((Model) ourSession.getData().get(Maven3ModelProvider.class));
+            repositorySystem.readArtifactDescriptor(ourSession, adr); // ignore result; is in session.data
+            return Optional.ofNullable(modelRef.get());
         } catch (ArtifactDescriptorException e) {
             return Optional.empty();
         }
