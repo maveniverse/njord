@@ -27,6 +27,6 @@ public class SigstoreSignatureValidator extends SignatureValidatorSupport {
             InputStream signatureContent,
             ValidationContext collector)
             throws IOException {
-        return Outcome.SKIPPED;
+        return Outcome.SKIPPED; // TODO
     }
 }
