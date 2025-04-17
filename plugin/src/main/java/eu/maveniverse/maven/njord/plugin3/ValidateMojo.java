@@ -53,7 +53,16 @@ public class ValidateMojo extends NjordMojoSupport {
                         logger.error("ArtifactStore {} failed validation", from);
                         throw new MojoFailureException("ArtifactStore validation failed");
                     } else {
-                        logger.info("ArtifactStore {} passed validation", from);
+                        int warnings = vr.warningCount();
+                        if (warnings > 0) {
+                            logger.warn(
+                                    "ArtifactStore {} passed {} validation with {} warnings",
+                                    from,
+                                    vr.checkCount(),
+                                    warnings);
+                        } else {
+                            logger.info("ArtifactStore {} passed {} validation", from, vr.checkCount());
+                        }
                     }
                 } else {
                     logger.info("Not validated artifact store, no validator set for publisher {}", p.name());

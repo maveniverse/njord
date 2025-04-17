@@ -127,7 +127,16 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
                 logger.error("ArtifactStore {} failed validation", artifactStore);
                 return false;
             } else {
-                logger.info("ArtifactStore {} passed validation", artifactStore);
+                int warnings = vr.warningCount();
+                if (warnings > 0) {
+                    logger.warn(
+                            "ArtifactStore {} passed {} validation with {} warnings",
+                            artifactStore,
+                            vr.checkCount(),
+                            warnings);
+                } else {
+                    logger.info("ArtifactStore {} passed {} validation", artifactStore, vr.checkCount());
+                }
             }
         } else {
             logger.info("No validator set for publisher {}; validation skipped", name());

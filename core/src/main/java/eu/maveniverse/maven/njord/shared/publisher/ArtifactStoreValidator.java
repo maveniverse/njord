@@ -23,6 +23,24 @@ public interface ArtifactStoreValidator {
             return error().isEmpty() && children().stream().allMatch(ValidationResult::isValid);
         }
 
+        /**
+         * Total "validation actions" count (validations performed and those left some message).
+         */
+        default int checkCount() {
+            return info().size()
+                    + warning().size()
+                    + error().size()
+                    + children().stream().map(ValidationResult::checkCount).reduce(0, Integer::sum);
+        }
+
+        /**
+         * Total warning count (this instance and all children).
+         */
+        default int warningCount() {
+            return warning().size()
+                    + children().stream().map(ValidationResult::warningCount).reduce(0, Integer::sum);
+        }
+
         String name();
 
         Collection<String> info();
