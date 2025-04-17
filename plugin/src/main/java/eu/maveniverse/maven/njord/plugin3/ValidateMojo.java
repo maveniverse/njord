@@ -65,7 +65,7 @@ public class ValidateMojo extends NjordMojoSupport {
                         }
                     }
                 } else {
-                    logger.info("Not validated artifact store, no validator set for publisher {}", p.name());
+                    logger.info("Not validated artifact store, no applicable validator set for publisher {}", p.name());
                 }
             }
         } else {

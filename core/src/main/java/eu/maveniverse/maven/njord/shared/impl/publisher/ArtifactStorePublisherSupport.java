@@ -139,7 +139,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
                 }
             }
         } else {
-            logger.info("No validator set for publisher {}; validation skipped", name());
+            logger.info("No applicable validator set for publisher {}; validation skipped", name());
         }
         return true;
     }
