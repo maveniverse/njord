@@ -26,7 +26,6 @@ import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.RepositorySystemSession;
@@ -140,9 +139,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<Config> implemen
         AtomicBoolean result = new AtomicBoolean(false);
         sessionBoundStore.values().forEach(n -> {
             try {
-                Optional<ArtifactStore> artifactStore = internalArtifactStoreManager.selectArtifactStore(n);
-                if (artifactStore.isPresent()) {
-                    internalArtifactStoreManager.dropArtifactStore(artifactStore.orElseThrow());
+                if (internalArtifactStoreManager.dropArtifactStore(n)) {
                     result.set(true);
                 }
             } catch (IOException e) {

@@ -47,7 +47,7 @@ public class MergeMojo extends NjordMojoSupport {
         }
         if (drop) {
             logger.info("Dropping {}", from);
-            ns.artifactStoreManager().dropArtifactStore(fromOptional.orElseThrow());
+            ns.artifactStoreManager().dropArtifactStore(from);
         }
     }
 }

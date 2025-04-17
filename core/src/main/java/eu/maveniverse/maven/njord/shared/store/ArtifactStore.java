@@ -10,7 +10,6 @@ package eu.maveniverse.maven.njord.shared.store;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -82,11 +81,6 @@ public interface ArtifactStore extends Closeable {
      * Returns the artifact content, if exists.
      */
     Optional<InputStream> metadataContent(Metadata metadata) throws IOException;
-
-    /**
-     * The store basedir, never {@code null}.
-     */
-    Path basedir();
 
     /**
      * Customizes the session to access this store.

@@ -40,7 +40,7 @@ public interface ArtifactStoreManager {
             throws IOException;
 
     /**
-     * Closes and fully deletes store.
+     * Fully deletes store.
      */
-    void dropArtifactStore(ArtifactStore artifactStore) throws IOException;
+    boolean dropArtifactStore(String name) throws IOException;
 }
