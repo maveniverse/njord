@@ -39,6 +39,7 @@ public class ArtifactStoreDeployer {
     }
 
     public void deploy(ArtifactStore artifactStore) throws IOException {
+        requireNonNull(artifactStore);
         deploy(
                 artifactStore,
                 artifactStore.artifacts().stream()
@@ -47,6 +48,8 @@ public class ArtifactStoreDeployer {
     }
 
     public void deploy(ArtifactStore artifactStore, Collection<Artifact> artifacts) throws IOException {
+        requireNonNull(artifactStore);
+        requireNonNull(artifacts);
         DeployRequest deployRequest = new DeployRequest();
         deployRequest.setArtifacts(artifacts);
         deployRequest.setRepository(repositorySystem.newDeploymentRepository(repositorySystemSession, repository));
