@@ -7,14 +7,11 @@
  */
 package eu.maveniverse.maven.njord.publisher.sonatype;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -43,21 +40,8 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
     }
 
     @Override
-    public void publish(ArtifactStore artifactStore) throws IOException {
-        requireNonNull(artifactStore);
-        checkClosed();
-
-        logger.info("Publishing {} to {}", artifactStore, name());
-
-        validateArtifactStore(artifactStore);
-
-        RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? serviceReleaseRepository
-                : serviceSnapshotRepository;
-        if (repository == null) {
-            throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
-                    + " not supported; provide RemoteRepository for it");
-        }
-        new ArtifactStoreDeployer(repositorySystem, config.session(), repository).deploy(artifactStore);
+    protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        new ArtifactStoreDeployer(repositorySystem, config.session(), selectRemoteRepositoryFor(artifactStore))
+                .deploy(artifactStore);
     }
 }

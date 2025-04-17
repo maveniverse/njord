@@ -8,11 +8,12 @@
 package eu.maveniverse.maven.njord.shared.publisher;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public interface ArtifactStorePublisher {
+public interface ArtifactStorePublisher extends Closeable {
     /**
      * Publisher name.
      */

@@ -18,7 +18,6 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -92,9 +91,9 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
     @Override
     public Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        Optional<ArtifactStoreValidator> vo = artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? artifactStoreRequirements.releaseValidator()
-                : artifactStoreRequirements.snapshotValidator();
+        checkClosed();
+
+        Optional<ArtifactStoreValidator> vo = selectArtifactStoreValidator(artifactStore);
         if (vo.isPresent()) {
             return Optional.of(vo.orElseThrow().validate(artifactStore));
         } else {
@@ -103,31 +102,48 @@ public abstract class ArtifactStorePublisherSupport extends CloseableConfigSuppo
     }
 
     @Override
-    public abstract void publish(ArtifactStore artifactStore) throws IOException;
+    public void publish(ArtifactStore artifactStore) throws IOException {
+        requireNonNull(artifactStore);
+        checkClosed();
+        logger.info("Validating {} for {}", artifactStore, name());
+        if (validateArtifactStore(artifactStore)) {
+            logger.info("Publishing {} to {}", artifactStore, name());
+            doPublish(artifactStore);
+        }
+    }
 
-    protected void validateArtifactStore(ArtifactStore artifactStore) throws IOException {
+    protected abstract void doPublish(ArtifactStore artifactStore) throws IOException;
+
+    protected Optional<ArtifactStoreValidator> selectArtifactStoreValidator(ArtifactStore artifactStore) {
+        return artifactStore.repositoryMode() == RepositoryMode.RELEASE
+                ? artifactStoreRequirements.releaseValidator()
+                : artifactStoreRequirements.snapshotValidator();
+    }
+
+    protected RemoteRepository selectRemoteRepositoryFor(ArtifactStore artifactStore) {
+        RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
+                ? serviceReleaseRepository
+                : serviceSnapshotRepository;
+        if (repository == null) {
+            throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
+                    + " not supported; provide RemoteRepository for it");
+        }
+        return repository;
+    }
+
+    protected boolean validateArtifactStore(ArtifactStore artifactStore) throws IOException {
         Optional<ArtifactStoreValidator.ValidationResult> vro = validate(artifactStore);
         if (vro.isPresent()) {
             ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
-            logger.info("Validation results:");
-            AtomicInteger counter = new AtomicInteger(0);
-            for (String msg : vr.error()) {
-                logger.error("  {}. {}", counter.incrementAndGet(), msg);
-            }
-            for (String msg : vr.warning()) {
-                logger.warn("  {}. {}", counter.incrementAndGet(), msg);
-            }
-            for (String msg : vr.info()) {
-                logger.info("  {}. {}", counter.incrementAndGet(), msg);
-            }
             if (!vr.isValid()) {
                 logger.error("ArtifactStore {} failed validation", artifactStore);
-                throw new IOException("Validation failed");
+                return false;
             } else {
                 logger.info("ArtifactStore {} passed validation", artifactStore);
             }
         } else {
-            logger.info("Not validated artifact store, no validator set for publisher {}", name());
+            logger.info("No validator set for publisher {}; validation skipped", name());
         }
+        return true;
     }
 }

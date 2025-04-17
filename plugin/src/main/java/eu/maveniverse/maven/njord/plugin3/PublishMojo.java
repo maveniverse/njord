@@ -41,8 +41,9 @@ public class PublishMojo extends NjordMojoSupport {
                 .filter(p -> target.equals(p.name()))
                 .findFirst();
         if (po.isPresent()) {
-            try (ArtifactStore from = storeOptional.orElseThrow()) {
-                po.orElseThrow().publish(from);
+            try (ArtifactStore from = storeOptional.orElseThrow();
+                    ArtifactStorePublisher publisher = po.orElseThrow()) {
+                publisher.publish(from);
             }
             if (drop) {
                 logger.info("Dropping {}", store);

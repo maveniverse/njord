@@ -21,7 +21,6 @@ import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
-import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -56,22 +55,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
     }
 
     @Override
-    public void publish(ArtifactStore artifactStore) throws IOException {
-        requireNonNull(artifactStore);
-        checkClosed();
-
-        logger.info("Publishing {} to {}", artifactStore, name());
-
-        validateArtifactStore(artifactStore);
-
-        RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? serviceReleaseRepository
-                : serviceSnapshotRepository;
-        if (repository == null) {
-            throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
-                    + " not supported; provide RemoteRepository for it");
-        }
-
+    protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
             Path tmpDir = Files.createTempDirectory(name());
