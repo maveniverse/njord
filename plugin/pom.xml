@@ -23,12 +23,6 @@
 
   <name>${project.groupId}:${project.artifactId}</name>
 
-  <properties>
-    <!-- m-p-p workarounds -->
-    <prerequisiteMaven>${requireRuntimeMavenVersion.version}</prerequisiteMaven>
-    <prerequisiteJava>${maven.compiler.release}</prerequisiteJava>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
@@ -115,8 +109,8 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
           <goalPrefix>njord</goalPrefix>
-          <requiredMavenVersion>${prerequisiteMaven}</requiredMavenVersion>
-          <requiredJavaVersion>${prerequisiteJava}</requiredJavaVersion>
+          <requiredMavenVersion>${requireRuntimeMavenVersion.range}</requiredMavenVersion>
+          <requiredJavaVersion>${requireRuntimeJavaVersion.range}</requiredJavaVersion>
         </configuration>
         <executions>
           <execution>

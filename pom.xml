@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>26</version>
+    <version>28</version>
   </parent>
 
   <groupId>eu.maveniverse.maven.njord</groupId>
@@ -67,15 +67,12 @@
     Run time: current Maven (3.9+) and Java 21+
     -->
     <maven.compiler.release>17</maven.compiler.release>
-    <requireBuildtimeJavaVersion.version>[21.0.3,)</requireBuildtimeJavaVersion.version>
-    <requireBuildtimeMavenVersion.version>[3.9.9,)</requireBuildtimeMavenVersion.version>
-    <requireRuntimeMavenVersion.version>[3.9.9,)</requireRuntimeMavenVersion.version>
+    <requireRuntimeMavenVersion.range>[3.9.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
     <version.maven>3.9.9</version.maven>
     <version.resolver>1.9.22</version.resolver>
     <version.slf4j>2.0.17</version.slf4j>
-    <version.mavenPluginTools>3.15.1</version.mavenPluginTools>
     <version.testcontainers>1.20.6</version.testcontainers>
   </properties>
 
@@ -153,7 +150,7 @@
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>
         <artifactId>maven-plugin-annotations</artifactId>
-        <version>${version.mavenPluginTools}</version>
+        <version>${version.maven-plugin-tools}</version>
       </dependency>
 
       <dependency>
@@ -170,14 +167,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
-          <version>${version.mavenPluginTools}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <configuration>
-            <skip>false</skip>
-          </configuration>
+          <version>${version.maven-plugin-tools}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -196,35 +186,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.gaul</groupId>
-        <artifactId>modernizer-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>modernizer</id>
-            <goals>
-              <goal>modernizer</goal>
-            </goals>
-            <phase>verify</phase>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
-
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-plugin-report-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-    </plugins>
-  </reporting>
 </project>
