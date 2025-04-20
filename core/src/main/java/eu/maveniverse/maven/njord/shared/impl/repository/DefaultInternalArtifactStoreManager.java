@@ -130,6 +130,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
         Properties properties = new Properties();
         properties.put("name", name);
+        properties.put("templateName", template.name());
         properties.put("created", Long.toString(created.toEpochMilli()));
         properties.put("repositoryMode", repositoryMode.name());
         properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
@@ -147,6 +148,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
         return new DefaultArtifactStore(
                 name,
+                template,
                 created,
                 repositoryMode,
                 allowRedeploy,
@@ -188,6 +190,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
             return new DefaultArtifactStore(
                     properties.getProperty("name"),
+                    templates.get(properties.getProperty("templateName")),
                     Instant.ofEpochMilli(Long.parseLong(properties.getProperty("created"))),
                     RepositoryMode.valueOf(properties.getProperty("repositoryMode")),
                     Boolean.parseBoolean(properties.getProperty("allowRedeploy")),

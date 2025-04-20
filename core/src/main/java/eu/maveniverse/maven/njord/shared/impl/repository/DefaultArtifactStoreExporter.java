@@ -28,12 +28,12 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Session
     }
 
     @Override
-    public Path exportAsDirectory(ArtifactStore artifactStore, Path directory) throws IOException {
+    public Path exportAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
-        requireNonNull(directory);
+        requireNonNull(outputDirectory);
         checkClosed();
 
-        Path targetDirectory = Config.getCanonicalPath(directory);
+        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
@@ -42,12 +42,12 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Session
     }
 
     @Override
-    public Path exportAsBundle(ArtifactStore artifactStore, Path directory) throws IOException {
+    public Path exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
-        requireNonNull(directory);
+        requireNonNull(outputDirectory);
         checkClosed();
 
-        Path targetDirectory = Config.getCanonicalPath(directory);
+        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
         if (!Files.isDirectory(targetDirectory)) {
             Files.createDirectories(targetDirectory);
         }
@@ -58,6 +58,27 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Session
         try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
             artifactStore.writeTo(root);
+        }
+        return bundleFile;
+    }
+
+    @Override
+    public Path exportAsTransportableBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
+        requireNonNull(artifactStore);
+        requireNonNull(outputDirectory);
+        checkClosed();
+
+        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
+        if (!Files.isDirectory(targetDirectory)) {
+            Files.createDirectories(targetDirectory);
+        }
+        Path bundleFile = targetDirectory.resolve(artifactStore.name() + ".zip");
+        if (Files.exists(bundleFile)) {
+            throw new IOException("Exporting to existing bundle ZIP not supported");
+        }
+        try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
+            Path root = fs.getPath("/");
+            artifactStore.exportTo(root);
         }
         return bundleFile;
     }

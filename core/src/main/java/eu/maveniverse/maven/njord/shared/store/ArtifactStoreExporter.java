@@ -21,4 +21,9 @@ public interface ArtifactStoreExporter extends Closeable {
      * Exports store as ZIP bundle. Returns the ZIP file.
      */
     Path exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
+
+    /**
+     * Exports store as "transportable" Njord bundle. Returns the ZIP file.
+     */
+    Path exportAsTransportableBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
 }

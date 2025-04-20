@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class DefaultArtifactStore extends CloseableSupport implements ArtifactStore {
     private final String name;
+    private final ArtifactStoreTemplate template;
     private final Instant created;
     private final RepositoryMode repositoryMode;
     private final boolean allowRedeploy;
@@ -51,6 +53,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
 
     public DefaultArtifactStore(
             String name,
+            ArtifactStoreTemplate template,
             Instant created,
             RepositoryMode repositoryMode,
             boolean allowRedeploy,
@@ -58,6 +61,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
             List<String> omitChecksumsForExtensions,
             Path basedir) {
         this.name = requireNonNull(name);
+        this.template = requireNonNull(template);
         this.created = requireNonNull(created);
         this.repositoryMode = requireNonNull(repositoryMode);
         this.allowRedeploy = allowRedeploy;
@@ -74,6 +78,11 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     @Override
     public String name() {
         return name;
+    }
+
+    @Override
+    public ArtifactStoreTemplate template() {
+        return template;
     }
 
     @Override
@@ -198,6 +207,16 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         }
         FileUtils.copyRecursively(
                 basedir(), directory, p -> !p.getFileName().toString().startsWith("."));
+    }
+
+    @Override
+    public void exportTo(Path directory) throws IOException {
+        requireNonNull(directory);
+        if (!Files.isDirectory(directory)) {
+            throw new IOException("Directory does not exist");
+        }
+        FileUtils.copyRecursively(
+                basedir(), directory, p -> !p.getFileName().toString().startsWith(".lock"));
     }
 
     @Override

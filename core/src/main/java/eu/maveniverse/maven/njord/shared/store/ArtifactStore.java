@@ -28,6 +28,11 @@ public interface ArtifactStore extends Closeable {
     String name();
 
     /**
+     * The template used to create this store.
+     */
+    ArtifactStoreTemplate template();
+
+    /**
      * Timestamp when this store was created, never {@code null}.
      */
     Instant created();
@@ -101,6 +106,12 @@ public interface ArtifactStore extends Closeable {
      * Writes out the whole store to given directory retaining the layout of the store. The directory must exist.
      */
     void writeTo(Path directory) throws IOException;
+
+    /**
+     * Exports out the whole store to given directory retaining the layout of the store and all the metadata.
+     * The directory must exist.
+     */
+    void exportTo(Path directory) throws IOException;
 
     /**
      * Content modifying operation handle. Caller must close this instance, even if operation is canceled.
