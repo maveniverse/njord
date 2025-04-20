@@ -109,8 +109,8 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
           <goalPrefix>njord</goalPrefix>
-          <requiredMavenVersion>${requireRuntimeMavenVersion.version}</requiredMavenVersion>
-          <requiredJavaVersion>${maven.compiler.release}</requiredJavaVersion>
+          <requiredMavenVersion>${requireRuntimeMavenVersion.range}</requiredMavenVersion>
+          <requiredJavaVersion>${requireRuntimeJavaVersion.range}</requiredJavaVersion>
         </configuration>
         <executions>
           <execution>
