@@ -67,7 +67,7 @@
     Run time: current Maven (3.9+) and Java 21+
     -->
     <maven.compiler.release>17</maven.compiler.release>
-    <requireRuntimeMavenVersion.version>[3.9.9,)</requireRuntimeMavenVersion.version>
+    <requireRuntimeMavenVersion.range>[3.9.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
     <version.maven>3.9.9</version.maven>
