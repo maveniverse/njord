@@ -75,7 +75,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                     for (License license : m.getLicenses()) {
                         if (ok && (nullOrBlank(license.getName()) || nullOrBlank(license.getUrl()))) {
                             ok = false;
-                            collector.addError("MISSING (incomplete) project/licenses/license (name, url)");
+                            collector.addError("MISSING project/licenses/license (name, url)");
                         }
                     }
                     if (ok) {
@@ -90,7 +90,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                         if (ok && (nullOrBlank(developer.getId()) && nullOrBlank(developer.getName()) && nullOrBlank(developer.getEmail()))) {
                             ok = false;
                             collector.addError(
-                                    "MISSING (incomplete) project/developers/developer (id, name or email)");
+                                    "MISSING project/developers/developer (id, name or email)");
                         }
                         if (ok && nullOrBlank(developer.getId()) || nullOrBlank(developer.getName()) || nullOrBlank(developer.getEmail())) {
                             collector.addWarning("INCOMPLETE project/developers/developer (id, name or email)");
@@ -107,7 +107,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                     if (nullOrBlank(scm.getUrl())
                             || nullOrBlank(scm.getConnection())
                             || nullOrBlank(scm.getDeveloperConnection())) {
-                        collector.addError("MISSING (incomplete) project/scm (url, connection, developerConnection)");
+                        collector.addError("MISSING project/scm (url, connection, developerConnection)");
                     }
                 }
             } else {
