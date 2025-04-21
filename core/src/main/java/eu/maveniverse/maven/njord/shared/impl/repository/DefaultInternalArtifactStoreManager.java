@@ -138,7 +138,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path targetDirectory = Config.getCanonicalPath(file);
         Path bundleFile = targetDirectory;
         if (Files.isDirectory(targetDirectory)) {
-            bundleFile = targetDirectory.resolve(artifactStore.name() + ".zip");
+            bundleFile = targetDirectory.resolve(artifactStore.name() + ".ntb");
         } else if (!Files.isDirectory(targetDirectory.getFileName())) {
             throw new IllegalArgumentException("Target parent directory does not exists");
         }
@@ -168,8 +168,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             throw new IllegalArgumentException("File does not exist");
         }
         Path storeSource = Config.getCanonicalPath(file);
-        String storeName = null;
-        Path storeBasedir = null;
+        String storeName;
+        Path storeBasedir;
         try (FileSystem fs = FileSystems.newFileSystem(storeSource, Map.of("create", "false"), null)) {
             Path repositoryProperties = fs.getPath("/", ".meta", "repository.properties");
             if (Files.exists(repositoryProperties)) {
@@ -202,6 +202,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                         Files.newOutputStream(newStoreProperties, StandardOpenOption.TRUNCATE_EXISTING)) {
                     properties.store(out, null);
                 }
+            } else {
+                throw new IOException("Unknown transportable bundle layout");
             }
         }
         return loadExistingArtifactStore(storeName);
