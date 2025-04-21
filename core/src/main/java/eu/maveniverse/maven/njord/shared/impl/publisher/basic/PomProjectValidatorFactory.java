@@ -53,17 +53,17 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
             Optional<Model> mo = modelProvider.readEffectiveModel(session, artifact, remoteRepositories);
             if (mo.isPresent()) {
                 Model m = mo.orElseThrow();
-                if (m.getName() != null && !m.getName().trim().isEmpty()) {
+                if (!nullOrBlank(m.getName())) {
                     collector.addInfo("VALID project/name");
                 } else {
                     collector.addError("MISSING project/name");
                 }
-                if (m.getDescription() != null && !m.getDescription().trim().isEmpty()) {
+                if (!nullOrBlank(m.getDescription())) {
                     collector.addInfo("VALID project/description");
                 } else {
                     collector.addError("MISSING project/description");
                 }
-                if (m.getUrl() != null && !m.getUrl().trim().isEmpty()) {
+                if (!nullOrBlank(m.getUrl())) {
                     collector.addInfo("VALID project/url");
                 } else {
                     collector.addError("MISSING project/url");
@@ -73,12 +73,9 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                 } else {
                     boolean ok = true;
                     for (License license : m.getLicenses()) {
-                        if ((license.getName() == null
-                                        || license.getName().trim().isEmpty())
-                                || (license.getUrl() == null
-                                        || license.getUrl().trim().isEmpty())) {
+                        if (ok && (nullOrBlank(license.getName()) || nullOrBlank(license.getUrl()))) {
                             ok = false;
-                            collector.addError("MISSING (incomplete) project/licenses/license");
+                            collector.addError("MISSING project/licenses/license (name, url)");
                         }
                     }
                     if (ok) {
@@ -90,33 +87,40 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                 } else {
                     boolean ok = true;
                     for (Developer developer : m.getDevelopers()) {
-                        if ((developer.getName() == null
-                                        || developer.getName().trim().isEmpty())
-                                || (developer.getEmail() == null
-                                        || developer.getEmail().trim().isEmpty())) {
+                        if (ok
+                                && (nullOrBlank(developer.getId())
+                                        && nullOrBlank(developer.getName())
+                                        && nullOrBlank(developer.getEmail()))) {
                             ok = false;
-                            collector.addError("MISSING (incomplete) project/developers/developer");
+                            collector.addError("MISSING project/developers/developer (id, name or email)");
+                        }
+                        if (ok && nullOrBlank(developer.getId())
+                                || nullOrBlank(developer.getName())
+                                || nullOrBlank(developer.getEmail())) {
+                            collector.addWarning("INCOMPLETE project/developers/developer (id, name or email)");
                         }
                     }
                     if (ok) {
-                        collector.addInfo("VALID project/licenses");
+                        collector.addInfo("VALID project/developers");
                     }
                 }
                 if (m.getScm() == null) {
                     collector.addError("MISSING project/scm");
                 } else {
                     Scm scm = m.getScm();
-                    if ((scm.getUrl() == null || scm.getUrl().trim().isEmpty())
-                            || (scm.getConnection() == null
-                                    || scm.getConnection().trim().isEmpty())
-                            || (scm.getDeveloperConnection() == null
-                                    || scm.getDeveloperConnection().trim().isEmpty())) {
-                        collector.addError("MISSING (incomplete) project/scm");
+                    if (nullOrBlank(scm.getUrl())
+                            || nullOrBlank(scm.getConnection())
+                            || nullOrBlank(scm.getDeveloperConnection())) {
+                        collector.addError("MISSING project/scm (url, connection, developerConnection)");
                     }
                 }
             } else {
                 collector.addWarning("Could not get effective model");
             }
         }
+    }
+
+    private boolean nullOrBlank(String str) {
+        return str == null || str.trim().isEmpty();
     }
 }
