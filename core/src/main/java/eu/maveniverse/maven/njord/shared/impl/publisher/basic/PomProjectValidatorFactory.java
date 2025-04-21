@@ -87,12 +87,16 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                 } else {
                     boolean ok = true;
                     for (Developer developer : m.getDevelopers()) {
-                        if (ok && (nullOrBlank(developer.getId()) && nullOrBlank(developer.getName()) && nullOrBlank(developer.getEmail()))) {
+                        if (ok
+                                && (nullOrBlank(developer.getId())
+                                        && nullOrBlank(developer.getName())
+                                        && nullOrBlank(developer.getEmail()))) {
                             ok = false;
-                            collector.addError(
-                                    "MISSING project/developers/developer (id, name or email)");
+                            collector.addError("MISSING project/developers/developer (id, name or email)");
                         }
-                        if (ok && nullOrBlank(developer.getId()) || nullOrBlank(developer.getName()) || nullOrBlank(developer.getEmail())) {
+                        if (ok && nullOrBlank(developer.getId())
+                                || nullOrBlank(developer.getName())
+                                || nullOrBlank(developer.getEmail())) {
                             collector.addWarning("INCOMPLETE project/developers/developer (id, name or email)");
                         }
                     }
