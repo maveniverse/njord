@@ -26,30 +26,57 @@ public interface ArtifactStoreRequirements {
     /**
      * Returns the list of mandatory checksum algorithms.
      */
-    Optional<List<ChecksumAlgorithmFactory>> mandatoryChecksumAlgorithms();
+    default Optional<List<ChecksumAlgorithmFactory>> mandatoryChecksumAlgorithms() {
+        return Optional.empty();
+    }
 
     /**
      * Returns the list of supported and optional checksum algorithms.
      */
-    Optional<List<ChecksumAlgorithmFactory>> optionalChecksumAlgorithms();
+    default Optional<List<ChecksumAlgorithmFactory>> optionalChecksumAlgorithms() {
+        return Optional.empty();
+    }
 
     /**
      * Returns the list of mandatory signature types.
      */
-    Optional<List<SignatureType>> mandatorySignatureTypes();
+    default Optional<List<SignatureType>> mandatorySignatureTypes() {
+        return Optional.empty();
+    }
 
     /**
      * Returns the list of supported and optional signature types.
      */
-    Optional<List<SignatureType>> optionalSignatureTypes();
+    default Optional<List<SignatureType>> optionalSignatureTypes() {
+        return Optional.empty();
+    }
 
     /**
      * The validator that must be applied to release store before publishing.
      */
-    Optional<ArtifactStoreValidator> releaseValidator();
+    default Optional<ArtifactStoreValidator> releaseValidator() {
+        return Optional.empty();
+    }
 
     /**
      * The validator that must be applied to snapshot store before publishing.
      */
-    Optional<ArtifactStoreValidator> snapshotValidator();
+    default Optional<ArtifactStoreValidator> snapshotValidator() {
+        return Optional.empty();
+    }
+
+    /**
+     * No requirements.
+     */
+    ArtifactStoreRequirements NONE = new ArtifactStoreRequirements() {
+        @Override
+        public String name() {
+            return "none";
+        }
+
+        @Override
+        public String description() {
+            return "No requirements";
+        }
+    };
 }

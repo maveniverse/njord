@@ -11,16 +11,16 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
@@ -31,19 +31,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> implements NjordSession {
     private final InternalArtifactStoreManager internalArtifactStoreManager;
-    private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
+    private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
 
     public DefaultNjordSession(
             SessionConfig sessionConfig,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
-            ArtifactStoreExporterFactory artifactStoreExporterFactory,
+            ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
         super(sessionConfig);
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
-        this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
+        this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
     }
@@ -60,9 +60,9 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     }
 
     @Override
-    public ArtifactStoreExporter createArtifactStoreExporter() {
+    public ArtifactStoreWriter createArtifactStoreWriter() {
         checkClosed();
-        return artifactStoreExporterFactory.create(sessionConfig());
+        return artifactStoreWriterFactory.create(sessionConfig());
     }
 
     @Override

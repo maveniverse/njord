@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.plugin3;
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +20,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Exports a store as "bundle" ZIP to given path. The ZIP file has remote repository layout and contains all the
+ * Write out a store as "bundle" ZIP to given path. The ZIP file has remote repository layout and contains all the
  * artifacts and metadata.
  */
-@Mojo(name = "export-bundle", threadSafe = true, requiresProject = false)
-public class ExportBundleMojo extends NjordMojoSupport {
+@Mojo(name = "write-bundle", threadSafe = true, requiresProject = false)
+public class WriteBundleMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "store")
     private String store;
 
@@ -40,11 +40,11 @@ public class ExportBundleMojo extends NjordMojoSupport {
                 Files.createDirectories(targetDirectory);
             }
             Path result;
-            logger.info("Exporting store {} as bundle to {}", store, directory);
-            try (ArtifactStoreExporter artifactStoreExporter = ns.createArtifactStoreExporter()) {
-                result = artifactStoreExporter.exportAsBundle(storeOptional.orElseThrow(), targetDirectory);
+            logger.info("Writing store {} as bundle to {}", store, directory);
+            try (ArtifactStoreWriter artifactStoreWriter = ns.createArtifactStoreWriter()) {
+                result = artifactStoreWriter.writeAsBundle(storeOptional.orElseThrow(), targetDirectory);
             }
-            logger.info("Exported to " + result);
+            logger.info("Written to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");
         }

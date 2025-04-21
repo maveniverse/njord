@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.shared.store;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -41,4 +42,15 @@ public interface ArtifactStoreManager {
      * Fully deletes store.
      */
     boolean dropArtifactStore(String name) throws IOException;
+
+    /**
+     * Exports store as "transportable" Njord bundle. The file may be existing directory, in which case name of the
+     * resulting file will be store name, or non-existing file (with existing parents). Returns the bundle file.
+     */
+    Path exportTo(ArtifactStore artifactStore, Path file) throws IOException;
+
+    /**
+     * Imports the whole store to from "transportable" Njord bundle. The file must exist.
+     */
+    ArtifactStore importFrom(Path file) throws IOException;
 }

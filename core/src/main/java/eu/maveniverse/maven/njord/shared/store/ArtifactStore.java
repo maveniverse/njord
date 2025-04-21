@@ -28,6 +28,11 @@ public interface ArtifactStore extends Closeable {
     String name();
 
     /**
+     * The template used to create this store.
+     */
+    ArtifactStoreTemplate template();
+
+    /**
      * Timestamp when this store was created, never {@code null}.
      */
     Instant created();

@@ -8,16 +8,16 @@
 package eu.maveniverse.maven.njord.shared.impl.repository;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
 @Named
-public class DefaultArtifactStoreExporterFactory implements ArtifactStoreExporterFactory {
+public class DefaultArtifactStoreWriterFactory implements ArtifactStoreWriterFactory {
     @Override
-    public ArtifactStoreExporter create(SessionConfig sessionConfig) {
-        return new DefaultArtifactStoreExporter(sessionConfig);
+    public ArtifactStoreWriter create(SessionConfig sessionConfig) {
+        return new DefaultArtifactStoreWriter(sessionConfig);
     }
 }

@@ -11,14 +11,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface ArtifactStoreExporter extends Closeable {
+public interface ArtifactStoreWriter extends Closeable {
     /**
      * Exports store as directory hierarchy using Maven remote repository layout. Returns the root directory.
      */
-    Path exportAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
+    Path writeAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
 
     /**
      * Exports store as ZIP bundle. Returns the ZIP file.
      */
-    Path exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
+    Path writeAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException;
 }
