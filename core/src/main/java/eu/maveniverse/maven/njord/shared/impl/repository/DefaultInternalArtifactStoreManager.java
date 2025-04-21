@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.impl.Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -26,16 +27,20 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -66,7 +71,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (Files.isDirectory(config.config().basedir())) {
             try (Stream<Path> stream = Files.list(config.config().basedir())) {
                 return stream.filter(Files::isDirectory)
-                        .filter(p -> Files.isRegularFile(p.resolve(".meta").resolve("repository.properties")))
+                        .filter(p -> Files.isRegularFile(metaRepositoryProperties(p)))
                         .map(p -> p.getFileName().toString())
                         .collect(Collectors.toList());
             }
@@ -113,7 +118,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
             try {
-                Path meta = basedir.resolve(".meta").resolve("repository.properties");
+                Path meta = metaRepositoryProperties(basedir);
                 if (Files.exists(meta)) {
                     FileUtils.deleteRecursively(basedir);
                     return true;
@@ -123,6 +128,29 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             }
         }
         return false;
+    }
+
+    @Override
+    public void renumberArtifactStores() throws IOException {
+        ArrayList<String> names = new ArrayList<>(listArtifactStoreNames());
+        names.sort(Comparator.naturalOrder());
+        Map<ArtifactStoreTemplate, TreeSet<String>> stores = new HashMap<>();
+        for (String name : names) {
+            Path basedir = config.config().basedir().resolve(name);
+            Map<String, String> properties = loadStoreProperties(basedir);
+            ArtifactStoreTemplate template = templates.get(properties.get("templateName"));
+            stores.computeIfAbsent(template, k -> new TreeSet<>()).add(name);
+        }
+        for (ArtifactStoreTemplate template : stores.keySet()) {
+            int num = 1;
+            for (String name : stores.get(template)) {
+                String formattedName = formatArtifactStoreName(template.prefix(), num++);
+                if (!formattedName.equals(name)) {
+                    Path basedir = config.config().basedir().resolve(name);
+                    renameStore(basedir, formattedName);
+                }
+            }
+        }
     }
 
     @Override
@@ -171,15 +199,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         String storeName;
         Path storeBasedir;
         try (FileSystem fs = FileSystems.newFileSystem(storeSource, Map.of("create", "false"), null)) {
-            Path repositoryProperties = fs.getPath("/", ".meta", "repository.properties");
+            Path repositoryProperties = metaRepositoryProperties(fs.getPath("/"));
             if (Files.exists(repositoryProperties)) {
-                Properties properties = new Properties();
-                try (InputStream in = Files.newInputStream(repositoryProperties)) {
-                    properties.load(in);
-                }
-                ArtifactStoreTemplate template = templates.get(properties.getProperty("templateName"));
+                Map<String, String> properties = loadStoreProperties(fs.getPath("/"));
+                ArtifactStoreTemplate template = templates.get(properties.get("templateName"));
                 if (template == null) {
-                    throw new IOException("Template not found: " + properties.getProperty("templateName"));
+                    throw new IOException("Template not found: " + properties.get("templateName"));
                 }
                 try (DefaultArtifactStore artifactStore = createNewArtifactStore(template)) {
                     storeName = artifactStore.name();
@@ -192,16 +217,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                             true);
                 }
                 // fix name
-                properties.clear();
-                Path newStoreProperties = storeBasedir.resolve(".meta").resolve("repository.properties");
-                try (InputStream in = Files.newInputStream(newStoreProperties)) {
-                    properties.load(in);
-                }
-                properties.setProperty("name", storeName);
-                try (OutputStream out =
-                        Files.newOutputStream(newStoreProperties, StandardOpenOption.TRUNCATE_EXISTING)) {
-                    properties.store(out, null);
-                }
+                renameStore(storeBasedir, storeName);
             } else {
                 throw new IOException("Unknown transportable bundle layout");
             }
@@ -213,26 +229,18 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path basedir = config.config().basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
-            Properties properties = new Properties();
-            Path meta = basedir.resolve(".meta").resolve("repository.properties");
-            try (InputStream in = Files.newInputStream(meta)) {
-                properties.load(in);
-            }
-
+            Map<String, String> properties = loadStoreProperties(basedir);
             return new DefaultArtifactStore(
-                    properties.getProperty("name"),
-                    templates.get(properties.getProperty("templateName")),
-                    Instant.ofEpochMilli(Long.parseLong(properties.getProperty("created"))),
-                    RepositoryMode.valueOf(properties.getProperty("repositoryMode")),
-                    Boolean.parseBoolean(properties.getProperty("allowRedeploy")),
-                    checksumAlgorithmFactorySelector.selectList(Arrays.stream(properties
-                                    .getProperty("checksumAlgorithmFactories")
-                                    .split(","))
+                    properties.get("name"),
+                    templates.get(properties.get("templateName")),
+                    Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
+                    RepositoryMode.valueOf(properties.get("repositoryMode")),
+                    Boolean.parseBoolean(properties.get("allowRedeploy")),
+                    checksumAlgorithmFactorySelector.selectList(Arrays.stream(
+                                    properties.get("checksumAlgorithmFactories").split(","))
                             .filter(s -> !s.trim().isEmpty())
                             .collect(toList())),
-                    Arrays.stream(properties
-                                    .getProperty("omitChecksumsForExtensions")
-                                    .split(","))
+                    Arrays.stream(properties.get("omitChecksumsForExtensions").split(","))
                             .filter(s -> !s.trim().isEmpty())
                             .collect(toList()),
                     basedir);
@@ -271,23 +279,19 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                                 DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
                                 CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS));
 
-        Properties properties = new Properties();
-        properties.setProperty("name", name);
-        properties.setProperty("templateName", template.name());
-        properties.setProperty("created", Long.toString(created.toEpochMilli()));
-        properties.setProperty("repositoryMode", repositoryMode.name());
-        properties.setProperty("allowRedeploy", Boolean.toString(allowRedeploy));
-        properties.setProperty(
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put("name", name);
+        properties.put("templateName", template.name());
+        properties.put("created", Long.toString(created.toEpochMilli()));
+        properties.put("repositoryMode", repositoryMode.name());
+        properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
+        properties.put(
                 "checksumAlgorithmFactories",
                 checksumAlgorithmFactories.stream()
                         .map(ChecksumAlgorithmFactory::getName)
                         .collect(Collectors.joining(",")));
-        properties.setProperty("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
-        Path meta = basedir.resolve(".meta").resolve("repository.properties");
-        Files.createDirectories(meta.getParent());
-        try (OutputStream out = Files.newOutputStream(meta, StandardOpenOption.CREATE_NEW)) {
-            properties.store(out, null);
-        }
+        properties.put("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
+        saveStoreProperties(basedir, properties);
 
         return new DefaultArtifactStore(
                 name,
@@ -306,7 +310,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         try (Stream<Path> candidates = Files.list(config.config().basedir())
                 .filter(Files::isDirectory)
                 .filter(d -> d.getFileName().toString().startsWith(prefixDash))
-                .filter(d -> Files.isRegularFile(d.resolve(".meta").resolve("repository.properties")))
+                .filter(d -> Files.isRegularFile(metaRepositoryProperties(d)))
                 .sorted(Comparator.reverseOrder())) {
             Optional<Path> greatest = candidates.findFirst();
             if (greatest.isPresent()) {
@@ -314,6 +318,42 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                         greatest.orElseThrow().getFileName().toString().substring(prefixDash.length()));
             }
         }
-        return prefixDash + String.format("%05d", num + 1);
+        return formatArtifactStoreName(prefix, num + 1);
+    }
+
+    private String formatArtifactStoreName(String prefix, int num) {
+        return String.format("%s-%05d", prefix, num);
+    }
+
+    private Path metaRepositoryProperties(Path basedir) {
+        return basedir.resolve(".meta").resolve("repository.properties");
+    }
+
+    private Map<String, String> loadStoreProperties(Path basedir) throws IOException {
+        Properties properties = new Properties();
+        Path metaStoreProperties = metaRepositoryProperties(basedir);
+        try (InputStream in = Files.newInputStream(metaStoreProperties)) {
+            properties.load(in);
+        }
+        return Utils.toMap(properties);
+    }
+
+    private void saveStoreProperties(Path basedir, Map<String, String> properties) throws IOException {
+        Properties prop = new Properties();
+        properties.forEach(prop::setProperty);
+        Path metaStoreProperties = metaRepositoryProperties(basedir);
+        Files.createDirectories(metaStoreProperties.getParent());
+        try (OutputStream out = Files.newOutputStream(metaStoreProperties, StandardOpenOption.CREATE)) {
+            prop.store(out, null);
+        }
+    }
+
+    private void renameStore(Path basedir, String newName) throws IOException {
+        Map<String, String> props = loadStoreProperties(basedir);
+        props.put("name", newName);
+        saveStoreProperties(basedir, props);
+        if (!basedir.getFileName().toString().equals(newName)) {
+            Files.move(basedir, basedir.getParent().resolve(newName), StandardCopyOption.ATOMIC_MOVE);
+        }
     }
 }

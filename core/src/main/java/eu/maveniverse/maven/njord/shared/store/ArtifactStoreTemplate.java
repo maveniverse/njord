@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.store;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public interface ArtifactStoreTemplate {
@@ -153,6 +154,20 @@ public interface ArtifactStoreTemplate {
 
         public Optional<List<String>> omitChecksumsForExtensions() {
             return Optional.ofNullable(omitChecksumsForExtensions);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Impl impl = (Impl) o;
+            return Objects.equals(name, impl.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
         }
     }
 }
