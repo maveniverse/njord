@@ -22,6 +22,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "import", threadSafe = true, requiresProject = false)
 public class ImportMojo extends NjordMojoSupport {
+    /**
+     * The bundle file to import.
+     */
     @Parameter(required = true, property = "file")
     private String file;
 

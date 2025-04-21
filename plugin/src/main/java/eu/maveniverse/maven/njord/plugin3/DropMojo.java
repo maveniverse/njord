@@ -17,6 +17,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "drop", threadSafe = true, requiresProject = false)
 public class DropMojo extends NjordMojoSupport {
+    /**
+     * The name of the store to drop.
+     */
     @Parameter(required = true, property = "store")
     private String store;
 

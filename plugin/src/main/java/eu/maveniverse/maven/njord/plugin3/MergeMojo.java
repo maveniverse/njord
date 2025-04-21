@@ -20,12 +20,21 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "merge", threadSafe = true, requiresProject = false)
 public class MergeMojo extends NjordMojoSupport {
+    /**
+     * The name of the source store.
+     */
     @Parameter(required = true, property = "from")
     private String from;
 
+    /**
+     * The name of the target store.
+     */
     @Parameter(required = true, property = "to")
     private String to;
 
+    /**
+     * Whether source store should be dropped after successful operation.
+     */
     @Parameter(required = true, property = "drop", defaultValue = "true")
     private boolean drop;
 

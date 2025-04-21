@@ -22,12 +22,21 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "validate", threadSafe = true, requiresProject = false)
 public class ValidateMojo extends NjordMojoSupport {
+    /**
+     * The name of the store to validate.
+     */
     @Parameter(required = true, property = "store")
     private String store;
 
+    /**
+     * The name of the publisher to validate against.
+     */
     @Parameter(required = true, property = "target")
     private String target;
 
+    /**
+     * Show detailed validation report.
+     */
     @Parameter(required = true, property = "details", defaultValue = "false")
     private boolean details;
 

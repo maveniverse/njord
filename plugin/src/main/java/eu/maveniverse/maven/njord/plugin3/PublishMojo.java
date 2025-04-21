@@ -21,12 +21,21 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "publish", threadSafe = true, requiresProject = false)
 public class PublishMojo extends NjordMojoSupport {
+    /**
+     * The name of the store to publish.
+     */
     @Parameter(required = true, property = "store")
     private String store;
 
+    /**
+     * The name of the publisher to publish to.
+     */
     @Parameter(required = true, property = "target")
     private String target;
 
+    /**
+     * Whether source store should be dropped after successful operation.
+     */
     @Parameter(required = true, property = "drop", defaultValue = "false")
     private boolean drop;
 

@@ -25,9 +25,15 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "write-bundle", threadSafe = true, requiresProject = false)
 public class WriteBundleMojo extends NjordMojoSupport {
+    /**
+     * The name of the store to be written out.
+     */
     @Parameter(required = true, property = "store")
     private String store;
 
+    /**
+     * The directory to write out the bundle file.
+     */
     @Parameter(required = true, property = "directory")
     private String directory;
 

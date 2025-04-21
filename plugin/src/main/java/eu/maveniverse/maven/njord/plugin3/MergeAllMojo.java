@@ -28,6 +28,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "merge-all", threadSafe = true, requiresProject = false)
 public class MergeAllMojo extends NjordMojoSupport {
+    /**
+     * Fail if no store got merged, by default {@code true}.
+     */
     @Parameter(required = true, property = "failIfNothingDone", defaultValue = "true")
     private boolean failIfNothingDone;
 

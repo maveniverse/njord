@@ -24,6 +24,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "import-all", threadSafe = true, requiresProject = false)
 public class ImportAllMojo extends NjordMojoSupport {
+    /**
+     * The directory to import from, by default is current directory.
+     */
     @Parameter(required = true, property = "dir", defaultValue = ".")
     private String dir;
 
