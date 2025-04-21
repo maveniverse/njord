@@ -163,7 +163,8 @@ public final class FileUtils {
     /**
      * Copies directory recursively.
      */
-    public static void copyRecursively(Path from, Path to, Predicate<Path> predicate) throws IOException {
+    public static void copyRecursively(Path from, Path to, Predicate<Path> predicate, boolean overwrite)
+            throws IOException {
         Files.walkFileTree(from, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -180,7 +181,12 @@ public final class FileUtils {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (predicate.test(file)) {
                     Path target = to.resolve(from.relativize(file).toString());
-                    Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
+                    if (overwrite) {
+                        Files.copy(
+                                file, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                    } else {
+                        Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
+                    }
                 }
                 return FileVisitResult.CONTINUE;
             }

@@ -12,8 +12,8 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import java.util.Map;
@@ -25,18 +25,18 @@ import javax.inject.Singleton;
 @Named
 public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
-    private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
+    private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
 
     @Inject
     public DefaultNjordSessionFactory(
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
-            ArtifactStoreExporterFactory artifactStoreExporterFactory,
+            ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
-        this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
+        this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
     }
@@ -46,7 +46,7 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
         return new DefaultNjordSession(
                 sessionConfig,
                 internalArtifactStoreManagerFactory,
-                artifactStoreExporterFactory,
+                artifactStoreWriterFactory,
                 artifactStoreMergerFactory,
                 artifactStorePublisherFactories);
     }

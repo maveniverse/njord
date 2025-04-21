@@ -108,12 +108,6 @@ public interface ArtifactStore extends Closeable {
     void writeTo(Path directory) throws IOException;
 
     /**
-     * Exports out the whole store to given directory retaining the layout of the store and all the metadata.
-     * The directory must exist.
-     */
-    void exportTo(Path directory) throws IOException;
-
-    /**
      * Content modifying operation handle. Caller must close this instance, even if operation is canceled.
      */
     interface Operation extends Closeable {

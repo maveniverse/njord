@@ -11,9 +11,9 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Optional;
@@ -30,9 +30,9 @@ public interface NjordSession extends Closeable {
     ArtifactStoreManager artifactStoreManager();
 
     /**
-     * Creates store exporter. Returned instance must be closed, ideally in try-with-resource.
+     * Creates store writer. Returned instance must be closed, ideally in try-with-resource.
      */
-    ArtifactStoreExporter createArtifactStoreExporter();
+    ArtifactStoreWriter createArtifactStoreWriter();
 
     /**
      * Creates store merger. Returned instance must be closed, ideally in try-with-resource.

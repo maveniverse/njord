@@ -13,7 +13,7 @@ import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -21,14 +21,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class DefaultArtifactStoreExporter extends CloseableConfigSupport<SessionConfig>
-        implements ArtifactStoreExporter {
-    public DefaultArtifactStoreExporter(SessionConfig sessionConfig) {
+public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionConfig> implements ArtifactStoreWriter {
+    public DefaultArtifactStoreWriter(SessionConfig sessionConfig) {
         super(sessionConfig);
     }
 
     @Override
-    public Path exportAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
+    public Path writeAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
         checkClosed();
@@ -42,7 +41,7 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Session
     }
 
     @Override
-    public Path exportAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
+    public Path writeAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
         checkClosed();
@@ -58,27 +57,6 @@ public class DefaultArtifactStoreExporter extends CloseableConfigSupport<Session
         try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
             artifactStore.writeTo(root);
-        }
-        return bundleFile;
-    }
-
-    @Override
-    public Path exportAsTransportableBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
-        requireNonNull(artifactStore);
-        requireNonNull(outputDirectory);
-        checkClosed();
-
-        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
-        if (!Files.isDirectory(targetDirectory)) {
-            Files.createDirectories(targetDirectory);
-        }
-        Path bundleFile = targetDirectory.resolve(artifactStore.name() + ".zip");
-        if (Files.exists(bundleFile)) {
-            throw new IOException("Exporting to existing bundle ZIP not supported");
-        }
-        try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
-            Path root = fs.getPath("/");
-            artifactStore.exportTo(root);
         }
         return bundleFile;
     }

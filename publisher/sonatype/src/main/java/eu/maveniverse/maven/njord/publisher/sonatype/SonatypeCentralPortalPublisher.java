@@ -16,12 +16,12 @@ import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreExporterFactory;
+import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreExporter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +33,7 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
-    private final ArtifactStoreExporterFactory artifactStoreExporterFactory;
+    private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
 
     public SonatypeCentralPortalPublisher(
             SessionConfig sessionConfig,
@@ -41,7 +41,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
-            ArtifactStoreExporterFactory artifactStoreExporterFactory) {
+            ArtifactStoreWriterFactory artifactStoreWriterFactory) {
         super(
                 sessionConfig,
                 repositorySystem,
@@ -52,7 +52,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
-        this.artifactStoreExporterFactory = requireNonNull(artifactStoreExporterFactory);
+        this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
     }
 
     @Override
@@ -63,8 +63,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             Path tmpDir = Files.createTempDirectory(name);
             try {
                 Path bundle;
-                try (ArtifactStoreExporter artifactStoreExporter = artifactStoreExporterFactory.create(sessionConfig)) {
-                    bundle = artifactStoreExporter.exportAsBundle(artifactStore, tmpDir);
+                try (ArtifactStoreWriter artifactStoreWriter = artifactStoreWriterFactory.create(sessionConfig)) {
+                    bundle = artifactStoreWriter.writeAsBundle(artifactStore, tmpDir);
                 }
                 if (bundle == null) {
                     throw new IllegalStateException("Bundle ZIP was not created");

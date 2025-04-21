@@ -206,17 +206,10 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
             throw new IOException("Directory does not exist");
         }
         FileUtils.copyRecursively(
-                basedir(), directory, p -> !p.getFileName().toString().startsWith("."));
-    }
-
-    @Override
-    public void exportTo(Path directory) throws IOException {
-        requireNonNull(directory);
-        if (!Files.isDirectory(directory)) {
-            throw new IOException("Directory does not exist");
-        }
-        FileUtils.copyRecursively(
-                basedir(), directory, p -> !p.getFileName().toString().startsWith(".lock"));
+                basedir(),
+                directory,
+                p -> p.getFileName() == null || !p.getFileName().toString().startsWith("."),
+                false);
     }
 
     @Override
