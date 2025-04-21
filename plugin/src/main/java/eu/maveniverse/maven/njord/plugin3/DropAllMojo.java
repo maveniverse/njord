@@ -18,6 +18,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "drop-all", threadSafe = true, requiresProject = false)
 public class DropAllMojo extends NjordMojoSupport {
+    /**
+     * This property must be specified as "safety net" for this operation to succeed.
+     */
     @Parameter(required = true, property = "yes")
     private boolean yes;
 

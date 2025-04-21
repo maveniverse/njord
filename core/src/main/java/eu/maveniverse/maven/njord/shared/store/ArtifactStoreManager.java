@@ -44,6 +44,11 @@ public interface ArtifactStoreManager {
     boolean dropArtifactStore(String name) throws IOException;
 
     /**
+     * Renumbers artifact stores.
+     */
+    void renumberArtifactStores() throws IOException;
+
+    /**
      * Exports store as "transportable" Njord bundle. The file may be existing directory, in which case name of the
      * resulting file will be store name, or non-existing file (with existing parents). Returns the bundle file.
      */
