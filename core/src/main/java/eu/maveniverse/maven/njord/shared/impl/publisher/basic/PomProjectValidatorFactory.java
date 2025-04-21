@@ -73,7 +73,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                 } else {
                     boolean ok = true;
                     for (License license : m.getLicenses()) {
-                        if (nullOrBlank(license.getName()) || nullOrBlank(license.getUrl())) {
+                        if (ok && (nullOrBlank(license.getName()) || nullOrBlank(license.getUrl()))) {
                             ok = false;
                             collector.addError("MISSING (incomplete) project/licenses/license (name, url)");
                         }
@@ -87,10 +87,13 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
                 } else {
                     boolean ok = true;
                     for (Developer developer : m.getDevelopers()) {
-                        if (nullOrBlank(developer.getId()) || nullOrBlank(developer.getName())) {
+                        if (ok && (nullOrBlank(developer.getId()) && nullOrBlank(developer.getName()) && nullOrBlank(developer.getEmail()))) {
                             ok = false;
                             collector.addError(
-                                    "MISSING (incomplete) project/developers/developer (id, name)");
+                                    "MISSING (incomplete) project/developers/developer (id, name or email)");
+                        }
+                        if (ok && nullOrBlank(developer.getId()) || nullOrBlank(developer.getName()) || nullOrBlank(developer.getEmail())) {
+                            collector.addWarning("INCOMPLETE project/developers/developer (id, name or email)");
                         }
                     }
                     if (ok) {
