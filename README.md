@@ -57,12 +57,12 @@ needs following stanza in your `settings.xml`:
 
 Supported publishers and corresponding `server.id`s are:
 
-| Publisher (publisher ID)                                        | server.id               | What is needed                                                                                                                               |
+| Publisher (publisher ID)                                       | server.id               | What is needed                                                                                                                               |
 |----------------------------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
 | Sonatype Central Portal (`sonatype-cp`)                        | `sonatype-cp`           | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/).                 |
  | Sonatype OSS on https://oss.sonatype.org/ (`sonatype-oss`)     | `sonatype-oss`          | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-token/) and using OSS instance. |
 | Sonatype S01 on https://s01.oss.sonatype.org/ (`sonatype-s01`) | `sonatype-s01`          | As above but using s01 instance.                                                                                                             |
- | Apache RAO on (`apache-rao`)                                   | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
+ | Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
 
