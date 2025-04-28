@@ -65,6 +65,7 @@ Supported publishers and corresponding `server.id`s are:
  | Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
+The publisher id is determined from the mandatory plugin parameter `target` (of goal `publish`).
 
 That's all! No project change needed at all. 
 
