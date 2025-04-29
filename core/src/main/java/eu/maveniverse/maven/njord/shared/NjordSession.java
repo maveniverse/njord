@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
@@ -50,6 +51,21 @@ public interface NjordSession extends Closeable {
     default Optional<ArtifactStorePublisher> selectArtifactStorePublisher(String name) {
         requireNonNull(name);
         return availablePublishers().stream().filter(p -> name.equals(p.name())).findFirst();
+    }
+
+    /**
+     * Returns a collection of available comparator names.
+     */
+    Collection<ArtifactStoreComparator> availableComparators();
+
+    /**
+     * Selects the publisher by {@link ArtifactStoreComparator#name()}.
+     */
+    default Optional<ArtifactStoreComparator> selectArtifactStoreComparator(String name) {
+        requireNonNull(name);
+        return availableComparators().stream()
+                .filter(p -> name.equals(p.name()))
+                .findFirst();
     }
 
     /**

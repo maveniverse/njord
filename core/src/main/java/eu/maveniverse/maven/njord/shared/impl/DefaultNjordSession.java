@@ -17,6 +17,8 @@ import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreMan
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -34,18 +36,21 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
+    private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
     public DefaultNjordSession(
             SessionConfig sessionConfig,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
-            Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
+            Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
         super(sessionConfig);
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
+        this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
     }
 
     @Override
@@ -75,6 +80,14 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
         return artifactStorePublisherFactories.values().stream()
+                .map(f -> f.create(sessionConfig()))
+                .toList();
+    }
+
+    @Override
+    public Collection<ArtifactStoreComparator> availableComparators() {
+        checkClosed();
+        return artifactStoreComparatorFactories.values().stream()
                 .map(f -> f.create(sessionConfig()))
                 .toList();
     }
