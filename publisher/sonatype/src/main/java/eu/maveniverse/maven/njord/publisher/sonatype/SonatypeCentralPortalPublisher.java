@@ -18,7 +18,7 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
-import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
+import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;

@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFacto
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,17 +29,20 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
+    private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
     @Inject
     public DefaultNjordSessionFactory(
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
-            Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories) {
+            Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
         this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
+        this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
     }
 
     @Override
@@ -48,6 +52,7 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
                 internalArtifactStoreManagerFactory,
                 artifactStoreWriterFactory,
                 artifactStoreMergerFactory,
-                artifactStorePublisherFactories);
+                artifactStorePublisherFactories,
+                artifactStoreComparatorFactories);
     }
 }

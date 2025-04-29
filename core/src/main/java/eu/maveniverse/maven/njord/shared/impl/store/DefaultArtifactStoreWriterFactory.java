@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.repository;
+package eu.maveniverse.maven.njord.shared.impl.store;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;

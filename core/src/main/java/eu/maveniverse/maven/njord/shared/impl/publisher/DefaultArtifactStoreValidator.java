@@ -109,7 +109,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
         private final LinkedHashMap<String, VR> children = new LinkedHashMap<>();
 
         private VR(String name) {
-            this.name = requireNonNull(name);
+            this.name = name;
         }
 
         @Override
@@ -166,6 +166,7 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
 
         @Override
         public VR child(String name) {
+            requireNonNull(name);
             VR child = new VR(name);
             children.put(name, child);
             return child;

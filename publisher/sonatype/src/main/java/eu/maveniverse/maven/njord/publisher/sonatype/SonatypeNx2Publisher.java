@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
-import eu.maveniverse.maven.njord.shared.impl.repository.ArtifactStoreDeployer;
+import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
