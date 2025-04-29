@@ -50,11 +50,11 @@ assert second.contains('[INFO] Using alternate deployment repository id::njord:r
 
 // third run:
 assert third.contains("[INFO] Njord ${projectVersion} session created")
-assert third.contains('[INFO] Exporting store release-sca-00001')
+assert third.contains('[INFO] Exporting store merge-all-release-00001')
 
 // fourth run:
 assert fourth.contains("[INFO] Njord ${projectVersion} session created")
-assert fourth.contains('[INFO] Exporting store release-sca-00002')
+assert fourth.contains('[INFO] Exporting store merge-all-release-00002')
 
 // fifth run:
 assert fifth.contains("[INFO] Njord ${projectVersion} session created")
@@ -66,8 +66,8 @@ assert sixth.contains('[INFO] Importing stores from')
 
 // seventh run:
 assert seventh.contains("[INFO] Njord ${projectVersion} session created")
-assert seventh.contains('[INFO] Merging release-sca-00001')
-assert seventh.contains('[INFO] Merging release-sca-00002')
+assert seventh.contains('[INFO] Merging merge-all-release-00001')
+assert seventh.contains('[INFO] Merging merge-all-release-00002')
 
 // eighth run:
 assert eighth.contains("[INFO] Njord ${projectVersion} session created")

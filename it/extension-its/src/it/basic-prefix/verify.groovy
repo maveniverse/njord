@@ -26,17 +26,19 @@ var fourth = fourthLog.text
 
 // first run:
 assert first.contains("[INFO] Njord ${projectVersion} session created")
-assert first.contains('[INFO] Using alternate deployment repository id::njord:release-sca')
+assert first.contains('[INFO] Using alternate deployment repository id::njord:release')
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains('[INFO] Using alternate deployment repository id::njord:release-redeploy-sca')
+assert second.contains('[INFO] Using alternate deployment repository id::njord:release-sca')
 
 // third run:
 assert third.contains("[INFO] Njord ${projectVersion} session created")
-assert third.contains('[INFO] Redeploying redeploy-release-00001')
-assert third.contains('[INFO] Dropping redeploy-release-00001')
+assert third.contains('[INFO] Using alternate deployment repository id::njord:release-redeploy-sca')
 
 // fourth run:
 assert fourth.contains("[INFO] Njord ${projectVersion} session created")
-assert fourth.contains('[INFO] Total of 1 ArtifactStore.')
+assert fourth.contains('[INFO] - something-else-00001')
+assert fourth.contains('[INFO] - something-else-00002')
+assert fourth.contains('[INFO] - something-else-00003')
+assert fourth.contains('[INFO] Total of 3 ArtifactStore.')

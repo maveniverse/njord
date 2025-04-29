@@ -10,13 +10,21 @@ package eu.maveniverse.maven.njord.shared.store;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ArtifactStoreManager {
     /**
      * Lists store "probable names". Not all element name may be a store, check with {@link #selectArtifactStore(String)}.
+     * The result is ordered in natural order (growing).
      */
-    Collection<String> listArtifactStoreNames() throws IOException;
+    List<String> listArtifactStoreNames() throws IOException;
+
+    /**
+     * Lists store "probable names" for given prefix. Not all element name may be a store, check with {@link #selectArtifactStore(String)}.
+     * The result is ordered in natural order (growing).
+     */
+    List<String> listArtifactStoreNamesForPrefix(String prefix) throws IOException;
 
     /**
      * Selects artifact store. If selected (optional is not empty), caller must close it.

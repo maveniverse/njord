@@ -21,19 +21,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * Validate given store against given target.
  */
 @Mojo(name = "validate", threadSafe = true, requiresProject = false)
-public class ValidateMojo extends NjordMojoSupport {
-    /**
-     * The name of the store to validate.
-     */
-    @Parameter(required = true, property = "store")
-    private String store;
-
-    /**
-     * The name of the publisher to validate against.
-     */
-    @Parameter(required = true, property = "target")
-    private String target;
-
+public class ValidateMojo extends PublisherSupportMojo {
     /**
      * Show detailed validation report.
      */
@@ -42,43 +30,33 @@ public class ValidateMojo extends NjordMojoSupport {
 
     @Override
     protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
-        Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
-        if (storeOptional.isEmpty()) {
-            logger.warn("ArtifactStore with given name not found: {}", store);
-            return;
-        }
-        Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(target);
-        if (po.isPresent()) {
-            ArtifactStorePublisher p = po.orElseThrow();
-            try (ArtifactStore from = storeOptional.orElseThrow()) {
-                Optional<ArtifactStoreValidator> v = p.validatorFor(from);
-                if (v.isPresent()) {
-                    ArtifactStoreValidator.ValidationResult vr = v.orElseThrow().validate(from);
-                    if (details) {
-                        logger.info("Validation results for {}", store);
-                        dumpValidationResult("", vr);
-                    }
-                    if (!vr.isValid()) {
-                        logger.error("ArtifactStore {} failed validation", from);
-                        throw new MojoFailureException("ArtifactStore validation failed");
-                    } else {
-                        int warnings = vr.warningCount();
-                        if (warnings > 0) {
-                            logger.warn(
-                                    "ArtifactStore {} passed {} validation with {} warnings",
-                                    from,
-                                    vr.checkCount(),
-                                    warnings);
-                        } else {
-                            logger.info("ArtifactStore {} passed {} validation", from, vr.checkCount());
-                        }
-                    }
-                } else {
-                    logger.info("Not validated artifact store, no applicable validator set for publisher {}", p.name());
+        ArtifactStorePublisher p = getArtifactStorePublisher(ns);
+        try (ArtifactStore from = getArtifactStore(ns)) {
+            Optional<ArtifactStoreValidator> v = p.validatorFor(from);
+            if (v.isPresent()) {
+                ArtifactStoreValidator.ValidationResult vr = v.orElseThrow().validate(from);
+                if (details) {
+                    logger.info("Validation results for {}", from.name());
+                    dumpValidationResult("", vr);
                 }
+                if (!vr.isValid()) {
+                    logger.error("ArtifactStore {} failed validation", from);
+                    throw new MojoFailureException("ArtifactStore validation failed");
+                } else {
+                    int warnings = vr.warningCount();
+                    if (warnings > 0) {
+                        logger.warn(
+                                "ArtifactStore {} passed {} validation with {} warnings",
+                                from,
+                                vr.checkCount(),
+                                warnings);
+                    } else {
+                        logger.info("ArtifactStore {} passed {} validation", from, vr.checkCount());
+                    }
+                }
+            } else {
+                logger.info("Not validated artifact store, no applicable validator set for publisher {}", p.name());
             }
-        } else {
-            throw new MojoFailureException("Publisher not found");
         }
     }
 

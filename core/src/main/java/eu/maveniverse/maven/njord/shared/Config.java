@@ -30,6 +30,14 @@ public interface Config {
     RemoteRepository CENTRAL =
             new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
+    String NJORD_AUTOPREFIX = "njord.autoprefix";
+
+    String DEFAULT_NJORD_AUTOPREFIX = Boolean.TRUE.toString();
+
+    String NJORD_PREFIX = "njord.prefix";
+
+    String NJORD_TARGET = "njord.target";
+
     boolean enabled();
 
     Optional<String> version();

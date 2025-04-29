@@ -104,8 +104,11 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
                         // empty -> default
-                        try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(
-                                internalArtifactStoreManager.defaultTemplate())) {
+                        ArtifactStoreTemplate template = internalArtifactStoreManager.defaultTemplate();
+                        if (config.prefix().isPresent()) {
+                            template = template.withPrefix(config.prefix().orElseThrow());
+                        }
+                        try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(template)) {
                             artifactStoreName = artifactStore.name();
                         }
                     } else {
@@ -116,8 +119,12 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
                         if (templates.size() != 1) {
                             throw new IllegalArgumentException("Unknown template: " + uri);
                         } else {
+                            ArtifactStoreTemplate template = templates.get(0);
+                            if (config.prefix().isPresent()) {
+                                template = template.withPrefix(config.prefix().orElseThrow());
+                            }
                             try (ArtifactStore artifactStore =
-                                    internalArtifactStoreManager.createArtifactStore(templates.get(0))) {
+                                    internalArtifactStoreManager.createArtifactStore(template)) {
                                 artifactStoreName = artifactStore.name();
                             }
                         }

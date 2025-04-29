@@ -37,9 +37,7 @@ public interface ArtifactStoreTemplate {
     /**
      * Template prefix to use when creating distinct store names.
      */
-    default String prefix() {
-        return name();
-    }
+    String prefix();
 
     /**
      * Repository mode to create store.
@@ -60,6 +58,20 @@ public interface ArtifactStoreTemplate {
      * The extensions that checksum creation should be omitted for, or empty, if globally configured value should be used.
      */
     Optional<List<String>> omitChecksumsForExtensions();
+
+    /**
+     * Customizes template to use given prefix.
+     */
+    default ArtifactStoreTemplate withPrefix(String prefix) {
+        requireNonNull(prefix);
+        return new Impl(
+                name(),
+                prefix,
+                repositoryMode(),
+                allowRedeploy(),
+                checksumAlgorithmFactories().orElse(null),
+                omitChecksumsForExtensions().orElse(null));
+    }
 
     ArtifactStoreTemplate RELEASE = create(
             "release",
@@ -109,11 +121,13 @@ public interface ArtifactStoreTemplate {
             boolean allowRedeploy,
             List<String> checksumAlgorithmFactories,
             List<String> omitChecksumsForExtensions) {
-        return new Impl(name, repositoryMode, allowRedeploy, checksumAlgorithmFactories, omitChecksumsForExtensions);
+        return new Impl(
+                name, name, repositoryMode, allowRedeploy, checksumAlgorithmFactories, omitChecksumsForExtensions);
     }
 
     class Impl implements ArtifactStoreTemplate {
         private final String name;
+        private final String prefix;
         private final RepositoryMode repositoryMode;
         private final boolean allowRedeploy;
         private final List<String> checksumAlgorithmFactories;
@@ -121,11 +135,13 @@ public interface ArtifactStoreTemplate {
 
         private Impl(
                 String name,
+                String prefix,
                 RepositoryMode repositoryMode,
                 boolean allowRedeploy,
                 List<String> checksumAlgorithmFactories,
                 List<String> omitChecksumsForExtensions) {
             this.name = requireNonNull(name);
+            this.prefix = requireNonNull(prefix);
             this.repositoryMode = requireNonNull(repositoryMode);
             this.allowRedeploy = allowRedeploy;
             this.checksumAlgorithmFactories = checksumAlgorithmFactories;
@@ -135,6 +151,11 @@ public interface ArtifactStoreTemplate {
         @Override
         public String name() {
             return name;
+        }
+
+        @Override
+        public String prefix() {
+            return prefix;
         }
 
         @Override
@@ -162,12 +183,12 @@ public interface ArtifactStoreTemplate {
                 return false;
             }
             Impl impl = (Impl) o;
-            return Objects.equals(name, impl.name);
+            return Objects.equals(name, impl.name) && Objects.equals(prefix, impl.prefix);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(name);
+            return Objects.hash(name, prefix);
         }
     }
 }

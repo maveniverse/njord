@@ -276,11 +276,16 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     public String toString() {
         if (closed.get()) {
             return String.format(
-                    "%s (%s, %s, closed)", name(), created(), repositoryMode().name());
+                    "%s (%s, %s, %s, closed)",
+                    name(), created(), repositoryMode().name(), template.name());
         } else {
             return String.format(
-                    "%s (%s, %s, %s artifacts)",
-                    name(), created(), repositoryMode().name(), artifacts().size());
+                    "%s (%s, %s, %s, %s artifacts)",
+                    name(),
+                    created(),
+                    repositoryMode().name(),
+                    template.name(),
+                    artifacts().size());
         }
     }
 

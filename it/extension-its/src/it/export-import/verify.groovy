@@ -30,7 +30,7 @@ assert first.contains('[INFO] Using alternate deployment repository id::njord:re
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains('[INFO] Exporting store release-sca-00001 to')
+assert second.contains('[INFO] Exporting store export-import-00001 to')
 assert second.contains('[INFO] Exported to ')
 
 // third run:

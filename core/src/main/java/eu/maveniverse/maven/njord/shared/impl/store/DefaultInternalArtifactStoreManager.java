@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -66,17 +67,36 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
-    public Collection<String> listArtifactStoreNames() throws IOException {
+    public List<String> listArtifactStoreNames() throws IOException {
         checkClosed();
         if (Files.isDirectory(config.config().basedir())) {
             try (Stream<Path> stream = Files.list(config.config().basedir())) {
                 return stream.filter(Files::isDirectory)
                         .filter(p -> Files.isRegularFile(metaRepositoryProperties(p)))
                         .map(p -> p.getFileName().toString())
+                        .sorted(Comparator.naturalOrder())
                         .collect(Collectors.toList());
             }
         }
         return List.of();
+    }
+
+    @Override
+    public List<String> listArtifactStoreNamesForPrefix(String prefix) throws IOException {
+        checkClosed();
+        ArrayList<String> result = new ArrayList<>();
+        for (String storeName : listArtifactStoreNames()) {
+            if (storeName.startsWith(prefix)) { // simple check but more is needed
+                try (ArtifactStore store = loadExistingArtifactStore(storeName)) {
+                    if (store != null && Objects.equals(prefix, store.template().prefix())) {
+                        result.add(storeName);
+                    }
+                } catch (IOException e) {
+                    logger.warn("Error listing store for prefix {}: {}", storeName, e.getMessage());
+                }
+            }
+        }
+        return List.copyOf(result);
     }
 
     @Override
@@ -138,7 +158,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         for (String name : names) {
             Path basedir = config.config().basedir().resolve(name);
             Map<String, String> properties = loadStoreProperties(basedir);
-            ArtifactStoreTemplate template = templates.get(properties.get("templateName"));
+            ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
             stores.computeIfAbsent(template, k -> new TreeSet<>()).add(name);
         }
         for (ArtifactStoreTemplate template : stores.keySet()) {
@@ -202,10 +222,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             Path repositoryProperties = metaRepositoryProperties(fs.getPath("/"));
             if (Files.exists(repositoryProperties)) {
                 Map<String, String> properties = loadStoreProperties(fs.getPath("/"));
-                ArtifactStoreTemplate template = templates.get(properties.get("templateName"));
-                if (template == null) {
-                    throw new IOException("Template not found: " + properties.get("templateName"));
-                }
+                ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
                 try (DefaultArtifactStore artifactStore = createNewArtifactStore(template)) {
                     storeName = artifactStore.name();
                     storeBasedir = artifactStore.basedir();
@@ -225,6 +242,17 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         return loadExistingArtifactStore(storeName);
     }
 
+    private ArtifactStoreTemplate loadTemplateWithProperties(Map<String, String> properties) {
+        ArtifactStoreTemplate template = templates.get(properties.get("templateName"));
+        if (template == null) {
+            throw new IllegalStateException("Template not found: " + properties.get("templateName"));
+        }
+        if (properties.containsKey("templatePrefix")) {
+            template = template.withPrefix(properties.get("templatePrefix"));
+        }
+        return template;
+    }
+
     private DefaultArtifactStore loadExistingArtifactStore(String name) throws IOException {
         Path basedir = config.config().basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
@@ -232,7 +260,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             Map<String, String> properties = loadStoreProperties(basedir);
             return new DefaultArtifactStore(
                     properties.get("name"),
-                    templates.get(properties.get("templateName")),
+                    loadTemplateWithProperties(properties),
                     Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
                     RepositoryMode.valueOf(properties.get("repositoryMode")),
                     Boolean.parseBoolean(properties.get("allowRedeploy")),
@@ -282,6 +310,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         HashMap<String, String> properties = new HashMap<>();
         properties.put("name", name);
         properties.put("templateName", template.name());
+        if (!Objects.equals(template.name(), template.prefix())) {
+            properties.put("templatePrefix", template.prefix());
+        }
         properties.put("created", Long.toString(created.toEpochMilli()));
         properties.put("repositoryMode", repositoryMode.name());
         properties.put("allowRedeploy", Boolean.toString(allowRedeploy));

@@ -7,9 +7,12 @@
  */
 package eu.maveniverse.maven.njord.shared;
 
+import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
+import static eu.maveniverse.maven.njord.shared.Config.NJORD_TARGET;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -31,6 +34,16 @@ public interface SessionConfig {
      * Njord config, never {@code null}.
      */
     Config config();
+
+    /**
+     * The prefix to override template prefix, if needed.
+     */
+    Optional<String> prefix();
+
+    /**
+     * The target, to use if specified.
+     */
+    Optional<String> target();
 
     /**
      * Returns this instance as builder.
@@ -92,6 +105,16 @@ public interface SessionConfig {
             @Override
             public Config config() {
                 return config;
+            }
+
+            @Override
+            public Optional<String> prefix() {
+                return Optional.ofNullable(config().effectiveProperties().get(NJORD_PREFIX));
+            }
+
+            @Override
+            public Optional<String> target() {
+                return Optional.ofNullable(config().effectiveProperties().get(NJORD_TARGET));
             }
 
             @Override

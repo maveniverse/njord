@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.maveniverse.maven.njord.it</groupId>
-    <artifactId>merge-all-release</artifactId>
+    <artifactId>basic-prefix</artifactId>
     <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -20,10 +20,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <!-- Build MUST BE reproducible -->
-        <project.build.outputTimestamp>2025-04-17T00:00:00Z</project.build.outputTimestamp>
-        <attach-classifier>first</attach-classifier>
+        <njord.prefix>something-else</njord.prefix>
     </properties>
 
     <dependencies>
@@ -40,32 +37,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-fake</id>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>target/merge-all-release-1.0.0.jar</file>
-                                    <type>jar</type>
-                                    <classifier>${attach-classifier}</classifier>
-                                </artifact>
-                            </artifacts>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

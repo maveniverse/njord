@@ -30,4 +30,4 @@ assert second.contains('[INFO] Using alternate deployment repository id::njord:r
 
 // third run:
 assert third.contains("[INFO] Njord ${projectVersion} session created")
-assert third.contains('[INFO] ArtifactStore release-00001 and release-00002 are EQUAL')
+assert third.contains('[INFO] ArtifactStore compare-00001 and compare-00002 are EQUAL')

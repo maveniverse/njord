@@ -34,8 +34,8 @@ assert second.contains('[INFO] Using alternate deployment repository id::njord:r
 
 // third run:
 assert third.contains("[INFO] Njord ${projectVersion} session created")
-assert third.contains('[INFO] Merging release-sca-00001')
-assert third.contains('[INFO] Dropping release-sca-00001')
+assert third.contains('[INFO] Merging merge-release-00001')
+assert third.contains('[INFO] Dropping merge-release-00001')
 
 // fourth run:
 assert fourth.contains("[INFO] Njord ${projectVersion} session created")
