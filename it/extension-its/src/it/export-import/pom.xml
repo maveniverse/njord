@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.maveniverse.maven.njord.it</groupId>
-    <artifactId>merge-release</artifactId>
+    <artifactId>export-import</artifactId>
     <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -57,7 +57,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>target/merge-release-1.0.0.jar</file>
+                                    <file>target/export-import-1.0.0.jar</file>
                                     <type>jar</type>
                                     <classifier>${attach-classifier}</classifier>
                                 </artifact>

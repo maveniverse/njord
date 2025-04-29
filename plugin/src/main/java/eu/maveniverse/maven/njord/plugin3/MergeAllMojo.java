@@ -45,7 +45,7 @@ public class MergeAllMojo extends NjordMojoSupport {
                 try (ArtifactStore store = so.orElseThrow()) {
                     if (template == null) {
                         template = store.template();
-                    } else if (template != store.template()) {
+                    } else if (!template.equals(store.template())) {
                         throw new MojoExecutionException("Conflicting templates used");
                     }
                 }

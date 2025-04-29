@@ -24,13 +24,13 @@ public class PublishMojo extends NjordMojoSupport {
     /**
      * The name of the store to publish.
      */
-    @Parameter(required = true, property = "store")
+    @Parameter(required = true, property = "store", alias = "njord.publish.store")
     private String store;
 
     /**
      * The name of the publisher to publish to.
      */
-    @Parameter(required = true, property = "target")
+    @Parameter(required = true, property = "target", alias = "njord.publish.target")
     private String target;
 
     /**

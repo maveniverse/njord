@@ -7,6 +7,8 @@
  */
 package eu.maveniverse.maven.njord.extension3;
 
+import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
+import static eu.maveniverse.maven.njord.shared.Config.NJORD_TARGET;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Config;
@@ -14,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import java.util.HashMap;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,6 +25,7 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +45,33 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
     }
 
     @Override
-    public void afterSessionStart(MavenSession session) throws MavenExecutionException {
+    public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         try {
+            HashMap<String, String> userProperties =
+                    new HashMap<>(session.getRepositorySession().getUserProperties());
+            HashMap<String, String> systemProperties =
+                    new HashMap<>(session.getRepositorySession().getSystemProperties());
+            MavenProject currentProject = session.getTopLevelProject();
+            if (currentProject != null
+                    && !"org.apache.maven:standalone-pom"
+                            .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
+                if (!userProperties.containsKey(NJORD_PREFIX) && !systemProperties.containsKey(NJORD_PREFIX)) {
+                    String prefix = currentProject.getProperties().getProperty(NJORD_PREFIX);
+                    if (prefix == null) {
+                        prefix = currentProject.getArtifactId();
+                    }
+                    userProperties.put(NJORD_PREFIX, prefix);
+                }
+                if (!userProperties.containsKey(NJORD_TARGET) && !systemProperties.containsKey(NJORD_TARGET)) {
+                    String target = currentProject.getProperties().getProperty(NJORD_TARGET);
+                    if (target != null) {
+                        userProperties.put(NJORD_TARGET, target);
+                    }
+                }
+            }
             Config config = Config.defaults()
-                    .userProperties(session.getRepositorySession().getUserProperties())
-                    .systemProperties(session.getRepositorySession().getSystemProperties())
+                    .userProperties(userProperties)
+                    .systemProperties(systemProperties)
                     .build();
             SessionConfig sessionConfig = SessionConfig.builder()
                     .session(session.getRepositorySession())
