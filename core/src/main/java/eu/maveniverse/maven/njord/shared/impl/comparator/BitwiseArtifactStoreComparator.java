@@ -23,8 +23,13 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
  * Bitwise comparator.
+ * <p>
+ * For now a simple one: recalculates SHA-1 of both artifact and compares them, does not rely on repository
+ * checksums (see validator for that).
  */
 public class BitwiseArtifactStoreComparator extends ArtifactStoreComparatorSupport {
+    private static final String SHA1 = "SHA-1";
+
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
     public BitwiseArtifactStoreComparator(
@@ -43,30 +48,33 @@ public class BitwiseArtifactStoreComparator extends ArtifactStoreComparatorSuppo
         Collection<Artifact> a2artifacts = a2.artifacts();
 
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories =
-                checksumAlgorithmFactorySelector.selectList(List.of("SHA-1"));
+                checksumAlgorithmFactorySelector.selectList(List.of(SHA1));
 
         ComparisonContext context = comparisonContext.child("Bitwise comparison");
         for (Artifact artifact : extractIndex(a1)) {
-            String id = ArtifactIdUtils.toId(artifact);
-            Artifact artifact1 = a1artifacts.stream()
-                    .filter(a -> ArtifactIdUtils.toId(a).equals(id))
-                    .findFirst()
-                    .orElse(null);
-            Artifact artifact2 = a2artifacts.stream()
-                    .filter(a -> ArtifactIdUtils.toId(a).equals(id))
-                    .findFirst()
-                    .orElse(null);
-            if (artifact1 != null && artifact2 != null) {
-                ComparisonContext artifactContext = context.child(id);
-                Map<String, String> a1hashes =
-                        ChecksumAlgorithmHelper.calculate(artifact1.getFile(), checksumAlgorithmFactories);
-                Map<String, String> a2hashes =
-                        ChecksumAlgorithmHelper.calculate(artifact2.getFile(), checksumAlgorithmFactories);
-                if (a1hashes.equals(a2hashes)) {
-                    artifactContext.addEquality("Equal: " + a1hashes.get("SHA-1"));
-                } else {
-                    artifactContext.addDifference(
-                            "Different: " + a1hashes.get("SHA-1") + " vs " + a2hashes.get("SHA-1"));
+            if (a1.omitChecksumsForExtensions().stream()
+                    .noneMatch(e -> artifact.getExtension().endsWith(e))) {
+                String id = ArtifactIdUtils.toId(artifact);
+                Artifact artifact1 = a1artifacts.stream()
+                        .filter(a -> ArtifactIdUtils.toId(a).equals(id))
+                        .findFirst()
+                        .orElse(null);
+                Artifact artifact2 = a2artifacts.stream()
+                        .filter(a -> ArtifactIdUtils.toId(a).equals(id))
+                        .findFirst()
+                        .orElse(null);
+                if (artifact1 != null && artifact2 != null) {
+                    ComparisonContext artifactContext = context.child(id);
+                    Map<String, String> a1hashes =
+                            ChecksumAlgorithmHelper.calculate(artifact1.getFile(), checksumAlgorithmFactories);
+                    Map<String, String> a2hashes =
+                            ChecksumAlgorithmHelper.calculate(artifact2.getFile(), checksumAlgorithmFactories);
+                    if (a1hashes.equals(a2hashes)) {
+                        artifactContext.addEquality("Equal: " + a1hashes.get(SHA1));
+                    } else {
+                        artifactContext.addDifference(
+                                "Different: " + a1hashes.get(SHA1) + " vs " + a2hashes.get(SHA1));
+                    }
                 }
             }
         }
