@@ -67,17 +67,36 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
-    public Collection<String> listArtifactStoreNames() throws IOException {
+    public List<String> listArtifactStoreNames() throws IOException {
         checkClosed();
         if (Files.isDirectory(config.config().basedir())) {
             try (Stream<Path> stream = Files.list(config.config().basedir())) {
                 return stream.filter(Files::isDirectory)
                         .filter(p -> Files.isRegularFile(metaRepositoryProperties(p)))
                         .map(p -> p.getFileName().toString())
+                        .sorted(Comparator.naturalOrder())
                         .collect(Collectors.toList());
             }
         }
         return List.of();
+    }
+
+    @Override
+    public List<String> listArtifactStoreNamesForPrefix(String prefix) throws IOException {
+        checkClosed();
+        ArrayList<String> result = new ArrayList<>();
+        for (String storeName : listArtifactStoreNames()) {
+            if (storeName.startsWith(prefix)) { // simple check but more is needed
+                try (ArtifactStore store = loadExistingArtifactStore(storeName)) {
+                    if (store != null && Objects.equals(prefix, store.template().prefix())) {
+                        result.add(storeName);
+                    }
+                } catch (IOException e) {
+                    logger.warn("Error listing store for prefix {}: {}", storeName, e.getMessage());
+                }
+            }
+        }
+        return List.copyOf(result);
     }
 
     @Override

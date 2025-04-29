@@ -22,7 +22,7 @@ public class PublishMojo extends PublisherSupportMojo {
     /**
      * Whether source store should be dropped after successful operation.
      */
-    @Parameter(required = true, property = "drop", defaultValue = "false")
+    @Parameter(required = true, property = "drop", defaultValue = "true")
     private boolean drop;
 
     @Override
