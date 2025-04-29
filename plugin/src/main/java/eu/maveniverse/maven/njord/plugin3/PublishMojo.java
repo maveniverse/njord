@@ -8,10 +8,8 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.NjordSession;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.util.Optional;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -20,19 +18,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * Publishes given store to given target.
  */
 @Mojo(name = "publish", threadSafe = true, requiresProject = false)
-public class PublishMojo extends NjordMojoSupport {
-    /**
-     * The name of the store to publish.
-     */
-    @Parameter(required = true, property = "store", alias = "njord.publish.store")
-    private String store;
-
-    /**
-     * The name of the publisher to publish to.
-     */
-    @Parameter(required = true, property = "target", alias = "njord.publish.target")
-    private String target;
-
+public class PublishMojo extends PublisherSupportMojo {
     /**
      * Whether source store should be dropped after successful operation.
      */
@@ -41,22 +27,12 @@ public class PublishMojo extends NjordMojoSupport {
 
     @Override
     protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
-        Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
-        if (storeOptional.isEmpty()) {
-            logger.warn("ArtifactStore with given name not found: {}", store);
-            return;
+        try (ArtifactStore from = getArtifactStore(ns)) {
+            getArtifactStorePublisher(ns).publish(from);
         }
-        Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(target);
-        if (po.isPresent()) {
-            try (ArtifactStore from = storeOptional.orElseThrow()) {
-                po.orElseThrow().publish(from);
-            }
-            if (drop) {
-                logger.info("Dropping {}", store);
-                ns.artifactStoreManager().dropArtifactStore(store);
-            }
-        } else {
-            throw new MojoFailureException("Publisher not found");
+        if (drop) {
+            logger.info("Dropping {}", store);
+            ns.artifactStoreManager().dropArtifactStore(store);
         }
     }
 }
