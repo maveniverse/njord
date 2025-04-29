@@ -25,7 +25,7 @@ public class ListTemplatesMojo extends NjordMojoSupport {
         ArtifactStoreTemplate defaultTemplate = ns.artifactStoreManager().defaultTemplate();
         for (ArtifactStoreTemplate template : templates) {
             logger.info("- {} {}", template.name(), template == defaultTemplate ? " (default)" : " ");
-            logger.info("    Prefix: {}", template.prefix());
+            logger.info("    Default prefix: '{}'", template.prefix());
             logger.info("    Repository Mode: {}", template.repositoryMode());
             logger.info("    Allow redeploy: {}", template.allowRedeploy());
             logger.info(

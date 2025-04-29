@@ -7,6 +7,8 @@
  */
 package eu.maveniverse.maven.njord.extension3;
 
+import static eu.maveniverse.maven.njord.shared.Config.DEFAULT_NJORD_AUTOPREFIX;
+import static eu.maveniverse.maven.njord.shared.Config.NJORD_AUTOPREFIX;
 import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
 import static eu.maveniverse.maven.njord.shared.Config.NJORD_TARGET;
 import static java.util.Objects.requireNonNull;
@@ -56,11 +58,15 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
                     && !"org.apache.maven:standalone-pom"
                             .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
                 if (!userProperties.containsKey(NJORD_PREFIX) && !systemProperties.containsKey(NJORD_PREFIX)) {
+                    boolean autoPrefix = Boolean.parseBoolean(
+                            userProperties.getOrDefault(NJORD_AUTOPREFIX, DEFAULT_NJORD_AUTOPREFIX));
                     String prefix = currentProject.getProperties().getProperty(NJORD_PREFIX);
-                    if (prefix == null) {
+                    if (autoPrefix && prefix == null) {
                         prefix = currentProject.getArtifactId();
                     }
-                    userProperties.put(NJORD_PREFIX, prefix);
+                    if (prefix != null) {
+                        userProperties.put(NJORD_PREFIX, prefix);
+                    }
                 }
                 if (!userProperties.containsKey(NJORD_TARGET) && !systemProperties.containsKey(NJORD_TARGET)) {
                     String target = currentProject.getProperties().getProperty(NJORD_TARGET);

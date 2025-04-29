@@ -7,7 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.impl;
 
-import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordSession;
@@ -106,9 +105,8 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
                     if (uri.isEmpty()) {
                         // empty -> default
                         ArtifactStoreTemplate template = internalArtifactStoreManager.defaultTemplate();
-                        if (config.config().effectiveProperties().containsKey(NJORD_PREFIX)) {
-                            template = template.withPrefix(
-                                    config.config().effectiveProperties().get(NJORD_PREFIX));
+                        if (config.prefix().isPresent()) {
+                            template = template.withPrefix(config.prefix().orElseThrow());
                         }
                         try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(template)) {
                             artifactStoreName = artifactStore.name();
@@ -122,9 +120,8 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
                             throw new IllegalArgumentException("Unknown template: " + uri);
                         } else {
                             ArtifactStoreTemplate template = templates.get(0);
-                            if (config.config().effectiveProperties().containsKey(NJORD_PREFIX)) {
-                                template = template.withPrefix(
-                                        config.config().effectiveProperties().get(NJORD_PREFIX));
+                            if (config.prefix().isPresent()) {
+                                template = template.withPrefix(config.prefix().orElseThrow());
                             }
                             try (ArtifactStore artifactStore =
                                     internalArtifactStoreManager.createArtifactStore(template)) {

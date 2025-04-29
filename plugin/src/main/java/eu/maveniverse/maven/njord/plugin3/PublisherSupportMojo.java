@@ -7,8 +7,6 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
-
 import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -36,20 +34,17 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
 
     protected ArtifactStore getArtifactStore(NjordSession ns) throws IOException, MojoFailureException {
         if (store == null) {
-            logger.info("No store name specified, using heuristic to find store");
-            if (ns.sessionConfig().config().effectiveProperties().containsKey(NJORD_PREFIX)) {
-                String prefix =
-                        ns.sessionConfig().config().effectiveProperties().get(NJORD_PREFIX);
-                if (prefix != null) {
-                    List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
-                    if (!storeNames.isEmpty()) {
-                        if (storeNames.size() == 1) {
-                            store = storeNames.get(0);
-                            logger.info("Found one store, using it: '{}'", store);
-                        } else {
-                            store = storeNames.get(storeNames.size() - 1);
-                            logger.info("Found multiple stores, using latest: '{}'", store);
-                        }
+            if (ns.sessionConfig().prefix().isPresent()) {
+                logger.info("No store name specified but prefix is set; using heuristic to find store");
+                String prefix = ns.sessionConfig().prefix().orElseThrow();
+                List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
+                if (!storeNames.isEmpty()) {
+                    if (storeNames.size() == 1) {
+                        store = storeNames.get(0);
+                        logger.info("Found one store, using it: '{}'", store);
+                    } else {
+                        store = storeNames.get(storeNames.size() - 1);
+                        logger.info("Found multiple stores, using latest: '{}'", store);
                     }
                 }
             }
