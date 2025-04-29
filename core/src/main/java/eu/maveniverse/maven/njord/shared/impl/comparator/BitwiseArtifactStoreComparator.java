@@ -72,8 +72,7 @@ public class BitwiseArtifactStoreComparator extends ArtifactStoreComparatorSuppo
                     if (a1hashes.equals(a2hashes)) {
                         artifactContext.addEquality("Equal: " + a1hashes.get(SHA1));
                     } else {
-                        artifactContext.addDifference(
-                                "Different: " + a1hashes.get(SHA1) + " vs " + a2hashes.get(SHA1));
+                        artifactContext.addDifference("Different: " + a1hashes.get(SHA1) + " vs " + a2hashes.get(SHA1));
                     }
                 }
             }
