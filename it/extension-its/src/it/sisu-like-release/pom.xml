@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.maveniverse.maven.njord.it</groupId>
-    <artifactId>sisu-like</artifactId>
+    <artifactId>sisu-like-release</artifactId>
     <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>

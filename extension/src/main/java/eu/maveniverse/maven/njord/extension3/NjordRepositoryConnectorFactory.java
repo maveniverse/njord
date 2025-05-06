@@ -42,9 +42,10 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     }
 
     /**
-     * {@code repoId::njord:default}
-     * {@code repoId::njord:template:templateName}
-     * {@code repoId::njord:store:storeName}
+     * {@code njord:}
+     * {@code njord:templateName}
+     * {@code njord:template:templateName}
+     * {@code njord:store:storeName}
      */
     @Override
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
@@ -52,17 +53,18 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         Optional<Session> nso = NjordUtils.mayGetNjordSessionIfEnabled(session);
         if (nso.isPresent()) {
             Session ns = nso.orElseThrow();
-
             String url = repository.getUrl();
             Optional<Map<String, String>> sco = ns.config().serviceConfiguration(repository.getId());
-            if (sco.isPresent() && ns.config().topLevelProject().isPresent()) {
+            if (!url.startsWith(NAME + ":")
+                    && sco.isPresent()
+                    && ns.config().topLevelProject().isPresent()) {
                 logger.info("Njord service configuration found for server '{}'", repository.getId());
                 Map<String, String> config = sco.orElseThrow();
                 url = ns.config().topLevelProject().orElseThrow().artifact().isSnapshot()
-                        ? config.getOrDefault(SessionConfig.CONFIG_SNAPSHOT_URL, repository.getUrl())
-                        : config.getOrDefault(SessionConfig.CONFIG_RELEASE_URL, repository.getUrl());
+                        ? config.get(SessionConfig.CONFIG_SNAPSHOT_URL)
+                        : config.get(SessionConfig.CONFIG_RELEASE_URL);
             }
-            if (url.startsWith(NAME + ":")) {
+            if (url != null && url.startsWith(NAME + ":")) {
                 ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                 return new NjordRepositoryConnector(
                         artifactStore,
@@ -71,7 +73,6 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                                 artifactStore.storeRepositorySession(session), artifactStore.storeRemoteRepository()));
             }
         }
-
         throw new NoRepositoryConnectorException(repository);
     }
 

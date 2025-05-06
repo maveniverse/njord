@@ -41,11 +41,11 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (sessionConfig.dryRun()) {
-            logger.info("Dry run; not publishing to {}", name);
+            logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
-        new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), selectRemoteRepositoryFor(artifactStore))
-                .deploy(artifactStore);
+        new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(artifactStore);
     }
 }

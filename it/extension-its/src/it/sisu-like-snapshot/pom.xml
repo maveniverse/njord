@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2023-2024 Maveniverse Org.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v2.0
+    which accompanies this distribution, and is available at
+    https://www.eclipse.org/legal/epl-v20.html
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>eu.maveniverse.maven.njord.it</groupId>
+    <artifactId>sisu-like-release</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Just to pass validation</description>
+    <url>http://justtopassvalidation.foobar</url>
+
+    <licenses>
+        <license>
+            <name>EPLv2</name>
+            <url>https://www.eclipse.org/legal/epl-v20.html</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>to not have warning</id>
+            <email>to not have warning</email>
+            <name>Maveniverse Team</name>
+            <organization>Maveniverse Team</organization>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:maveniverse/njord.git</connection>
+        <developerConnection>scm:git:git@github.com:maveniverse/njord.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/maveniverse/njord</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>sonatype-cp-service</id>
+            <name>Sonatype Central Portal</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <snapshotRepository>
+            <id>sonatype-cp-service</id>
+            <name>Sonatype Central Portal</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <project.build.outputTimestamp>2025-04-29T00:00:00Z</project.build.outputTimestamp>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.12.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <configuration>
+                            <useAgent>false</useAgent>
+                            <signer>bc</signer>
+                            <keyFilePath>${basedir}/.mvn/signing-key.asc</keyFilePath>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.11.2</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                                <configuration>
+                                    <includePom>true</includePom>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

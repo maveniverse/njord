@@ -57,11 +57,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (sessionConfig.dryRun()) {
-            logger.info("Dry run; not publishing to {}", name);
+            logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
             Path tmpDir = Files.createTempDirectory(name);

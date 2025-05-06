@@ -22,5 +22,6 @@ assert first.contains('[INFO] Njord service configuration found for server \'son
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains('ArtifactStore sisu-like-00001') // m4 warns
+assert second.contains('ArtifactStore sisu-like-release-00001') // m4 warns
 assert second.contains(' passed ')
+assert second.contains('[INFO] Dry run; not publishing to \'sonatype-cp\' service at https://central.sonatype.com/api/v1/publisher/upload')

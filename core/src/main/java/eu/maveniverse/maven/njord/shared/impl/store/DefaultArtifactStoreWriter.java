@@ -14,6 +14,7 @@ import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -53,7 +54,8 @@ public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionCo
         if (Files.exists(bundleFile)) {
             throw new IOException("Exporting to existing bundle ZIP not supported");
         }
-        try (FileSystem fs = FileSystems.newFileSystem(bundleFile.toUri(), Map.of("create", "true"), null)) {
+        try (FileSystem fs =
+                FileSystems.newFileSystem(URI.create("jar:" + bundleFile.toUri()), Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
             artifactStore.writeTo(root);
         }

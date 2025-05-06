@@ -1,4 +1,4 @@
-# Sisu Like
+# Sisu Like Release
 
 Tests validate of Njord.
 
