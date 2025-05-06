@@ -25,6 +25,7 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -125,6 +126,11 @@ public interface SessionConfig {
     Optional<String> publisher();
 
     /**
+     * The top level project, if exists.
+     */
+    Optional<TopLevelProject> topLevelProject();
+
+    /**
      * Returns the "service configuration" for given service ID.
      */
     default Map<String, String> serviceConfiguration(String serviceId) {
@@ -166,7 +172,8 @@ public interface SessionConfig {
                 remoteRepositories(),
                 autoPrefix(),
                 prefix().orElse(null),
-                publisher().orElse(null));
+                publisher().orElse(null),
+                topLevelProject().orElse(null));
     }
 
     /**
@@ -188,7 +195,8 @@ public interface SessionConfig {
                 remoteRepositories,
                 ConfigUtils.getBoolean(session, true, CONFIG_AUTOPREFIX),
                 ConfigUtils.getString(session, null, CONFIG_PREFIX),
-                ConfigUtils.getString(session, null, CONFIG_PUBLISHER));
+                ConfigUtils.getString(session, null, CONFIG_PUBLISHER),
+                null);
     }
 
     class Builder {
@@ -204,6 +212,7 @@ public interface SessionConfig {
         private boolean autoPrefix;
         private String prefix;
         private String publisher;
+        private TopLevelProject topLevelProject;
 
         public Builder(
                 boolean enabled,
@@ -217,7 +226,8 @@ public interface SessionConfig {
                 List<RemoteRepository> remoteRepositories,
                 boolean autoPrefix,
                 String prefix,
-                String publisher) {
+                String publisher,
+                TopLevelProject topLevelProject) {
             this.enabled = enabled;
             this.dryRun = dryRun;
             this.version = version;
@@ -230,6 +240,7 @@ public interface SessionConfig {
             this.autoPrefix = autoPrefix;
             this.prefix = prefix;
             this.publisher = publisher;
+            this.topLevelProject = topLevelProject;
         }
 
         public Builder enabled(boolean enabled) {
@@ -287,6 +298,11 @@ public interface SessionConfig {
             return this;
         }
 
+        public Builder topLevelProject(TopLevelProject topLevelProject) {
+            this.topLevelProject = topLevelProject;
+            return this;
+        }
+
         public SessionConfig build() {
             return new Impl(
                     enabled,
@@ -300,7 +316,8 @@ public interface SessionConfig {
                     remoteRepositories,
                     autoPrefix,
                     prefix,
-                    publisher);
+                    publisher,
+                    topLevelProject);
         }
 
         private static class Impl implements SessionConfig {
@@ -317,6 +334,7 @@ public interface SessionConfig {
             private final boolean autoPrefix;
             private final String prefix;
             private final String publisher;
+            private final TopLevelProject topLevelProject;
 
             private Impl(
                     boolean enabled,
@@ -330,7 +348,8 @@ public interface SessionConfig {
                     List<RemoteRepository> remoteRepositories,
                     boolean autoPrefix,
                     String prefix,
-                    String publisher) {
+                    String publisher,
+                    TopLevelProject topLevelProject) {
                 this.enabled = enabled;
                 this.dryRun = dryRun;
                 this.version = version;
@@ -360,6 +379,7 @@ public interface SessionConfig {
                 this.autoPrefix = autoPrefix;
                 this.prefix = prefix;
                 this.publisher = publisher;
+                this.topLevelProject = topLevelProject;
             }
 
             @Override
@@ -426,6 +446,11 @@ public interface SessionConfig {
             public Optional<String> publisher() {
                 return Optional.ofNullable(publisher);
             }
+
+            @Override
+            public Optional<TopLevelProject> topLevelProject() {
+                return Optional.ofNullable(topLevelProject);
+            }
         }
     }
 
@@ -452,5 +477,13 @@ public interface SessionConfig {
         } catch (IOException e) {
             return getCanonicalPath(path.getParent()).resolve(path.getFileName());
         }
+    }
+
+    interface TopLevelProject {
+        Artifact artifact();
+
+        Map<String, String> properties();
+
+        List<RemoteRepository> remoteRepositories();
     }
 }
