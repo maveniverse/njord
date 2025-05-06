@@ -28,7 +28,7 @@
   </modules>
 
   <properties>
-    <requireBuildtimeJavaVersion.range>[17,)</requireBuildtimeJavaVersion.range>
+    <requireBuildtimeJavaVersion.range>[11,)</requireBuildtimeJavaVersion.range>
     <requireBuildtimeMavenVersion.range>[3.9.9,)</requireBuildtimeMavenVersion.range>
 
     <maven.install.skip>true</maven.install.skip>
