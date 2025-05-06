@@ -25,6 +25,9 @@
   <properties>
     <maven39Version>3.9.9</maven39Version>
     <maven4Version>4.0.0-rc-3</maven4Version>
+
+    <!-- We need to skip this on Java lower than 17 (see profiles below) -->
+    <mvn4-its-run.skip>true</mvn4-its-run.skip>
   </properties>
 
   <dependencies>
@@ -145,6 +148,7 @@
                 </goals>
                 <phase>integration-test</phase>
                 <configuration>
+                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>
                   <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>
                   <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
@@ -166,6 +170,15 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>maven4-capable-jdk</id>
+      <activation>
+        <jdk>[17,)</jdk>
+      </activation>
+      <properties>
+        <mvn4-its-run.skip>false</mvn4-its-run.skip>
+      </properties>
     </profile>
   </profiles>
 </project>
