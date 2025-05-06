@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
     private final InternalArtifactStoreManager internalArtifactStoreManager;
@@ -81,7 +82,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         checkClosed();
         return artifactStorePublisherFactories.values().stream()
                 .map(f -> f.create(config()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -89,7 +90,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         checkClosed();
         return artifactStoreComparatorFactories.values().stream()
                 .map(f -> f.create(config()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static final String SESSION_BOUND_STORES_KEY = Session.class.getName() + "." + ArtifactStore.class;
@@ -138,7 +139,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private String createUsingTemplate(String templateName) throws IOException {
         List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
                 .filter(t -> t.name().equals(templateName))
-                .toList();
+                .collect(Collectors.toList());
         if (templates.size() != 1) {
             throw new IllegalArgumentException("Unknown template: " + templateName);
         } else {
@@ -152,10 +153,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean dropSessionArtifactStores() {
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, ConcurrentHashMap::new);
         AtomicBoolean result = new AtomicBoolean(false);
         sessionBoundStore.values().forEach(n -> {
             try {

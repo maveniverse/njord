@@ -23,7 +23,7 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
-    <maven3Version>3.9.9</maven3Version>
+    <maven39Version>3.9.9</maven39Version>
     <maven4Version>4.0.0-rc-3</maven4Version>
   </properties>
 
@@ -60,7 +60,7 @@
                     <artifactItem>
                       <groupId>org.apache.maven</groupId>
                       <artifactId>apache-maven</artifactId>
-                      <version>${maven3Version}</version>
+                      <version>${maven39Version}</version>
                       <classifier>bin</classifier>
                       <type>zip</type>
                     </artifactItem>
@@ -115,14 +115,14 @@
                 </configuration>
               </execution>
               <execution>
-                <id>mvn3-its-run</id>
+                <id>mvn39-its-run</id>
                 <goals>
                   <goal>run</goal>
                 </goals>
                 <phase>integration-test</phase>
                 <configuration>
-                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven3Version}</mavenHome>
-                  <cloneProjectsTo>${project.build.directory}/mvn3-it</cloneProjectsTo>
+                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven39Version}</mavenHome>
+                  <cloneProjectsTo>${project.build.directory}/mvn39-it</cloneProjectsTo>
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                   <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
                   <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>

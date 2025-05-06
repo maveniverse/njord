@@ -53,24 +53,17 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         if (nso.isPresent()) {
             Session ns = nso.orElseThrow();
 
+            String url = repository.getUrl();
             Optional<Map<String, String>> sco = ns.config().serviceConfiguration(repository.getId());
             if (sco.isPresent() && ns.config().topLevelProject().isPresent()) {
                 logger.info("Njord service configuration found for server '{}'", repository.getId());
                 Map<String, String> config = sco.orElseThrow();
-                String url =
-                        ns.config().topLevelProject().orElseThrow().artifact().isSnapshot()
-                                ? config.get(SessionConfig.CONFIG_SNAPSHOT_URL)
-                                : config.get(SessionConfig.CONFIG_RELEASE_URL);
-                ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url);
-                return new NjordRepositoryConnector(
-                        artifactStore,
-                        repository,
-                        basicRepositoryConnectorFactory.newInstance(
-                                artifactStore.storeRepositorySession(session), artifactStore.storeRemoteRepository()));
-            } else if (NAME.equals(repository.getProtocol())) {
-                // configured in POM or using altDeploymentRepository
-                ArtifactStore artifactStore =
-                        ns.getOrCreateSessionArtifactStore(repository.getUrl().substring(6));
+                url = ns.config().topLevelProject().orElseThrow().artifact().isSnapshot()
+                        ? config.getOrDefault(SessionConfig.CONFIG_SNAPSHOT_URL, repository.getUrl())
+                        : config.getOrDefault(SessionConfig.CONFIG_RELEASE_URL, repository.getUrl());
+            }
+            if (url.startsWith(NAME + ":")) {
+                ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                 return new NjordRepositoryConnector(
                         artifactStore,
                         repository,

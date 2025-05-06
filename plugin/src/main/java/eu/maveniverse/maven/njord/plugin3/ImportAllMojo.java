@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -40,7 +41,7 @@ public class ImportAllMojo extends NjordMojoSupport {
         List<Path> bundles;
         try (Stream<Path> stream = Files.list(sourceDirectory)
                 .filter(p -> p.getFileName().toString().endsWith(".ntb") && Files.isRegularFile(p))) {
-            bundles = stream.toList();
+            bundles = stream.collect(Collectors.toList());
         }
         for (Path bundle : bundles) {
             try (ArtifactStore artifactStore = ns.artifactStoreManager().importFrom(bundle)) {

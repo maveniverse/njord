@@ -44,10 +44,15 @@
 
     <distributionManagement>
         <repository>
-            <id>sisu-like-release</id>
+            <id>sonatype-cp-service</id>
             <name>Sonatype Central Portal</name>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
+        <snapshotRepository>
+            <id>sonatype-cp-service</id>
+            <name>Sonatype Central Portal</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <properties>

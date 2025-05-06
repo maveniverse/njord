@@ -339,7 +339,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
                 Files.createDirectories(index.getParent());
                 Files.createFile(index);
             }
-            List<String> lines = entries.stream().map(transform).toList();
+            List<String> lines = entries.stream().map(transform).collect(Collectors.toList());
             Files.write(index, lines, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
         }
     }

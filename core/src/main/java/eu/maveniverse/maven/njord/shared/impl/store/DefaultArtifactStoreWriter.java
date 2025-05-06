@@ -53,7 +53,7 @@ public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionCo
         if (Files.exists(bundleFile)) {
             throw new IOException("Exporting to existing bundle ZIP not supported");
         }
-        try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
+        try (FileSystem fs = FileSystems.newFileSystem(bundleFile.toUri(), Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
             artifactStore.writeTo(root);
         }

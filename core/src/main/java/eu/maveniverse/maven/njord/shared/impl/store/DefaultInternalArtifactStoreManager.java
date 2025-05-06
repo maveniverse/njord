@@ -22,6 +22,7 @@ import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -194,7 +195,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (Files.exists(bundleFile)) {
             throw new IOException("Exporting to existing bundle ZIP not supported");
         }
-        try (FileSystem fs = FileSystems.newFileSystem(bundleFile, Map.of("create", "true"), null)) {
+        try (FileSystem fs =
+                FileSystems.newFileSystem(URI.create("jar:" + bundleFile.toUri()), Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
             if (!Files.isDirectory(root)) {
                 throw new IOException("Directory does not exist");
@@ -219,7 +221,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path storeSource = SessionConfig.getCanonicalPath(file);
         String storeName;
         Path storeBasedir;
-        try (FileSystem fs = FileSystems.newFileSystem(storeSource, Map.of("create", "false"), null)) {
+        try (FileSystem fs =
+                FileSystems.newFileSystem(URI.create("jar:" + storeSource.toUri()), Map.of("create", "false"), null)) {
             Path repositoryProperties = metaRepositoryProperties(fs.getPath("/"));
             if (Files.exists(repositoryProperties)) {
                 Map<String, String> properties = loadStoreProperties(fs.getPath("/"));

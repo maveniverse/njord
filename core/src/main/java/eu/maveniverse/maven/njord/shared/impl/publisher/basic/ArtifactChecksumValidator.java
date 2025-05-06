@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
@@ -48,7 +49,7 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
         List<ChecksumAlgorithmFactory> extraChecksums = artifactStore.checksumAlgorithmFactories().stream()
                 .filter(a -> mandatoryChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
                 .filter(a -> optionalChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
-                .toList();
+                .collect(Collectors.toList());
         if (artifactStore.omitChecksumsForExtensions().stream()
                 .noneMatch(e -> artifact.getExtension().endsWith(e))) {
             validateArtifact(artifactStore, artifact, mandatoryChecksums, true, collector);
