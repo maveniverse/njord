@@ -9,10 +9,10 @@ package eu.maveniverse.maven.njord.publisher.apache;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 
 public final class ApachePublisherConfig {
-    public static ApachePublisherConfig with(Config config) {
+    public static ApachePublisherConfig with(SessionConfig config) {
         requireNonNull(config, "config");
 
         String releaseRepositoryId = "apache.releases.https";

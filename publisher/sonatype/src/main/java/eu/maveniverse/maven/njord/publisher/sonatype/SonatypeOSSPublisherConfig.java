@@ -9,10 +9,10 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 
 public final class SonatypeOSSPublisherConfig {
-    public static SonatypeOSSPublisherConfig with(Config config) {
+    public static SonatypeOSSPublisherConfig with(SessionConfig config) {
         requireNonNull(config, "config");
 
         String releaseRepositoryId = "sonatype-oss";

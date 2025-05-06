@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
@@ -29,23 +29,21 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     /**
      * The name of the publisher to publish to.
      */
-    @Parameter(required = true, property = "target", defaultValue = "${njord.target}")
-    protected String target;
+    @Parameter(property = "publisher")
+    protected String publisher;
 
-    protected ArtifactStore getArtifactStore(NjordSession ns) throws IOException, MojoFailureException {
-        if (store == null) {
-            if (ns.sessionConfig().prefix().isPresent()) {
-                logger.info("No store name specified but prefix is set; using heuristic to find store");
-                String prefix = ns.sessionConfig().prefix().orElseThrow();
-                List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
-                if (!storeNames.isEmpty()) {
-                    if (storeNames.size() == 1) {
-                        store = storeNames.get(0);
-                        logger.info("Found one store, using it: '{}'", store);
-                    } else {
-                        store = storeNames.get(storeNames.size() - 1);
-                        logger.info("Found multiple stores, using latest: '{}'", store);
-                    }
+    protected ArtifactStore getArtifactStore(Session ns) throws IOException, MojoFailureException {
+        if (store == null && ns.config().prefix().isPresent()) {
+            String prefix = ns.config().prefix().orElseThrow();
+            logger.info("No store name specified but prefix is set to '{}'; using heuristic to find store", prefix);
+            List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
+            if (!storeNames.isEmpty()) {
+                if (storeNames.size() == 1) {
+                    store = storeNames.get(0);
+                    logger.info("Found one store, using it: '{}'", store);
+                } else {
+                    store = storeNames.get(storeNames.size() - 1);
+                    logger.info("Found multiple stores, using latest: '{}'", store);
                 }
             }
         }
@@ -61,10 +59,18 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         return storeOptional.orElseThrow();
     }
 
-    protected ArtifactStorePublisher getArtifactStorePublisher(NjordSession ns) throws MojoFailureException {
-        Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(target);
+    protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {
+        if (publisher == null && ns.config().publisher().isPresent()) {
+            publisher = ns.config().publisher().orElseThrow();
+            logger.info("No publisher specified but session publisher is set to '{}'; using it", publisher);
+        }
+        if (publisher == null) {
+            throw new MojoFailureException("Publisher name was not specified nor could be found");
+        }
+
+        Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisher);
         if (po.isEmpty()) {
-            throw new MojoFailureException("Publisher not found");
+            throw new MojoFailureException("Publisher not found: " + publisher);
         }
         return po.orElseThrow();
     }

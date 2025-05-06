@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -26,7 +26,7 @@ public class PublishMojo extends PublisherSupportMojo {
     private boolean drop;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
+    protected void doExecute(Session ns) throws IOException, MojoFailureException {
         try (ArtifactStore from = getArtifactStore(ns)) {
             getArtifactStorePublisher(ns).publish(from);
         }

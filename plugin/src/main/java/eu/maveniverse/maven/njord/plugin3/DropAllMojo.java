@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -25,7 +25,7 @@ public class DropAllMojo extends NjordMojoSupport {
     private boolean yes;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doExecute(Session ns) throws IOException {
         if (yes) {
             logger.info("Dropping all ArtifactStore");
             AtomicInteger count = new AtomicInteger();

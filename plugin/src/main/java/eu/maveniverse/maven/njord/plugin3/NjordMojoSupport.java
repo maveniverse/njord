@@ -7,20 +7,15 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.NjordSession;
-import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
-import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.eclipse.aether.RepositorySystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,38 +25,22 @@ public abstract class NjordMojoSupport extends AbstractMojo {
     @Inject
     protected MavenSession mavenSession;
 
-    @Inject
-    protected RepositorySystem repositorySystem;
-
-    @Inject
-    protected NjordSessionFactory njordSessionFactory;
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        Config config = Config.defaults()
-                .userProperties(mavenSession.getRepositorySession().getUserProperties())
-                .systemProperties(mavenSession.getRepositorySession().getSystemProperties())
-                .build();
-        SessionConfig sessionConfig = SessionConfig.builder()
-                .session(mavenSession.getRepositorySession())
-                .remoteRepositories(
-                        RepositoryUtils.toRepos(mavenSession.getRequest().getRemoteRepositories()))
-                .config(config)
-                .build();
-        if (NjordUtils.lazyInit(sessionConfig, njordSessionFactory::create)) {
-            logger.info("Njord {} session created", config.version().orElse("UNKNOWN"));
-        }
-        Optional<NjordSession> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
+        Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
         if (njordSession.isEmpty()) {
-            logger.warn("Njord not configured or explicitly disabled");
-            return;
+            throw new MojoExecutionException("Njord extension is not installed");
         }
-        try (NjordSession ns = njordSession.orElseThrow()) {
-            doExecute(ns);
+        try (Session ns = njordSession.orElseThrow()) {
+            if (ns.config().enabled()) {
+                doExecute(ns);
+            } else {
+                logger.info("Njord is disabled");
+            }
         } catch (IOException e) {
             throw new MojoFailureException(e);
         }
     }
 
-    protected abstract void doExecute(NjordSession ns) throws IOException, MojoExecutionException, MojoFailureException;
+    protected abstract void doExecute(Session ns) throws IOException, MojoExecutionException, MojoFailureException;
 }

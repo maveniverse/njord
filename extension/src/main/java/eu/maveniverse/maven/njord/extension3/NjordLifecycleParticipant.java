@@ -7,18 +7,13 @@
  */
 package eu.maveniverse.maven.njord.extension3;
 
-import static eu.maveniverse.maven.njord.shared.Config.DEFAULT_NJORD_AUTOPREFIX;
-import static eu.maveniverse.maven.njord.shared.Config.NJORD_AUTOPREFIX;
-import static eu.maveniverse.maven.njord.shared.Config.NJORD_PREFIX;
-import static eu.maveniverse.maven.njord.shared.Config.NJORD_TARGET;
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.NjordSession;
-import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import java.util.HashMap;
+import eu.maveniverse.maven.njord.shared.SessionFactory;
+import java.util.ArrayList;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,6 +23,7 @@ import org.apache.maven.MavenExecutionException;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,54 +35,47 @@ import org.slf4j.LoggerFactory;
 public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final NjordSessionFactory njordSessionFactory;
+    private final SessionFactory sessionFactory;
 
     @Inject
-    public NjordLifecycleParticipant(NjordSessionFactory njordSessionFactory) {
-        this.njordSessionFactory = requireNonNull(njordSessionFactory);
+    public NjordLifecycleParticipant(SessionFactory sessionFactory) {
+        this.sessionFactory = requireNonNull(sessionFactory);
     }
 
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         try {
-            HashMap<String, String> userProperties =
-                    new HashMap<>(session.getRepositorySession().getUserProperties());
-            HashMap<String, String> systemProperties =
-                    new HashMap<>(session.getRepositorySession().getSystemProperties());
             MavenProject currentProject = session.getTopLevelProject();
-            if (currentProject != null
-                    && !"org.apache.maven:standalone-pom"
-                            .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
-                if (!userProperties.containsKey(NJORD_PREFIX) && !systemProperties.containsKey(NJORD_PREFIX)) {
-                    boolean autoPrefix = Boolean.parseBoolean(
-                            userProperties.getOrDefault(NJORD_AUTOPREFIX, DEFAULT_NJORD_AUTOPREFIX));
-                    String prefix = currentProject.getProperties().getProperty(NJORD_PREFIX);
-                    if (autoPrefix && prefix == null) {
-                        prefix = currentProject.getArtifactId();
-                    }
-                    if (prefix != null) {
-                        userProperties.put(NJORD_PREFIX, prefix);
-                    }
+
+            // collect all + top level POM (needed to build eff models, parent may be ext in some 3rd party repo)
+            ArrayList<RemoteRepository> remoteRepositories =
+                    new ArrayList<>(RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()));
+            remoteRepositories.addAll(currentProject.getRemoteProjectRepositories());
+
+            // session config
+            SessionConfig sc = SessionConfig.defaults(session.getRepositorySession(), remoteRepositories)
+                    .build();
+
+            // we may need to customize session config
+            if (sc.prefix().isEmpty()) {
+                String prefix = currentProject.getProperties().getProperty(SessionConfig.CONFIG_PREFIX);
+                if (prefix == null && sc.autoPrefix()) {
+                    prefix = currentProject.getArtifactId();
                 }
-                if (!userProperties.containsKey(NJORD_TARGET) && !systemProperties.containsKey(NJORD_TARGET)) {
-                    String target = currentProject.getProperties().getProperty(NJORD_TARGET);
-                    if (target != null) {
-                        userProperties.put(NJORD_TARGET, target);
-                    }
+                if (prefix != null) {
+                    sc = sc.toBuilder().prefix(prefix).build();
                 }
             }
-            Config config = Config.defaults()
-                    .userProperties(userProperties)
-                    .systemProperties(systemProperties)
-                    .build();
-            SessionConfig sessionConfig = SessionConfig.builder()
-                    .session(session.getRepositorySession())
-                    .remoteRepositories(
-                            RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
-                    .config(config)
-                    .build();
-            if (NjordUtils.lazyInit(sessionConfig, njordSessionFactory::create)) {
-                logger.info("Njord {} session created", config.version().orElse("UNKNOWN"));
+            if (sc.publisher().isEmpty()) {
+                String publisher = currentProject.getProperties().getProperty(SessionConfig.CONFIG_PUBLISHER);
+                if (publisher != null) {
+                    sc = sc.toBuilder().publisher(publisher).build();
+                }
+            }
+
+            Session ns = NjordUtils.init(sc, sessionFactory::create);
+            if (ns.config().enabled()) {
+                logger.info("Njord {} session created", ns.config().version().orElse("UNKNOWN"));
             }
         } catch (Exception e) {
             throw new MavenExecutionException("Error enabling Njord", e);
@@ -96,13 +85,15 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
         try {
-            Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
+            Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                NjordSession njordSession = ns.orElseThrow();
-                if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
-                    logger.warn("Session failed; dropped stores created in failed session");
+                Session njordSession = ns.orElseThrow();
+                if (njordSession.config().enabled()) {
+                    if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
+                        logger.warn("Session failed; dropped stores created in failed session");
+                    }
+                    logger.info("Njord session closed");
                 }
-                logger.info("Njord session closed");
                 njordSession.close();
             }
         } catch (Exception e) {

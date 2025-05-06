@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Optional;
@@ -29,7 +29,7 @@ public class ListContentMojo extends NjordMojoSupport {
     private String store;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doExecute(Session ns) throws IOException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             try (ArtifactStore store = storeOptional.orElseThrow()) {

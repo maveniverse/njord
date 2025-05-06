@@ -10,7 +10,6 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
@@ -69,8 +68,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     @Override
     public List<String> listArtifactStoreNames() throws IOException {
         checkClosed();
-        if (Files.isDirectory(config.config().basedir())) {
-            try (Stream<Path> stream = Files.list(config.config().basedir())) {
+        if (Files.isDirectory(config.basedir())) {
+            try (Stream<Path> stream = Files.list(config.basedir())) {
                 return stream.filter(Files::isDirectory)
                         .filter(p -> Files.isRegularFile(metaRepositoryProperties(p)))
                         .map(p -> p.getFileName().toString())
@@ -134,13 +133,15 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         requireNonNull(name);
         checkClosed();
 
-        Path basedir = config.config().basedir().resolve(name);
+        Path basedir = config.basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
             try {
                 Path meta = metaRepositoryProperties(basedir);
                 if (Files.exists(meta)) {
-                    FileUtils.deleteRecursively(basedir);
+                    if (!config.dryRun()) {
+                        FileUtils.deleteRecursively(basedir);
+                    }
                     return true;
                 }
             } finally {
@@ -156,7 +157,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         names.sort(Comparator.naturalOrder());
         Map<ArtifactStoreTemplate, TreeSet<String>> stores = new HashMap<>();
         for (String name : names) {
-            Path basedir = config.config().basedir().resolve(name);
+            Path basedir = config.basedir().resolve(name);
             Map<String, String> properties = loadStoreProperties(basedir);
             ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
             stores.computeIfAbsent(template, k -> new TreeSet<>()).add(name);
@@ -166,7 +167,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             for (String name : stores.get(template)) {
                 String formattedName = formatArtifactStoreName(template.prefix(), num++);
                 if (!formattedName.equals(name)) {
-                    Path basedir = config.config().basedir().resolve(name);
+                    Path basedir = config.basedir().resolve(name);
                     renameStore(basedir, formattedName);
                 }
             }
@@ -183,7 +184,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             throw new IllegalArgumentException("Unsupported store type: " + artifactStore.getClass());
         }
 
-        Path targetDirectory = Config.getCanonicalPath(file);
+        Path targetDirectory = SessionConfig.getCanonicalPath(file);
         Path bundleFile = targetDirectory;
         if (Files.isDirectory(targetDirectory)) {
             bundleFile = targetDirectory.resolve(artifactStore.name() + ".ntb");
@@ -215,7 +216,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (!Files.isRegularFile(file)) {
             throw new IllegalArgumentException("File does not exist");
         }
-        Path storeSource = Config.getCanonicalPath(file);
+        Path storeSource = SessionConfig.getCanonicalPath(file);
         String storeName;
         Path storeBasedir;
         try (FileSystem fs = FileSystems.newFileSystem(storeSource, Map.of("create", "false"), null)) {
@@ -254,7 +255,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private DefaultArtifactStore loadExistingArtifactStore(String name) throws IOException {
-        Path basedir = config.config().basedir().resolve(name);
+        Path basedir = config.basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
             Map<String, String> properties = loadStoreProperties(basedir);
@@ -286,7 +287,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     private DefaultArtifactStore createNewArtifactStore(ArtifactStoreTemplate template) throws IOException {
         String name = newArtifactStoreName(template.prefix());
-        Path basedir = config.config().basedir().resolve(name);
+        Path basedir = config.basedir().resolve(name);
         Files.createDirectories(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         Instant created = Instant.now();
@@ -338,7 +339,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     private String newArtifactStoreName(String prefix) throws IOException {
         String prefixDash = prefix + "-";
         int num = 0;
-        try (Stream<Path> candidates = Files.list(config.config().basedir())
+        try (Stream<Path> candidates = Files.list(config.basedir())
                 .filter(Files::isDirectory)
                 .filter(d -> d.getFileName().toString().startsWith(prefixDash))
                 .filter(d -> Files.isRegularFile(metaRepositoryProperties(d)))
@@ -370,6 +371,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private void saveStoreProperties(Path basedir, Map<String, String> properties) throws IOException {
+        if (config.dryRun()) {
+            return;
+        }
         Properties prop = new Properties();
         properties.forEach(prop::setProperty);
         Path metaStoreProperties = metaRepositoryProperties(basedir);
@@ -380,6 +384,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private void renameStore(Path basedir, String newName) throws IOException {
+        if (config.dryRun()) {
+            return;
+        }
         Map<String, String> props = loadStoreProperties(basedir);
         props.put("name", newName);
         saveStoreProperties(basedir, props);

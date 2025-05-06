@@ -99,6 +99,16 @@
         <artifactId>javax.inject</artifactId>
         <version>1</version>
       </dependency>
+      <dependency>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.inject</artifactId>
+        <version>0.9.0.M3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.plexus</artifactId>
+        <version>0.9.0.M3</version>
+      </dependency>
 
       <!-- Resolver + Maven -->
       <dependency>

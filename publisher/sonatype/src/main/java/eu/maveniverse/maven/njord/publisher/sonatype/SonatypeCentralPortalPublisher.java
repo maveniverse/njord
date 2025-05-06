@@ -13,13 +13,13 @@ import com.github.mizosoft.methanol.MediaType;
 import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
+import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 repositorySystem,
                 SonatypeCentralPortalPublisherFactory.NAME,
                 "Publishes to Sonatype Central Portal",
-                Config.CENTRAL,
+                MavenCentralPublisherFactory.CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
@@ -57,6 +57,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        if (sessionConfig.dryRun()) {
+            logger.info("Dry run; not publishing to {}", name);
+            return;
+        }
         RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle

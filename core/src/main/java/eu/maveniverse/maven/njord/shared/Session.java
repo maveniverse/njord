@@ -19,11 +19,11 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.Optional;
 
-public interface NjordSession extends Closeable {
+public interface Session extends Closeable {
     /**
      * Returns the session configuration.
      */
-    SessionConfig sessionConfig();
+    SessionConfig config();
 
     /**
      * Returns store manager.
@@ -70,6 +70,9 @@ public interface NjordSession extends Closeable {
 
     /**
      * Creates session-bound artifact store and memoize it during session.
+     * {@code repoId::njord:}
+     * {@code repoId::njord:template:templateName}
+     * {@code repoId::njord:store:storeName}
      */
     ArtifactStore getOrCreateSessionArtifactStore(String uri);
 

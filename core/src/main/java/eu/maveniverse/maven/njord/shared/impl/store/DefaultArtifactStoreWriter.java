@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -32,7 +31,7 @@ public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionCo
         requireNonNull(outputDirectory);
         checkClosed();
 
-        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
+        Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
@@ -46,7 +45,7 @@ public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionCo
         requireNonNull(outputDirectory);
         checkClosed();
 
-        Path targetDirectory = Config.getCanonicalPath(outputDirectory);
+        Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
         if (!Files.isDirectory(targetDirectory)) {
             Files.createDirectories(targetDirectory);
         }

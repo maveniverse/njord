@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import org.apache.maven.plugins.annotations.Mojo;
 
@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "list-comparators", threadSafe = true, requiresProject = false)
 public class ListComparatorsMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(NjordSession ns) {
+    protected void doExecute(Session ns) {
         logger.info("Listing available comparators:");
         for (ArtifactStoreComparator comparator : ns.availableComparators()) {
             logger.info("- '{}' - {}", comparator.name(), comparator.description());

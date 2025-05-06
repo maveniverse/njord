@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -35,7 +35,7 @@ public class MergeAllMojo extends NjordMojoSupport {
     private boolean failIfNothingDone;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoExecutionException {
+    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
         ArtifactStoreTemplate template = null;
         HashSet<String> names = new HashSet<>();
         for (String name : ns.artifactStoreManager().listArtifactStoreNames()) {

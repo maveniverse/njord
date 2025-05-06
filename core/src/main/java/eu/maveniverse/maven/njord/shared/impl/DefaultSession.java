@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
@@ -31,14 +31,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> implements NjordSession {
+public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
-    public DefaultNjordSession(
+    public DefaultSession(
             SessionConfig sessionConfig,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
@@ -54,7 +54,7 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     }
 
     @Override
-    public SessionConfig sessionConfig() {
+    public SessionConfig config() {
         return config;
     }
 
@@ -67,20 +67,20 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     @Override
     public ArtifactStoreWriter createArtifactStoreWriter() {
         checkClosed();
-        return artifactStoreWriterFactory.create(sessionConfig());
+        return artifactStoreWriterFactory.create(config());
     }
 
     @Override
     public ArtifactStoreMerger createArtifactStoreMerger() {
         checkClosed();
-        return artifactStoreMergerFactory.create(sessionConfig());
+        return artifactStoreMergerFactory.create(config());
     }
 
     @Override
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
         return artifactStorePublisherFactories.values().stream()
-                .map(f -> f.create(sessionConfig()))
+                .map(f -> f.create(config()))
                 .toList();
     }
 
@@ -88,14 +88,16 @@ public class DefaultNjordSession extends CloseableConfigSupport<SessionConfig> i
     public Collection<ArtifactStoreComparator> availableComparators() {
         checkClosed();
         return artifactStoreComparatorFactories.values().stream()
-                .map(f -> f.create(sessionConfig()))
+                .map(f -> f.create(config()))
                 .toList();
     }
 
-    private static final String SESSION_BOUND_STORES_KEY = NjordSession.class.getName() + "." + ArtifactStore.class;
+    private static final String SESSION_BOUND_STORES_KEY = Session.class.getName() + "." + ArtifactStore.class;
 
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
+        requireNonNull(uri);
+
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
                 config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
         String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {

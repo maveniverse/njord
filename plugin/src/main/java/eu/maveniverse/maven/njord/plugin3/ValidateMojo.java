@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -29,7 +29,7 @@ public class ValidateMojo extends PublisherSupportMojo {
     private boolean details;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
+    protected void doExecute(Session ns) throws IOException, MojoFailureException {
         ArtifactStorePublisher p = getArtifactStorePublisher(ns);
         try (ArtifactStore from = getArtifactStore(ns)) {
             Optional<ArtifactStoreValidator> v = p.validatorFor(from);

@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -24,7 +24,7 @@ public class DropMojo extends NjordMojoSupport {
     private String store;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doExecute(Session ns) throws IOException {
         if (ns.artifactStoreManager().dropArtifactStore(store)) {
             logger.info("Dropped ArtifactStore {}", store);
         } else {

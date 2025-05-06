@@ -11,9 +11,8 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeCentralRequirementsFactory;
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeNx2Publisher;
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -22,7 +21,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
 @Named(ApacheRaoPublisherFactory.NAME)
-public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory {
+public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
     public static final String NAME = "apache-rao";
 
     private final RepositorySystem repositorySystem;
@@ -37,7 +36,7 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
 
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        ApachePublisherConfig raoConfig = ApachePublisherConfig.with(sessionConfig.config());
+        ApachePublisherConfig raoConfig = ApachePublisherConfig.with(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
                 .build();
@@ -50,7 +49,7 @@ public class ApacheRaoPublisherFactory implements ArtifactStorePublisherFactory 
                 repositorySystem,
                 NAME,
                 "Publishes to ASF",
-                Config.CENTRAL,
+                CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,

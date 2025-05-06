@@ -9,9 +9,9 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
-import eu.maveniverse.maven.njord.shared.NjordSessionFactory;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 
 @Singleton
 @Named
-public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
+public class DefaultSessionFactory<C> implements SessionFactory {
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
@@ -32,7 +32,7 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
     @Inject
-    public DefaultNjordSessionFactory(
+    public DefaultSessionFactory(
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
@@ -46,8 +46,8 @@ public class DefaultNjordSessionFactory<C> implements NjordSessionFactory {
     }
 
     @Override
-    public NjordSession create(SessionConfig sessionConfig) {
-        return new DefaultNjordSession(
+    public Session create(SessionConfig sessionConfig) {
+        return new DefaultSession(
                 sessionConfig,
                 internalArtifactStoreManagerFactory,
                 artifactStoreWriterFactory,

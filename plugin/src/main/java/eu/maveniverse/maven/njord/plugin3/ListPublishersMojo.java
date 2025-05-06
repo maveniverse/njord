@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
@@ -23,7 +23,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 @Mojo(name = "list-publishers", threadSafe = true, requiresProject = false)
 public class ListPublishersMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(NjordSession ns) {
+    protected void doExecute(Session ns) {
         logger.info("Listing available publishers:");
         for (ArtifactStorePublisher publisher : ns.availablePublishers()) {
             logger.info("- '{}' -> {}", publisher.name(), publisher.description());
