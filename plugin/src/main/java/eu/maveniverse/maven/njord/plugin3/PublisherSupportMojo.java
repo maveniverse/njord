@@ -8,13 +8,16 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Publisher support mojo.
@@ -63,6 +66,31 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         if (publisher == null && ns.config().publisher().isPresent()) {
             publisher = ns.config().publisher().orElseThrow();
             logger.info("No publisher specified but session publisher is set to '{}'; using it", publisher);
+        }
+        if (publisher == null && mavenSession.getTopLevelProject() != null) {
+            MavenProject project = mavenSession.getTopLevelProject();
+            String distributionRepositoryId = null;
+            if (project.getArtifact().isSnapshot()) {
+                if (project.getDistributionManagement() != null
+                        && project.getDistributionManagement().getSnapshotRepository() != null) {
+                    distributionRepositoryId = project.getDistributionManagement()
+                            .getSnapshotRepository()
+                            .getId();
+                }
+            } else {
+                if (project.getDistributionManagement() != null
+                        && project.getDistributionManagement().getRepository() != null) {
+                    distributionRepositoryId =
+                            project.getDistributionManagement().getRepository().getId();
+                }
+            }
+            if (distributionRepositoryId != null) {
+                Optional<Map<String, String>> sco = ns.config().serviceConfiguration(distributionRepositoryId);
+                if (sco.isPresent()) {
+                    logger.info("Njord service configuration found for server '{}'", distributionRepositoryId);
+                    publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
+                }
+            }
         }
         if (publisher == null) {
             throw new MojoFailureException("Publisher name was not specified nor could be found");

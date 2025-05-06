@@ -106,32 +106,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
                         // empty -> default
-                        ArtifactStoreTemplate template = internalArtifactStoreManager.defaultTemplate();
-                        if (config.prefix().isPresent()) {
-                            template = template.withPrefix(config.prefix().orElseThrow());
-                        }
-                        try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(template)) {
-                            artifactStoreName = artifactStore.name();
-                        }
+                        artifactStoreName = createUsingTemplate(
+                                internalArtifactStoreManager.defaultTemplate().name());
                     } else {
                         // non-empty -> template name
-                        List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
-                                .filter(t -> t.name().equals(uri))
-                                .toList();
-                        if (templates.size() != 1) {
-                            throw new IllegalArgumentException("Unknown template: " + uri);
-                        } else {
-                            ArtifactStoreTemplate template = templates.get(0);
-                            if (config.prefix().isPresent()) {
-                                template = template.withPrefix(config.prefix().orElseThrow());
-                            }
-                            try (ArtifactStore artifactStore =
-                                    internalArtifactStoreManager.createArtifactStore(template)) {
-                                artifactStoreName = artifactStore.name();
-                            }
-                        }
+                        artifactStoreName = createUsingTemplate(uri);
                     }
+                } else if (uri.startsWith("template:")) {
+                    // template:xxx
+                    artifactStoreName = createUsingTemplate(uri.substring(9));
                 } else if (uri.startsWith("store:")) {
+                    // store:xxx
                     artifactStoreName = uri.substring(6);
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
@@ -147,6 +132,23 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                     .orElseThrow(() -> new IllegalArgumentException("No such store: " + storeName));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    private String createUsingTemplate(String templateName) throws IOException {
+        List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
+                .filter(t -> t.name().equals(templateName))
+                .toList();
+        if (templates.size() != 1) {
+            throw new IllegalArgumentException("Unknown template: " + templateName);
+        } else {
+            ArtifactStoreTemplate template = templates.get(0);
+            if (config.prefix().isPresent()) {
+                template = template.withPrefix(config.prefix().orElseThrow());
+            }
+            try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(template)) {
+                return artifactStore.name();
+            }
         }
     }
 

@@ -133,10 +133,13 @@ public interface SessionConfig {
     /**
      * Returns the "service configuration" for given service ID.
      */
-    default Map<String, String> serviceConfiguration(String serviceId) {
+    default Optional<Map<String, String>> serviceConfiguration(String serviceId) {
         requireNonNull(serviceId);
-        HashMap<String, String> serviceConfiguration = new HashMap<>();
-        Object configuration = ConfigUtils.getObject(session(), null, "aether.transport.wagon.config." + serviceId);
+        Object configuration = ConfigUtils.getObject(
+                session(),
+                null,
+                "aether.connector.wagon.config." + serviceId,
+                "aether.transport.wagon.config." + serviceId);
         if (configuration != null) {
             PlexusConfiguration config;
             if (configuration instanceof PlexusConfiguration) {
@@ -147,13 +150,15 @@ public interface SessionConfig {
                 throw new IllegalArgumentException("unexpected configuration type: "
                         + configuration.getClass().getName());
             }
+            HashMap<String, String> serviceConfiguration = new HashMap<>();
             for (PlexusConfiguration child : config.getChildren()) {
                 if (child.getName().startsWith(KEY_PREFIX) && child.getValue() != null) {
                     serviceConfiguration.put(child.getName(), child.getValue());
                 }
             }
+            return Optional.of(serviceConfiguration);
         }
-        return serviceConfiguration;
+        return Optional.empty();
     }
 
     /**
