@@ -17,16 +17,22 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import org.apache.maven.RepositoryUtils;
+import org.apache.maven.model.DeploymentRepository;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -97,25 +103,53 @@ public interface SessionConfig {
     RepositorySystemSession session();
 
     /**
-     * Remote repositories, never {@code null}.
+     * Remote repositories provided by environment, never {@code null}.
      */
     List<RemoteRepository> remoteRepositories();
 
     /**
-     * Whether to apply "auto prefix" (user provided or derived from current project) or use "template prefix" for
-     * created store names.
+     * Remote repositories provided by environment and project, if present, never {@code null}.
      */
-    boolean autoPrefix();
+    default List<RemoteRepository> allRemoteRepositories() {
+        ArrayList<RemoteRepository> remoteRepositories = new ArrayList<>(remoteRepositories());
+        if (currentProject().isPresent()) {
+            remoteRepositories.addAll(currentProject().orElseThrow().remoteRepositories());
+        }
+        return remoteRepositories;
+    }
+
+    /**
+     * Whether to apply "auto prefix" (user provided one or derived from current project) or use "template prefix" for
+     * created store names. Defaults to {@code true}: when {@link #currentProject()} is available, store prefix is
+     * derived from the project, otherwise from template.
+     */
+    default boolean autoPrefix() {
+        String value = effectiveProperties().get(CONFIG_AUTOPREFIX);
+        if (value == null && currentProject().isPresent()) {
+            CurrentProject cp = currentProject().orElseThrow();
+            value = cp.projectProperties().get(CONFIG_AUTOPREFIX);
+        }
+        return value == null || Boolean.parseBoolean(value);
+    }
 
     /**
      * The prefix to override template prefix, if needed. If {@link #autoPrefix()} is {@code true}, this value is always
-     * present (hold value user specified or defaults to top level project artifact ID), otherwise is present only if
-     * user provided it. If not present, template prefix will be used when creating store.
+     * present if there is present {@link #currentProject()}.
      * <p>
      * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
      * POM as project property.
      */
-    Optional<String> prefix();
+    default Optional<String> prefix() {
+        String value = effectiveProperties().get(CONFIG_PREFIX);
+        if (value == null && currentProject().isPresent()) {
+            CurrentProject cp = currentProject().orElseThrow();
+            value = cp.projectProperties().get(CONFIG_PREFIX);
+            if (value == null && autoPrefix()) {
+                value = cp.artifact().getArtifactId();
+            }
+        }
+        return Optional.ofNullable(value);
+    }
 
     /**
      * The publisher to use, if specified.
@@ -123,12 +157,52 @@ public interface SessionConfig {
      * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
      * POM as project property.
      */
-    Optional<String> publisher();
+    default Optional<String> publisher() {
+        String value = effectiveProperties().get(CONFIG_PUBLISHER);
+        if (value == null && currentProject().isPresent()) {
+            CurrentProject cp = currentProject().orElseThrow();
+            value = cp.projectProperties().get(CONFIG_PUBLISHER);
+        }
+        return Optional.ofNullable(value);
+    }
 
     /**
-     * If there is project in session, the "mode" of it. Note: Njord does not support "mixed" modes!
+     * Shim for "current project". Provides needed information from project.
      */
-    Optional<RepositoryMode> projectRepositoryMode();
+    interface CurrentProject {
+        /**
+         * The artifact of the project (bare coordinates), never {@code null}.
+         */
+        Artifact artifact();
+
+        /**
+         * The repository mode of project (in function of {@link #artifact()}, never {@code null}.
+         */
+        default RepositoryMode repositoryMode() {
+            return artifact().isSnapshot() ? RepositoryMode.SNAPSHOT : RepositoryMode.RELEASE;
+        }
+
+        /**
+         * The project properties.
+         */
+        Map<String, String> projectProperties();
+
+        /**
+         * The defined remote repositories, never {@code null}.
+         */
+        List<RemoteRepository> remoteRepositories();
+
+        /**
+         * The defined project distribution management repositories, never {@code null}.
+         */
+        Map<RepositoryMode, RemoteRepository> distributionManagementRepositories();
+    }
+
+    /**
+     * The current project, if available. If Maven invoked from a directory where no project is available,
+     * this field with be empty.
+     */
+    Optional<CurrentProject> currentProject();
 
     /**
      * Returns the "service configuration" for given service ID.
@@ -175,10 +249,61 @@ public interface SessionConfig {
                 systemProperties(),
                 session(),
                 remoteRepositories(),
-                autoPrefix(),
-                prefix().orElse(null),
-                publisher().orElse(null),
-                projectRepositoryMode().orElse(null));
+                currentProject().orElse(null));
+    }
+
+    /**
+     * Creates {@link CurrentProject} out of passed in project. May return {@code null}.
+     */
+    static CurrentProject fromMavenProject(MavenProject project) {
+        requireNonNull(project);
+        if (!"org.apache.maven:standalone-pom".equals(project.getGroupId() + ":" + project.getArtifactId())) {
+            final Artifact artifact = RepositoryUtils.toArtifact(project.getArtifact());
+            final Map<String, String> properties = Map.copyOf(Utils.toMap(project.getProperties()));
+            final List<RemoteRepository> remoteRepositories = project.getRemoteProjectRepositories();
+            final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
+            if (project.getDistributionManagement() != null) {
+                DeploymentRepository dr = project.getDistributionManagement().getRepository();
+                if (dr != null) {
+                    dmr.put(
+                            RepositoryMode.RELEASE,
+                            new RemoteRepository.Builder(dr.getId(), "default", dr.getUrl())
+                                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                                    .build());
+                }
+                dr = project.getDistributionManagement().getSnapshotRepository();
+                if (dr != null) {
+                    dmr.put(
+                            RepositoryMode.SNAPSHOT,
+                            new RemoteRepository.Builder(dr.getId(), "default", dr.getUrl())
+                                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                                    .build());
+                }
+            }
+            final Map<RepositoryMode, RemoteRepository> distributionManagementRepositories = Map.copyOf(dmr);
+            return new SessionConfig.CurrentProject() {
+                @Override
+                public Artifact artifact() {
+                    return artifact;
+                }
+
+                @Override
+                public Map<String, String> projectProperties() {
+                    return properties;
+                }
+
+                @Override
+                public List<RemoteRepository> remoteRepositories() {
+                    return remoteRepositories;
+                }
+
+                @Override
+                public Map<RepositoryMode, RemoteRepository> distributionManagementRepositories() {
+                    return distributionManagementRepositories;
+                }
+            };
+        }
+        return null;
     }
 
     /**
@@ -198,9 +323,6 @@ public interface SessionConfig {
                 session.getUserProperties(),
                 session,
                 remoteRepositories,
-                ConfigUtils.getBoolean(session, true, CONFIG_AUTOPREFIX),
-                ConfigUtils.getString(session, null, CONFIG_PREFIX),
-                ConfigUtils.getString(session, null, CONFIG_PUBLISHER),
                 null);
     }
 
@@ -214,10 +336,7 @@ public interface SessionConfig {
         private Map<String, String> systemProperties;
         private RepositorySystemSession session;
         private List<RemoteRepository> remoteRepositories;
-        private boolean autoPrefix;
-        private String prefix;
-        private String publisher;
-        private RepositoryMode projectRepositoryMode;
+        private CurrentProject currentProject;
 
         public Builder(
                 boolean enabled,
@@ -229,10 +348,7 @@ public interface SessionConfig {
                 Map<String, String> systemProperties,
                 RepositorySystemSession session,
                 List<RemoteRepository> remoteRepositories,
-                boolean autoPrefix,
-                String prefix,
-                String publisher,
-                RepositoryMode projectRepositoryMode) {
+                CurrentProject currentProject) {
             this.enabled = enabled;
             this.dryRun = dryRun;
             this.version = version;
@@ -242,10 +358,7 @@ public interface SessionConfig {
             this.systemProperties = systemProperties;
             this.session = session;
             this.remoteRepositories = remoteRepositories;
-            this.autoPrefix = autoPrefix;
-            this.prefix = prefix;
-            this.publisher = publisher;
-            this.projectRepositoryMode = projectRepositoryMode;
+            this.currentProject = currentProject;
         }
 
         public Builder enabled(boolean enabled) {
@@ -288,23 +401,8 @@ public interface SessionConfig {
             return this;
         }
 
-        public Builder autoPrefix(boolean autoPrefix) {
-            this.autoPrefix = autoPrefix;
-            return this;
-        }
-
-        public Builder prefix(String prefix) {
-            this.prefix = prefix;
-            return this;
-        }
-
-        public Builder publisher(String publisher) {
-            this.publisher = publisher;
-            return this;
-        }
-
-        public Builder projectRepositoryMode(RepositoryMode projectRepositoryMode) {
-            this.projectRepositoryMode = projectRepositoryMode;
+        public Builder currentProject(CurrentProject currentProject) {
+            this.currentProject = currentProject;
             return this;
         }
 
@@ -319,10 +417,7 @@ public interface SessionConfig {
                     systemProperties,
                     session,
                     remoteRepositories,
-                    autoPrefix,
-                    prefix,
-                    publisher,
-                    projectRepositoryMode);
+                    currentProject);
         }
 
         private static class Impl implements SessionConfig {
@@ -336,10 +431,7 @@ public interface SessionConfig {
             private final Map<String, String> effectiveProperties;
             private final RepositorySystemSession session;
             private final List<RemoteRepository> remoteRepositories;
-            private final boolean autoPrefix;
-            private final String prefix;
-            private final String publisher;
-            private final RepositoryMode projectRepositoryMode;
+            private final CurrentProject currentProject;
 
             private Impl(
                     boolean enabled,
@@ -351,10 +443,7 @@ public interface SessionConfig {
                     Map<String, String> systemProperties,
                     RepositorySystemSession session,
                     List<RemoteRepository> remoteRepositories,
-                    boolean autoPrefix,
-                    String prefix,
-                    String publisher,
-                    RepositoryMode projectRepositoryMode) {
+                    CurrentProject currentProject) {
                 this.enabled = enabled;
                 this.dryRun = dryRun;
                 this.version = version;
@@ -381,10 +470,7 @@ public interface SessionConfig {
 
                 this.session = requireNonNull(session);
                 this.remoteRepositories = List.copyOf(requireNonNull(remoteRepositories));
-                this.autoPrefix = autoPrefix;
-                this.prefix = prefix;
-                this.publisher = publisher;
-                this.projectRepositoryMode = projectRepositoryMode;
+                this.currentProject = currentProject;
             }
 
             @Override
@@ -438,23 +524,8 @@ public interface SessionConfig {
             }
 
             @Override
-            public boolean autoPrefix() {
-                return autoPrefix;
-            }
-
-            @Override
-            public Optional<String> prefix() {
-                return Optional.ofNullable(prefix);
-            }
-
-            @Override
-            public Optional<String> publisher() {
-                return Optional.ofNullable(publisher);
-            }
-
-            @Override
-            public Optional<RepositoryMode> projectRepositoryMode() {
-                return Optional.ofNullable(projectRepositoryMode);
+            public Optional<CurrentProject> currentProject() {
+                return Optional.ofNullable(currentProject);
             }
         }
     }

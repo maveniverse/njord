@@ -25,9 +25,9 @@ public class DefaultArtifactDeployerRedirector extends ComponentSupport implemen
     public String getRepositoryUrl(Session ns, RemoteRepository repository) {
         String url = repository.getUrl();
         if (!url.startsWith(SessionConfig.NAME + ":")
-                && ns.config().projectRepositoryMode().isPresent()) {
+                && ns.config().currentProject().isPresent()) {
             return getRepositoryUrl(
-                    ns, repository, ns.config().projectRepositoryMode().orElseThrow());
+                    ns, repository, ns.config().currentProject().orElseThrow().repositoryMode());
         }
         return url;
     }

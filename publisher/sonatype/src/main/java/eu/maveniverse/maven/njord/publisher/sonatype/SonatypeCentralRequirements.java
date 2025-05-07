@@ -63,9 +63,9 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
         validators.add((sc) -> new PomCoordinatesValidatorFactory(
-                "POM Coordinates", sc.session(), sc.remoteRepositories(), modelProvider));
+                "POM Coordinates", sc.session(), sc.allRemoteRepositories(), modelProvider));
         validators.add((sc) -> new PomProjectValidatorFactory(
-                "POM Completeness", sc.session(), sc.remoteRepositories(), modelProvider));
+                "POM Completeness", sc.session(), sc.allRemoteRepositories(), modelProvider));
         validators.add((sc) -> new JavadocJarValidatorFactory("Javadoc Jar"));
         validators.add((sc) -> new SourceJarValidatorFactory("Source Jar"));
         validators.add((sc) -> new ArchiveValidator("Archive"));

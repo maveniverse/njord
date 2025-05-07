@@ -42,21 +42,12 @@ public class StatusMojo extends PublisherSupportMojo {
     @Override
     protected void doWithoutSession() throws IOException, MojoFailureException {
         logger.warn("Njord extension is not installed; continuing with creating temporary session");
-        RepositoryMode projectRepositoryMode = null;
-        MavenProject currentProject = mavenSession.getTopLevelProject();
-        if (currentProject != null
-                && !"org.apache.maven:standalone-pom"
-                        .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
-            projectRepositoryMode =
-                    currentProject.getArtifact().isSnapshot() ? RepositoryMode.SNAPSHOT : RepositoryMode.RELEASE;
-        }
-
         try (Session ns = NjordUtils.lazyInit(
                 SessionConfig.defaults(
                                 mavenSession.getRepositorySession(),
                                 RepositoryUtils.toRepos(
                                         mavenSession.getRequest().getRemoteRepositories()))
-                        .projectRepositoryMode(projectRepositoryMode)
+                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getCurrentProject()))
                         .build(),
                 sessionFactory::create)) {
             doWithSession(ns);
