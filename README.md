@@ -22,6 +22,14 @@ what, plus you are forced to use their (possibly closed source) plugins in your 
 This tool aim is to help you manage your build artifacts by publishing them to these repositories, but without the
 hassle of requiring to mutilate your own build (POMs).
 
+With Njord you can have benefits:
+* have only as many server entries in your `settings.xml` as many publishing services you use, as opposed to current
+  status, where each project uses "own" server ID for distribution management, that again causes that users working
+  on several projects (ie releasing them) must have copies of auth for each server of each project. Currently, there
+  are only 4 services publishing to Maven Central, so all you need is 4 server entries with auth in your `settings.xml`.
+* support publishing that is not "natively" supported by Maven, without hoops and looks and any change needed in
+  your project. Moreover, publishing comes with local staging as well in non-intrusive way.
+
 ## Setting it up
 
 With Maven 3 install Njord project-wide `.mvn/extensions.xml`, or with Maven 4+ install it user-wide `~/.m2/extensions.xml` like this:

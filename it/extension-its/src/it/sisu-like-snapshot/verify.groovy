@@ -21,5 +21,4 @@ assert first.contains("[INFO] Njord ${projectVersion} session created")
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains("[INFO] No applicable validator set for publisher \'sonatype-cp\'; validation skipped")
 assert second.contains("[INFO] Dry run; not publishing to \'sonatype-cp\' service at https://central.sonatype.com/repository/maven-snapshots")

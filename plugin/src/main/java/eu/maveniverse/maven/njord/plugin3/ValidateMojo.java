@@ -32,9 +32,10 @@ public class ValidateMojo extends PublisherSupportMojo {
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         ArtifactStorePublisher p = getArtifactStorePublisher(ns);
         try (ArtifactStore from = getArtifactStore(ns)) {
-            Optional<ArtifactStoreValidator> v = p.validatorFor(from);
-            if (v.isPresent()) {
-                ArtifactStoreValidator.ValidationResult vr = v.orElseThrow().validate(from);
+            Optional<ArtifactStoreValidator.ValidationResult> vro = p.validate(from);
+            if (vro.isPresent()) {
+                logger.info("Validated {} against {}", from, p.name());
+                ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
                 if (details) {
                     logger.info("Validation results for {}", from.name());
                     dumpValidationResult("", vr);

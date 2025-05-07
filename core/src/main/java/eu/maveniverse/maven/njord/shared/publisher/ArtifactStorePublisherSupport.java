@@ -86,21 +86,28 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
     }
 
     @Override
-    public Optional<ArtifactStoreValidator> validatorFor(ArtifactStore artifactStore) throws IOException {
+    public Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        return artifactStore.repositoryMode() == RepositoryMode.RELEASE
-                ? artifactStoreRequirements.releaseValidator()
-                : artifactStoreRequirements.snapshotValidator();
+
+        return doValidate(artifactStore);
+    }
+
+    protected Optional<ArtifactStoreValidator.ValidationResult> doValidate(ArtifactStore artifactStore)
+            throws IOException {
+        Optional<ArtifactStoreValidator> vo = validatorFor(artifactStore);
+        if (vo.isPresent()) {
+            ArtifactStoreValidator.ValidationResult vr = vo.orElseThrow().validate(artifactStore);
+            return Optional.of(vr);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public void publish(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
-        logger.info("Validating {} for {}", artifactStore, name());
-        if (validateArtifactStore(artifactStore)) {
-            logger.info("Publishing {} to {}", artifactStore, name());
-            doPublish(artifactStore);
-        }
+
+        doPublish(artifactStore);
     }
 
     protected abstract void doPublish(ArtifactStore artifactStore) throws IOException;
@@ -116,28 +123,10 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
         return repository;
     }
 
-    protected boolean validateArtifactStore(ArtifactStore artifactStore) throws IOException {
-        Optional<ArtifactStoreValidator> vo = validatorFor(artifactStore);
-        if (vo.isPresent()) {
-            ArtifactStoreValidator.ValidationResult vr = vo.orElseThrow().validate(artifactStore);
-            if (!vr.isValid()) {
-                logger.error("ArtifactStore {} failed validation", artifactStore);
-                return false;
-            } else {
-                int warnings = vr.warningCount();
-                if (warnings > 0) {
-                    logger.warn(
-                            "ArtifactStore {} passed {} validation with {} warnings",
-                            artifactStore,
-                            vr.checkCount(),
-                            warnings);
-                } else {
-                    logger.info("ArtifactStore {} passed {} validation", artifactStore, vr.checkCount());
-                }
-            }
-        } else {
-            logger.info("No applicable validator set for publisher '{}'; validation skipped", name());
-        }
-        return true;
+    protected Optional<ArtifactStoreValidator> validatorFor(ArtifactStore artifactStore) throws IOException {
+        requireNonNull(artifactStore);
+        return artifactStore.repositoryMode() == RepositoryMode.RELEASE
+                ? artifactStoreRequirements.releaseValidator()
+                : artifactStoreRequirements.snapshotValidator();
     }
 }

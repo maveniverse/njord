@@ -65,32 +65,20 @@ public class StatusMojo extends PublisherSupportMojo {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
+        MavenProject cp = mavenSession.getCurrentProject();
+        if (cp.getDistributionManagement() == null) {
+            throw new MojoFailureException("No distribution management found");
+        }
         RemoteRepository deploymentRelease = new RemoteRepository.Builder(
-                        mavenSession
-                                .getCurrentProject()
-                                .getDistributionManagement()
-                                .getRepository()
-                                .getId(),
+                        cp.getDistributionManagement().getRepository().getId(),
                         "default",
-                        mavenSession
-                                .getCurrentProject()
-                                .getDistributionManagement()
-                                .getRepository()
-                                .getUrl())
+                        cp.getDistributionManagement().getRepository().getUrl())
                 .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                 .build();
         RemoteRepository deploymentSnapshot = new RemoteRepository.Builder(
-                        mavenSession
-                                .getCurrentProject()
-                                .getDistributionManagement()
-                                .getSnapshotRepository()
-                                .getId(),
+                        cp.getDistributionManagement().getSnapshotRepository().getId(),
                         "default",
-                        mavenSession
-                                .getCurrentProject()
-                                .getDistributionManagement()
-                                .getSnapshotRepository()
-                                .getUrl())
+                        cp.getDistributionManagement().getSnapshotRepository().getUrl())
                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                 .build();
         String deploymentReleaseUrl =
