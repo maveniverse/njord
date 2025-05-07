@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -18,7 +18,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Validate given store against given target.
+ * Validate given store against given publisher.
  */
 @Mojo(name = "validate", threadSafe = true, requiresProject = false)
 public class ValidateMojo extends PublisherSupportMojo {
@@ -29,12 +29,13 @@ public class ValidateMojo extends PublisherSupportMojo {
     private boolean details;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         ArtifactStorePublisher p = getArtifactStorePublisher(ns);
         try (ArtifactStore from = getArtifactStore(ns)) {
-            Optional<ArtifactStoreValidator> v = p.validatorFor(from);
-            if (v.isPresent()) {
-                ArtifactStoreValidator.ValidationResult vr = v.orElseThrow().validate(from);
+            Optional<ArtifactStoreValidator.ValidationResult> vro = p.validate(from);
+            if (vro.isPresent()) {
+                logger.info("Validated {} against {}", from, p.name());
+                ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
                 if (details) {
                     logger.info("Validation results for {}", from.name());
                     dumpValidationResult("", vr);

@@ -64,9 +64,9 @@
 
     <!--
     Build time: latest stable Maven and Java 21+
-    Run time: current Maven (3.9+) and Java 21+
+    Run time: current Maven (3.9+) and Java 11+
     -->
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>11</maven.compiler.release>
     <requireRuntimeMavenVersion.range>[3.9.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
@@ -98,6 +98,16 @@
         <groupId>javax.inject</groupId>
         <artifactId>javax.inject</artifactId>
         <version>1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.inject</artifactId>
+        <version>0.9.0.M3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.plexus</artifactId>
+        <version>0.9.0.M3</version>
       </dependency>
 
       <!-- Resolver + Maven -->

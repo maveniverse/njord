@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
@@ -70,7 +71,7 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                     new SubArtifact(artifact, "*", artifact.getExtension() + "." + signatureType.extension());
             Collection<SignatureValidator> typeSignatureValidator = signatureValidators.stream()
                     .filter(v -> Objects.equals(v.type().name(), signatureType.name()))
-                    .toList();
+                    .collect(Collectors.toList());
             boolean present = artifactStore.artifactPresent(signature);
             // signature validation as well
             if (present) {

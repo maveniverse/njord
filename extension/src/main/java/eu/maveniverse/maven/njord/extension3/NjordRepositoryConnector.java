@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
@@ -55,12 +56,12 @@ public class NjordRepositoryConnector implements RepositoryConnector {
                 artifactUploads != null
                         ? artifactUploads.stream()
                                 .map(u -> u.getArtifact().setFile(u.getFile()))
-                                .toList()
+                                .collect(Collectors.toList())
                         : Collections.emptyList(),
                 metadataUploads != null
                         ? metadataUploads.stream()
                                 .map(u -> u.getMetadata().setFile(u.getFile()))
-                                .toList()
+                                .collect(Collectors.toList())
                         : Collections.emptyList())) {
             delegate.put(artifactUploads, metadataUploads);
             if (artifactUploads != null && artifactUploads.stream().anyMatch(u -> u.getException() != null)) {

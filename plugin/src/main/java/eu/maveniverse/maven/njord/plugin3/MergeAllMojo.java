@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -35,7 +35,7 @@ public class MergeAllMojo extends NjordMojoSupport {
     private boolean failIfNothingDone;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         ArtifactStoreTemplate template = null;
         HashSet<String> names = new HashSet<>();
         for (String name : ns.artifactStoreManager().listArtifactStoreNames()) {
@@ -64,21 +64,20 @@ public class MergeAllMojo extends NjordMojoSupport {
             logger.info("Created target store {}", target);
             targetName = target.name();
         }
-        try (ArtifactStoreMerger merger = ns.createArtifactStoreMerger()) {
-            for (String name : names) {
-                Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
-                if (so.isPresent()) {
-                    try (ArtifactStore source = so.orElseThrow();
-                            ArtifactStore target = ns.artifactStoreManager()
-                                    .selectArtifactStore(targetName)
-                                    .orElseThrow()) {
-                        merger.merge(source, target);
-                    }
-                    logger.info("Dropping {}", name);
-                    ns.artifactStoreManager().dropArtifactStore(name);
-                } else {
-                    throw new MojoExecutionException("Once found store is gone: " + name);
+        ArtifactStoreMerger merger = ns.artifactStoreMerger();
+        for (String name : names) {
+            Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
+            if (so.isPresent()) {
+                try (ArtifactStore source = so.orElseThrow();
+                        ArtifactStore target = ns.artifactStoreManager()
+                                .selectArtifactStore(targetName)
+                                .orElseThrow()) {
+                    merger.merge(source, target);
                 }
+                logger.info("Dropping {}", name);
+                ns.artifactStoreManager().dropArtifactStore(name);
+            } else {
+                throw new MojoExecutionException("Once found store is gone: " + name);
             }
         }
         logger.info("Renumbering stores");

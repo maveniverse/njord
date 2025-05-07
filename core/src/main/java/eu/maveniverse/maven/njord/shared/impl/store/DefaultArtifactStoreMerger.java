@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
+import eu.maveniverse.maven.njord.shared.impl.ComponentSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -27,7 +27,8 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionConfig> implements ArtifactStoreMerger {
+public class DefaultArtifactStoreMerger extends ComponentSupport implements ArtifactStoreMerger {
+    private final SessionConfig sessionConfig;
     private final RepositorySystem repositorySystem;
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
@@ -35,7 +36,7 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
             SessionConfig sessionConfig,
             RepositorySystem repositorySystem,
             ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
-        super(sessionConfig);
+        this.sessionConfig = requireNonNull(sessionConfig);
         this.repositorySystem = requireNonNull(repositorySystem);
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
     }
@@ -44,7 +45,6 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
     public void redeploy(ArtifactStore source, ArtifactStore target) throws IOException {
         requireNonNull(source);
         requireNonNull(target);
-        checkClosed();
 
         if (source.repositoryMode() != target.repositoryMode()) {
             throw new IllegalArgumentException("Redeploy not possible; stores use different repository mode");
@@ -55,7 +55,7 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
         try (ArtifactStore from = source) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            config.session(),
+                            sessionConfig.session(),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build())
                     .deploy(from);
         }
@@ -65,7 +65,6 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
     public void merge(ArtifactStore source, ArtifactStore target) throws IOException {
         requireNonNull(source);
         requireNonNull(target);
-        checkClosed();
 
         if (source.repositoryMode() != RepositoryMode.RELEASE || target.repositoryMode() != RepositoryMode.RELEASE) {
             throw new IllegalArgumentException("Merge not possible; one or both stores are not RELEASE");
@@ -105,7 +104,7 @@ public class DefaultArtifactStoreMerger extends CloseableConfigSupport<SessionCo
         try (ArtifactStore from = source) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            config.session(),
+                            sessionConfig.session(),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build())
                     .deploy(from, toBeWritten);
         }

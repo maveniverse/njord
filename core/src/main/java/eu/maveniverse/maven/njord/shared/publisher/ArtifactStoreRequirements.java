@@ -66,17 +66,17 @@ public interface ArtifactStoreRequirements {
     }
 
     /**
-     * No requirements.
+     * The NONE requirements to be used when there are no requirements expected.
      */
     ArtifactStoreRequirements NONE = new ArtifactStoreRequirements() {
         @Override
         public String name() {
-            return "none";
+            return "NONE";
         }
 
         @Override
         public String description() {
-            return "No requirements";
+            return "No requirements set";
         }
     };
 }

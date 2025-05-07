@@ -7,10 +7,9 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.Config;
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,24 +30,22 @@ public class WriteMojo extends NjordMojoSupport {
     private String store;
 
     /**
-     * The directory to write out the store.
+     * The directory to write out the store to.
      */
     @Parameter(required = true, property = "directory")
     private String directory;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
-            Path targetDirectory = Config.getCanonicalPath(Path.of(directory).toAbsolutePath());
+            Path targetDirectory =
+                    SessionConfig.getCanonicalPath(Path.of(directory).toAbsolutePath());
             if (Files.exists(targetDirectory)) {
                 throw new MojoExecutionException("Exporting to existing directory not supported");
             }
-            Path result;
             logger.info("Writing store {} as directory to {}", store, directory);
-            try (ArtifactStoreWriter artifactStoreWriter = ns.createArtifactStoreWriter()) {
-                result = artifactStoreWriter.writeAsDirectory(storeOptional.orElseThrow(), targetDirectory);
-            }
+            Path result = ns.artifactStoreWriter().writeAsDirectory(storeOptional.orElseThrow(), targetDirectory);
             logger.info("Written to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");

@@ -10,9 +10,9 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -21,7 +21,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
 @Named(SonatypeCentralPortalPublisherFactory.NAME)
-public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePublisherFactory {
+public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublisherFactory {
     public static final String NAME = "sonatype-cp";
 
     private final RepositorySystem repositorySystem;
@@ -40,8 +40,7 @@ public class SonatypeCentralPortalPublisherFactory implements ArtifactStorePubli
 
     @Override
     public ArtifactStorePublisher create(SessionConfig sessionConfig) {
-        SonatypeCentralPortalPublisherConfig cpConfig =
-                SonatypeCentralPortalPublisherConfig.with(sessionConfig.config());
+        SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
                 .build();

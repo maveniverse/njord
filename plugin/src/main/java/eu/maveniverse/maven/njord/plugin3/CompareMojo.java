@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class CompareMojo extends NjordMojoSupport {
     private boolean details;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException, MojoFailureException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         Optional<ArtifactStore> store1Optional = ns.artifactStoreManager().selectArtifactStore(store1);
         if (store1Optional.isEmpty()) {
             logger.warn("ArtifactStore with given name not found: {}", store1);

@@ -7,9 +7,8 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.IOException;
 import java.util.Optional;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -39,7 +38,7 @@ public class MergeMojo extends NjordMojoSupport {
     private boolean drop;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         Optional<ArtifactStore> fromOptional = ns.artifactStoreManager().selectArtifactStore(from);
         Optional<ArtifactStore> toOptional = ns.artifactStoreManager().selectArtifactStore(to);
         if (fromOptional.isEmpty()) {
@@ -51,9 +50,7 @@ public class MergeMojo extends NjordMojoSupport {
             return;
         }
 
-        try (ArtifactStoreMerger artifactStoreMerger = ns.createArtifactStoreMerger()) {
-            artifactStoreMerger.merge(fromOptional.orElseThrow(), toOptional.orElseThrow());
-        }
+        ns.artifactStoreMerger().merge(fromOptional.orElseThrow(), toOptional.orElseThrow());
         if (drop) {
             logger.info("Dropping {}", from);
             ns.artifactStoreManager().dropArtifactStore(from);

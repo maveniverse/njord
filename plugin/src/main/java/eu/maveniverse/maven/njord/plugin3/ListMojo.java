@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +20,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "list", threadSafe = true, requiresProject = false)
 public class ListMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         logger.info("List of existing ArtifactStore:");
         List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNames();
         for (String storeName : storeNames) {

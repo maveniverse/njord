@@ -9,8 +9,9 @@ package eu.maveniverse.maven.njord.extension3;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
+import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -32,26 +33,32 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     public static final String NAME = "njord";
 
     private final Logger logger = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
     private final BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
     @Inject
-    public NjordRepositoryConnectorFactory(BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
+    public NjordRepositoryConnectorFactory(
+            ArtifactDeployerRedirector artifactDeployerRedirector,
+            BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
         this.basicRepositoryConnectorFactory = requireNonNull(basicRepositoryConnectorFactory);
     }
 
     /**
-     * {@code repoId::njord:default}
-     * {@code repoId::njord:template:templateName}
-     * {@code repoId::njord:store:storeName}
+     * {@code njord:}
+     * {@code njord:templateName}
+     * {@code njord:template:templateName}
+     * {@code njord:store:storeName}
      */
     @Override
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
-        if (NAME.equals(repository.getProtocol())) {
-            Optional<NjordSession> ns = NjordUtils.mayGetNjordSession(session);
-            if (ns.isPresent()) {
-                ArtifactStore artifactStore = ns.orElseThrow()
-                        .getOrCreateSessionArtifactStore(repository.getUrl().substring(6));
+        Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
+        if (nso.isPresent() && nso.orElseThrow().config().enabled()) {
+            Session ns = nso.orElseThrow();
+            String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
+            if (url != null && url.startsWith(NAME + ":")) {
+                ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                 return new NjordRepositoryConnector(
                         artifactStore,
                         repository,

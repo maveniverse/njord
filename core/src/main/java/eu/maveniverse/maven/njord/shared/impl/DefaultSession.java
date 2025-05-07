@@ -1,0 +1,235 @@
+/*
+ * Copyright (c) 2023-2024 Maveniverse Org.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ */
+package eu.maveniverse.maven.njord.shared.impl;
+
+import static java.util.Objects.requireNonNull;
+
+import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
+    private final String sessionBoundStoreKey;
+    private final DefaultSessionFactory defaultSessionFactory;
+    private final InternalArtifactStoreManager internalArtifactStoreManager;
+    private final ArtifactStoreWriter artifactStoreWriter;
+    private final ArtifactStoreMerger artifactStoreMerger;
+    private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
+    private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+
+    private final CopyOnWriteArrayList<Supplier<Boolean>> derivedDropSessionArtifactStores;
+
+    public DefaultSession(
+            SessionConfig sessionConfig,
+            DefaultSessionFactory defaultSessionFactory,
+            InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
+            ArtifactStoreWriterFactory artifactStoreWriterFactory,
+            ArtifactStoreMergerFactory artifactStoreMergerFactory,
+            Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
+        super(sessionConfig);
+        this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
+        this.defaultSessionFactory = requireNonNull(defaultSessionFactory);
+        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
+        this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
+        this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
+        this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
+        this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+
+        this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
+    }
+
+    @Override
+    public SessionConfig config() {
+        return config;
+    }
+
+    @Override
+    public Session derive(SessionConfig config) {
+        requireNonNull(config);
+        DefaultSession result = defaultSessionFactory.create(config);
+        derivedDropSessionArtifactStores.add(result::dropSessionArtifactStores);
+        return result;
+    }
+
+    @Override
+    public ArtifactStoreManager artifactStoreManager() {
+        checkClosed();
+        return internalArtifactStoreManager;
+    }
+
+    @Override
+    public ArtifactStoreWriter artifactStoreWriter() {
+        checkClosed();
+        return artifactStoreWriter;
+    }
+
+    @Override
+    public ArtifactStoreMerger artifactStoreMerger() {
+        checkClosed();
+        return artifactStoreMerger;
+    }
+
+    @Override
+    public Collection<ArtifactStorePublisher> availablePublishers() {
+        checkClosed();
+        return artifactStorePublisherFactories.values().stream()
+                .map(f -> f.create(config()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<ArtifactStoreComparator> availableComparators() {
+        checkClosed();
+        return artifactStoreComparatorFactories.values().stream()
+                .map(f -> f.create(config()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri) {
+        try {
+            if (!uri.contains(":")) {
+                if (uri.isEmpty()) {
+                    // empty -> default
+                    return internalArtifactStoreManager.defaultTemplate();
+                } else {
+                    // non-empty -> template name
+                    return selectTemplate(uri);
+                }
+            } else if (uri.startsWith("template:")) {
+                // template:xxx
+                return selectTemplate(uri.substring(9));
+            } else if (uri.startsWith("store:")) {
+                // store:xxx
+                return internalArtifactStoreManager
+                        .selectArtifactStore(uri.substring(6))
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown store"))
+                        .template();
+            } else {
+                throw new IllegalArgumentException("Invalid repository URI: " + uri);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
+        requireNonNull(uri);
+
+        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
+            try {
+                String artifactStoreName;
+                if (!uri.contains(":")) {
+                    if (uri.isEmpty()) {
+                        // empty -> default
+                        artifactStoreName = createUsingTemplate(
+                                internalArtifactStoreManager.defaultTemplate().name());
+                    } else {
+                        // non-empty -> template name
+                        artifactStoreName = createUsingTemplate(uri);
+                    }
+                } else if (uri.startsWith("template:")) {
+                    // template:xxx
+                    artifactStoreName = createUsingTemplate(uri.substring(9));
+                } else if (uri.startsWith("store:")) {
+                    // store:xxx
+                    artifactStoreName = uri.substring(6);
+                } else {
+                    throw new IllegalArgumentException("Invalid repository URI: " + uri);
+                }
+                return artifactStoreName;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+        try {
+            return internalArtifactStoreManager
+                    .selectArtifactStore(storeName)
+                    .orElseThrow(() -> new IllegalArgumentException("No such store: " + storeName));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private ArtifactStoreTemplate selectTemplate(String templateName) {
+        List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
+                .filter(t -> t.name().equals(templateName))
+                .collect(Collectors.toList());
+        if (templates.size() != 1) {
+            throw new IllegalArgumentException("Unknown template: " + templateName);
+        } else {
+            ArtifactStoreTemplate template = templates.get(0);
+            if (config.prefix().isPresent()) {
+                template = template.withPrefix(config.prefix().orElseThrow());
+            }
+            return template;
+        }
+    }
+
+    private String createUsingTemplate(String templateName) throws IOException {
+        try (ArtifactStore artifactStore =
+                internalArtifactStoreManager.createArtifactStore(selectTemplate(templateName))) {
+            return artifactStore.name();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean dropSessionArtifactStores() {
+        boolean derived = false;
+        for (Supplier<Boolean> callable : derivedDropSessionArtifactStores) {
+            if (callable.get()) {
+                derived = true;
+            }
+        }
+        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        AtomicBoolean result = new AtomicBoolean(derived);
+        sessionBoundStore.values().forEach(n -> {
+            try {
+                if (internalArtifactStoreManager.dropArtifactStore(n)) {
+                    result.set(true);
+                }
+            } catch (IOException e) {
+                logger.warn("Could not select ArtifactStore with name {}", n, e);
+            }
+        });
+        return result.get();
+    }
+
+    @Override
+    protected void doClose() throws IOException {
+        internalArtifactStoreManager.close();
+    }
+}

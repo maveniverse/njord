@@ -9,9 +9,8 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -20,7 +19,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
 @Named(SonatypeS01PublisherFactory.NAME)
-public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactory {
+public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory {
     public static final String NAME = "sonatype-s01";
 
     private final RepositorySystem repositorySystem;
@@ -35,7 +34,7 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
 
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        SonatypeS01PublisherConfig s01Config = SonatypeS01PublisherConfig.with(sessionConfig.config());
+        SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())
                 .build();
@@ -47,8 +46,8 @@ public class SonatypeS01PublisherFactory implements ArtifactStorePublisherFactor
                 sessionConfig,
                 repositorySystem,
                 NAME,
-                "Publishes to Sonatype s01",
-                Config.CENTRAL,
+                "Publishes to Sonatype S01",
+                CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,

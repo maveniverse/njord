@@ -9,9 +9,8 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Config;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -20,7 +19,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
 @Named(SonatypeOSSPublisherFactory.NAME)
-public class SonatypeOSSPublisherFactory implements ArtifactStorePublisherFactory {
+public class SonatypeOSSPublisherFactory implements MavenCentralPublisherFactory {
     public static final String NAME = "sonatype-oss";
 
     private final RepositorySystem repositorySystem;
@@ -35,7 +34,7 @@ public class SonatypeOSSPublisherFactory implements ArtifactStorePublisherFactor
 
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        SonatypeOSSPublisherConfig ossConfig = SonatypeOSSPublisherConfig.with(sessionConfig.config());
+        SonatypeOSSPublisherConfig ossConfig = new SonatypeOSSPublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         ossConfig.releaseRepositoryId(), "default", ossConfig.releaseRepositoryUrl())
                 .build();
@@ -47,8 +46,8 @@ public class SonatypeOSSPublisherFactory implements ArtifactStorePublisherFactor
                 sessionConfig,
                 repositorySystem,
                 NAME,
-                "Publishes to Sonatype s01",
-                Config.CENTRAL,
+                "Publishes to Sonatype OSS",
+                CENTRAL,
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,

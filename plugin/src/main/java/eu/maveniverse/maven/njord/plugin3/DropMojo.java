@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordSession;
+import eu.maveniverse.maven.njord.shared.Session;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -18,13 +18,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "drop", threadSafe = true, requiresProject = false)
 public class DropMojo extends NjordMojoSupport {
     /**
-     * The name of the store to drop.
+     * The name of the store to drop. As operation is destructive, this parameter is mandatory.
      */
     @Parameter(required = true, property = "store")
     private String store;
 
     @Override
-    protected void doExecute(NjordSession ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         if (ns.artifactStoreManager().dropArtifactStore(store)) {
             logger.info("Dropped ArtifactStore {}", store);
         } else {

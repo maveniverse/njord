@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,10 +82,10 @@ public abstract class ArtifactStoreComparatorSupport implements ArtifactStoreCom
      * Index "extraction": it "dries" out artifacts and sorts them. Basically, they are only coordinates.
      */
     protected List<Artifact> extractIndex(ArtifactStore artifactStore) {
-        ArrayList<Artifact> artifacts = new ArrayList<>(
-                artifactStore.artifacts().stream().map(INDEX_COMPARATOR_MAPPER).toList());
-        artifacts.sort(INDEX_COMPARATOR);
-        return artifacts;
+        return artifactStore.artifacts().stream()
+                .map(INDEX_COMPARATOR_MAPPER)
+                .sorted(INDEX_COMPARATOR)
+                .collect(Collectors.toList());
     }
 
     protected abstract void doCompare(ComparisonContext comparisonContext, ArtifactStore a1, ArtifactStore a2)

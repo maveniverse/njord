@@ -10,8 +10,8 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

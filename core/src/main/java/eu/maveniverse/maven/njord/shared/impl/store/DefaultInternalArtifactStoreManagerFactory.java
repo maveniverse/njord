@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
+import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManagerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

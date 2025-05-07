@@ -8,8 +8,8 @@
 package eu.maveniverse.maven.njord.shared.impl.store;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
 

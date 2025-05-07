@@ -7,4 +7,4 @@
  */
 package eu.maveniverse.maven.njord.shared;
 
-public interface NjordSessionFactory extends SessionConfigAwareFactory<NjordSession> {}
+public interface SessionFactory extends SessionConfigAwareFactory<Session> {}

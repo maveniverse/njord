@@ -24,6 +24,7 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <modules>
+    <module>deploy</module>
     <module>sonatype</module>
     <module>apache</module>
   </modules>

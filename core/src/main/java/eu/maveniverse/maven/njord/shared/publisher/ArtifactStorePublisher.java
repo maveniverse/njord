@@ -51,7 +51,7 @@ public interface ArtifactStorePublisher {
     /**
      * Performs a non-disruptive validation of artifact store, if validator present, or empty.
      */
-    Optional<ArtifactStoreValidator> validatorFor(ArtifactStore artifactStore) throws IOException;
+    Optional<ArtifactStoreValidator.ValidationResult> validate(ArtifactStore artifactStore) throws IOException;
 
     /**
      * Performs the publishing.
