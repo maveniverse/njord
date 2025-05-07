@@ -67,6 +67,7 @@ public class StatusMojo extends PublisherSupportMojo {
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         MavenProject cp = mavenSession.getCurrentProject();
         if (cp.getDistributionManagement() == null) {
+            logger.warn("No distribution management for project {}", cp.getName());
             throw new MojoFailureException("No distribution management found");
         }
         RemoteRepository deploymentRelease = new RemoteRepository.Builder(
@@ -117,6 +118,7 @@ public class StatusMojo extends PublisherSupportMojo {
         if (storeNameCandidates.isEmpty()) {
             logger.info("No candidate artifact stores found");
         } else {
+            logger.info("Locally staged stores:");
             for (String storeName : storeNameCandidates) {
                 Optional<ArtifactStore> aso = ns.artifactStoreManager().selectArtifactStore(storeName);
                 if (aso.isPresent()) {
