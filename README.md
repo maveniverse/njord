@@ -65,7 +65,10 @@ Supported publishers and corresponding `server.id`s are:
 | Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
-The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`).
+The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`) or from user
+or project properties, or from `server` indirection (in `settings.xml` you can add `configuration` element with Njord
+configurations that will be obeyed to "redirect" to other server, useful when you does not want to or cannot change
+the distributionManagement server IDs.
 
 If the project POM cannot be changed (`project/distributionManagement/repository`) or you don't want to change it, 
 you need one more thing: set up server indirection. Assuming your POM contains this:
