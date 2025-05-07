@@ -7,8 +7,6 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import static eu.maveniverse.maven.njord.shared.impl.Utils.toMap;
-
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
@@ -20,7 +18,6 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -28,7 +25,6 @@ import org.apache.maven.RepositoryUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -46,14 +42,25 @@ public class StatusMojo extends PublisherSupportMojo {
     @Override
     protected void doWithoutSession() throws IOException, MojoFailureException {
         logger.warn("Njord extension is not installed; continuing with creating temporary session");
-        doWithSession(NjordUtils.lazyInit(
+        RepositoryMode projectRepositoryMode = null;
+        MavenProject currentProject = mavenSession.getTopLevelProject();
+        if (currentProject != null
+                && !"org.apache.maven:standalone-pom"
+                        .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
+            projectRepositoryMode =
+                    currentProject.getArtifact().isSnapshot() ? RepositoryMode.SNAPSHOT : RepositoryMode.RELEASE;
+        }
+
+        try (Session ns = NjordUtils.lazyInit(
                 SessionConfig.defaults(
                                 mavenSession.getRepositorySession(),
                                 RepositoryUtils.toRepos(
                                         mavenSession.getRequest().getRemoteRepositories()))
-                        .topLevelProject(getTopLevelProject())
+                        .projectRepositoryMode(projectRepositoryMode)
                         .build(),
-                sessionFactory::create));
+                sessionFactory::create)) {
+            doWithSession(ns);
+        }
     }
 
     @Override
@@ -146,35 +153,5 @@ public class StatusMojo extends PublisherSupportMojo {
         }
 
         logger.info("");
-    }
-
-    private SessionConfig.TopLevelProject getTopLevelProject() {
-        SessionConfig.TopLevelProject topLevelProject = null;
-        MavenProject currentProject = mavenSession.getTopLevelProject();
-        if (currentProject != null
-                && !"org.apache.maven:standalone-pom"
-                        .equals(currentProject.getGroupId() + ":" + currentProject.getArtifactId())) {
-            Artifact tlpArtifact = RepositoryUtils.toArtifact(currentProject.getArtifact());
-            Map<String, String> tlpProperties = Map.copyOf(toMap(currentProject.getProperties()));
-            List<RemoteRepository> tlpRemoteRepositories = List.copyOf(currentProject.getRemoteProjectRepositories());
-
-            topLevelProject = new SessionConfig.TopLevelProject() {
-                @Override
-                public Artifact artifact() {
-                    return tlpArtifact;
-                }
-
-                @Override
-                public Map<String, String> properties() {
-                    return tlpProperties;
-                }
-
-                @Override
-                public List<RemoteRepository> remoteRepositories() {
-                    return tlpRemoteRepositories;
-                }
-            };
-        }
-        return topLevelProject;
     }
 }

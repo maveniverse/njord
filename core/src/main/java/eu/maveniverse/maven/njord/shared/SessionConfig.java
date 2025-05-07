@@ -11,6 +11,7 @@ import static eu.maveniverse.maven.njord.shared.impl.Utils.toMap;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.Utils;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -25,7 +26,6 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -126,9 +126,9 @@ public interface SessionConfig {
     Optional<String> publisher();
 
     /**
-     * The top level project, if exists.
+     * If there is project in session, the "mode" of it. Note: Njord does not support "mixed" modes!
      */
-    Optional<TopLevelProject> topLevelProject();
+    Optional<RepositoryMode> projectRepositoryMode();
 
     /**
      * Returns the "service configuration" for given service ID.
@@ -178,7 +178,7 @@ public interface SessionConfig {
                 autoPrefix(),
                 prefix().orElse(null),
                 publisher().orElse(null),
-                topLevelProject().orElse(null));
+                projectRepositoryMode().orElse(null));
     }
 
     /**
@@ -217,7 +217,7 @@ public interface SessionConfig {
         private boolean autoPrefix;
         private String prefix;
         private String publisher;
-        private TopLevelProject topLevelProject;
+        private RepositoryMode projectRepositoryMode;
 
         public Builder(
                 boolean enabled,
@@ -232,7 +232,7 @@ public interface SessionConfig {
                 boolean autoPrefix,
                 String prefix,
                 String publisher,
-                TopLevelProject topLevelProject) {
+                RepositoryMode projectRepositoryMode) {
             this.enabled = enabled;
             this.dryRun = dryRun;
             this.version = version;
@@ -245,7 +245,7 @@ public interface SessionConfig {
             this.autoPrefix = autoPrefix;
             this.prefix = prefix;
             this.publisher = publisher;
-            this.topLevelProject = topLevelProject;
+            this.projectRepositoryMode = projectRepositoryMode;
         }
 
         public Builder enabled(boolean enabled) {
@@ -303,8 +303,8 @@ public interface SessionConfig {
             return this;
         }
 
-        public Builder topLevelProject(TopLevelProject topLevelProject) {
-            this.topLevelProject = topLevelProject;
+        public Builder projectRepositoryMode(RepositoryMode projectRepositoryMode) {
+            this.projectRepositoryMode = projectRepositoryMode;
             return this;
         }
 
@@ -322,7 +322,7 @@ public interface SessionConfig {
                     autoPrefix,
                     prefix,
                     publisher,
-                    topLevelProject);
+                    projectRepositoryMode);
         }
 
         private static class Impl implements SessionConfig {
@@ -339,7 +339,7 @@ public interface SessionConfig {
             private final boolean autoPrefix;
             private final String prefix;
             private final String publisher;
-            private final TopLevelProject topLevelProject;
+            private final RepositoryMode projectRepositoryMode;
 
             private Impl(
                     boolean enabled,
@@ -354,7 +354,7 @@ public interface SessionConfig {
                     boolean autoPrefix,
                     String prefix,
                     String publisher,
-                    TopLevelProject topLevelProject) {
+                    RepositoryMode projectRepositoryMode) {
                 this.enabled = enabled;
                 this.dryRun = dryRun;
                 this.version = version;
@@ -384,7 +384,7 @@ public interface SessionConfig {
                 this.autoPrefix = autoPrefix;
                 this.prefix = prefix;
                 this.publisher = publisher;
-                this.topLevelProject = topLevelProject;
+                this.projectRepositoryMode = projectRepositoryMode;
             }
 
             @Override
@@ -453,8 +453,8 @@ public interface SessionConfig {
             }
 
             @Override
-            public Optional<TopLevelProject> topLevelProject() {
-                return Optional.ofNullable(topLevelProject);
+            public Optional<RepositoryMode> projectRepositoryMode() {
+                return Optional.ofNullable(projectRepositoryMode);
             }
         }
     }
@@ -482,13 +482,5 @@ public interface SessionConfig {
         } catch (IOException e) {
             return getCanonicalPath(path.getParent()).resolve(path.getFileName());
         }
-    }
-
-    interface TopLevelProject {
-        Artifact artifact();
-
-        Map<String, String> properties();
-
-        List<RemoteRepository> remoteRepositories();
     }
 }

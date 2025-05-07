@@ -25,13 +25,9 @@ public class DefaultArtifactDeployerRedirector extends ComponentSupport implemen
     public String getRepositoryUrl(Session ns, RemoteRepository repository) {
         String url = repository.getUrl();
         if (!url.startsWith(SessionConfig.NAME + ":")
-                && ns.config().topLevelProject().isPresent()) {
+                && ns.config().projectRepositoryMode().isPresent()) {
             return getRepositoryUrl(
-                    ns,
-                    repository,
-                    ns.config().topLevelProject().orElseThrow().artifact().isSnapshot()
-                            ? RepositoryMode.SNAPSHOT
-                            : RepositoryMode.RELEASE);
+                    ns, repository, ns.config().projectRepositoryMode().orElseThrow());
         }
         return url;
     }
@@ -40,9 +36,7 @@ public class DefaultArtifactDeployerRedirector extends ComponentSupport implemen
     public String getRepositoryUrl(Session ns, RemoteRepository repository, RepositoryMode repositoryMode) {
         String url = repository.getUrl();
         Optional<Map<String, String>> sco = ns.config().serviceConfiguration(repository.getId());
-        if (!url.startsWith(SessionConfig.NAME + ":")
-                && sco.isPresent()
-                && ns.config().topLevelProject().isPresent()) {
+        if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
             Map<String, String> config = sco.orElseThrow();
             String redirectUrl;
             switch (repositoryMode) {
