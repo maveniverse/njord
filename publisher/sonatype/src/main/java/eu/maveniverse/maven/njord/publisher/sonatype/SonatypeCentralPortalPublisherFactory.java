@@ -10,9 +10,9 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

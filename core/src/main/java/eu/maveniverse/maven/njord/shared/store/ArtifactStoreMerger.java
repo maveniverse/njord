@@ -7,10 +7,9 @@
  */
 package eu.maveniverse.maven.njord.shared.store;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-public interface ArtifactStoreMerger extends Closeable {
+public interface ArtifactStoreMerger {
     /**
      * Merges two stores by redeploying source store onto target. This operation behaves exactly as one would have
      * one remote hosted repository with contents of {@code target} and use Maven to deploy contents of {@code source}

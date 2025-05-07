@@ -46,7 +46,7 @@ public class SonatypeOSSPublisherFactory implements MavenCentralPublisherFactory
                 sessionConfig,
                 repositorySystem,
                 NAME,
-                "Publishes to Sonatype s01",
+                "Publishes to Sonatype OSS",
                 CENTRAL,
                 snapshotsRepository,
                 releasesRepository,

@@ -9,14 +9,12 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
-import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -24,7 +22,7 @@ import javax.inject.Singleton;
 
 @Singleton
 @Named
-public class DefaultSessionFactory<C> implements SessionFactory {
+public class DefaultSessionFactory implements SessionFactory {
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
@@ -46,9 +44,10 @@ public class DefaultSessionFactory<C> implements SessionFactory {
     }
 
     @Override
-    public Session create(SessionConfig sessionConfig) {
+    public DefaultSession create(SessionConfig sessionConfig) {
         return new DefaultSession(
                 sessionConfig,
+                this,
                 internalArtifactStoreManagerFactory,
                 artifactStoreWriterFactory,
                 artifactStoreMergerFactory,

@@ -10,7 +10,6 @@ package eu.maveniverse.maven.njord.plugin3;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,11 +45,8 @@ public class WriteBundleMojo extends NjordMojoSupport {
             if (!Files.isDirectory(targetDirectory)) {
                 Files.createDirectories(targetDirectory);
             }
-            Path result;
             logger.info("Writing store {} as bundle to {}", store, directory);
-            try (ArtifactStoreWriter artifactStoreWriter = ns.createArtifactStoreWriter()) {
-                result = artifactStoreWriter.writeAsBundle(storeOptional.orElseThrow(), targetDirectory);
-            }
+            Path result = ns.artifactStoreWriter().writeAsBundle(storeOptional.orElseThrow(), targetDirectory);
             logger.info("Written to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");

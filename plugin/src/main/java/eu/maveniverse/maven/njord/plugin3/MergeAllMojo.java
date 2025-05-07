@@ -64,21 +64,20 @@ public class MergeAllMojo extends NjordMojoSupport {
             logger.info("Created target store {}", target);
             targetName = target.name();
         }
-        try (ArtifactStoreMerger merger = ns.createArtifactStoreMerger()) {
-            for (String name : names) {
-                Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
-                if (so.isPresent()) {
-                    try (ArtifactStore source = so.orElseThrow();
-                            ArtifactStore target = ns.artifactStoreManager()
-                                    .selectArtifactStore(targetName)
-                                    .orElseThrow()) {
-                        merger.merge(source, target);
-                    }
-                    logger.info("Dropping {}", name);
-                    ns.artifactStoreManager().dropArtifactStore(name);
-                } else {
-                    throw new MojoExecutionException("Once found store is gone: " + name);
+        ArtifactStoreMerger merger = ns.artifactStoreMerger();
+        for (String name : names) {
+            Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
+            if (so.isPresent()) {
+                try (ArtifactStore source = so.orElseThrow();
+                        ArtifactStore target = ns.artifactStoreManager()
+                                .selectArtifactStore(targetName)
+                                .orElseThrow()) {
+                    merger.merge(source, target);
                 }
+                logger.info("Dropping {}", name);
+                ns.artifactStoreManager().dropArtifactStore(name);
+            } else {
+                throw new MojoExecutionException("Once found store is gone: " + name);
             }
         }
         logger.info("Renumbering stores");

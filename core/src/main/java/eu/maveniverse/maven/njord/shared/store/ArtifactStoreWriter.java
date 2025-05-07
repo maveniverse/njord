@@ -7,11 +7,10 @@
  */
 package eu.maveniverse.maven.njord.shared.store;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface ArtifactStoreWriter extends Closeable {
+public interface ArtifactStoreWriter {
     /**
      * Exports store as directory hierarchy using Maven remote repository layout. Returns the root directory.
      */

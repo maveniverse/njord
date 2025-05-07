@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import java.io.IOException;
 import java.util.Optional;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -50,9 +49,7 @@ public class RedeployMojo extends NjordMojoSupport {
             logger.warn("ArtifactStore with given name not found: {}", to);
             return;
         }
-        try (ArtifactStoreMerger artifactStoreMerger = ns.createArtifactStoreMerger()) {
-            artifactStoreMerger.redeploy(fromOptional.orElseThrow(), toOptional.orElseThrow());
-        }
+        ns.artifactStoreMerger().redeploy(fromOptional.orElseThrow(), toOptional.orElseThrow());
         if (drop) {
             logger.info("Dropping {}", from);
             ns.artifactStoreManager().dropArtifactStore(from);

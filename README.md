@@ -24,7 +24,7 @@ hassle of requiring to mutilate your own build (POMs).
 
 ## Setting it up
 
-With Maven 3 create project-wide, or with Maven 4+ create user-wide `~/.m2/extensions.xml` like this:
+With Maven 3 install Njord project-wide `.mvn/extensions.xml`, or with Maven 4+ install it user-wide `~/.m2/extensions.xml` like this:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <extensions>
@@ -44,8 +44,8 @@ It is recommended (but not mandatory) to add this stanza to your `settings.xml` 
   </pluginGroups>
 ```
 
-Next, set up authentication. Different publishers require different server, for example `sonatype-cp` publisher
-needs following stanza in your `settings.xml`:
+Next, set up authentication for service or even more services you plan to use. Different publishers require different 
+server, for example `sonatype-cp` publisher needs following stanza in your `settings.xml`:
 
 ```xml
     <server>
@@ -60,12 +60,58 @@ Supported publishers and corresponding `server.id`s are:
 | Publisher (publisher ID)                                       | server.id               | What is needed                                                                                                                               |
 |----------------------------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
 | Sonatype Central Portal (`sonatype-cp`)                        | `sonatype-cp`           | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/).                 |
- | Sonatype OSS on https://oss.sonatype.org/ (`sonatype-oss`)     | `sonatype-oss`          | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-token/) and using OSS instance. |
+| Sonatype OSS on https://oss.sonatype.org/ (`sonatype-oss`)     | `sonatype-oss`          | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-token/) and using OSS instance. |
 | Sonatype S01 on https://s01.oss.sonatype.org/ (`sonatype-s01`) | `sonatype-s01`          | As above but using s01 instance.                                                                                                             |
- | Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
+| Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
-The publisher id is determined from the mandatory plugin parameter `target` (of goal `publish`).
+The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`).
+
+If the project POM cannot be changed (`project/distributionManagement/repository`) or you don't want to change it, 
+you need one more thing: set up server indirection. Assuming your POM contains this:
+
+```xml
+  <distributionManagement>
+    <repository>
+      <id>project-releases</id>
+      <name>Some Release Repository</name>
+      <url>https://some.service/deploy</url>
+    </repository>
+    <snapshotRepository>
+      <id>project-snapshots</id>
+      <name>Some Snapshots Repository</name>
+      <url>https://some.service/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+```
+
+Then you need to set up indirection for servers `project-releases` and `project-snapshots` in your `settings.xml`, like this:
+
+```xml
+    <server>
+      <id>project-releases</id>
+      <configuration>
+        <!-- Using Sonatype Central Portal publisher -->
+        <njord.publisher>sonatype-cp</njord.publisher>
+        <!-- Releases are staged locally (if omitted, would go directly to URL as per POM) -->
+        <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
+      </configuration>
+    </server>
+    <server>
+      <id>project-snapshots</id>
+      <configuration>
+         <!-- Using Sonatype Central Portal publisher -->
+         <njord.publisher>sonatype-cp</njord.publisher>
+         <!-- Snapshots are staged locally (if omitted, would go directly to URL as per POM) -->
+         <njord.snapshotUrl>njord:template:snapshot-sca</njord.snapshotUrl>
+      </configuration>
+    </server>
+```
+
+This provides Njord following information:
+* indirection of publishing `project-release` -> `sonatype-cp` and `project-snapshots` -> `sonatype-cp` (for snapshot support Central Portal must have snapshot support enabled)
+* templates for local staging of releases and snapshots
+* any indirection may be omitted, then Maven will use distribution repositories from POM. Same for URL, if omitted, URL from POM will be used.
 
 That's all! No project change needed at all. 
 
@@ -78,9 +124,9 @@ Next, let's see an example of Apache Maven project (I used `maven-gpg-plugin`):
 3. Check staged store names: `mvn njord:list`
 4. Optionally, check locally staged content: `mvn njord:list-content -Dstore=release-xxx` (use store name from above)
 5. Optionally, validate locally staged content: `mvn njord:validate -Ddetails -Dstore=release-xxx` (use store name from above)
-6. Publish it to ASF: `mvn njord:publish -Dstore=release-xxx -Dtarget=apache-rao` (use store name from above)
+6. Publish it to ASF: `mvn njord:publish -Dstore=release-xxx -Dpublisher=apache-rao` (use store name from above), if operation successful, store is dropped.
 7. From now on, the repository is staged on RAO, so you can close it, vote, and all the usual fluff as before.
-8. Drop locally staged store: `mvn njord:drop -Dstor=release-xxx` (use store name from above)
+8. To drop locally staged stores use: `mvn njord:drop -Dstor=release-xxx` (use store name from above)
 
 Build requirements:
 * Java 21

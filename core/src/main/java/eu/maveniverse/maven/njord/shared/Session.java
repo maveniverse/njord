@@ -21,9 +21,14 @@ import java.util.Optional;
 
 public interface Session extends Closeable {
     /**
-     * Returns the session configuration.
+     * Returns this session configuration.
      */
     SessionConfig config();
+
+    /**
+     * Returns new session derived from (potentially modified) config. Nested sessions may be used for scoping.
+     */
+    Session derive(SessionConfig config);
 
     /**
      * Returns store manager.
@@ -31,14 +36,14 @@ public interface Session extends Closeable {
     ArtifactStoreManager artifactStoreManager();
 
     /**
-     * Creates store writer. Returned instance must be closed, ideally in try-with-resource.
+     * Returns store writer.
      */
-    ArtifactStoreWriter createArtifactStoreWriter();
+    ArtifactStoreWriter artifactStoreWriter();
 
     /**
-     * Creates store merger. Returned instance must be closed, ideally in try-with-resource.
+     * Returns store merger.
      */
-    ArtifactStoreMerger createArtifactStoreMerger();
+    ArtifactStoreMerger artifactStoreMerger();
 
     /**
      * Returns a collection of available publisher names.
@@ -77,7 +82,9 @@ public interface Session extends Closeable {
     ArtifactStore getOrCreateSessionArtifactStore(String uri);
 
     /**
-     * Drops all session-bound artifact stores.
+     * Drops all session-bound artifact stores created in this session. Session drops all own created
+     * and derived session created stores. Hence, top level session drops all created stores in given
+     * Maven session.
      */
     boolean dropSessionArtifactStores();
 }

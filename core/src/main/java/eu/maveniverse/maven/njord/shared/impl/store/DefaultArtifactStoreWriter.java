@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
+import eu.maveniverse.maven.njord.shared.impl.ComponentSupport;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.IOException;
@@ -21,16 +21,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionConfig> implements ArtifactStoreWriter {
+public class DefaultArtifactStoreWriter extends ComponentSupport implements ArtifactStoreWriter {
+    private final SessionConfig sessionConfig;
+
     public DefaultArtifactStoreWriter(SessionConfig sessionConfig) {
-        super(sessionConfig);
+        this.sessionConfig = requireNonNull(sessionConfig);
     }
 
     @Override
     public Path writeAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
-        checkClosed();
 
         Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
         if (Files.exists(targetDirectory)) {
@@ -44,7 +45,6 @@ public class DefaultArtifactStoreWriter extends CloseableConfigSupport<SessionCo
     public Path writeAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
-        checkClosed();
 
         Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
         if (!Files.isDirectory(targetDirectory)) {

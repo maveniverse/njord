@@ -11,9 +11,6 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreMergerFactory;
-import eu.maveniverse.maven.njord.shared.impl.factories.ArtifactStoreWriterFactory;
-import eu.maveniverse.maven.njord.shared.impl.factories.InternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -21,42 +18,64 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
+    private final String sessionBoundStoreKey;
+    private final DefaultSessionFactory defaultSessionFactory;
     private final InternalArtifactStoreManager internalArtifactStoreManager;
-    private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
-    private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
+    private final ArtifactStoreWriter artifactStoreWriter;
+    private final ArtifactStoreMerger artifactStoreMerger;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
+    private final CopyOnWriteArrayList<Supplier<Boolean>> derivedDropSessionArtifactStores;
+
     public DefaultSession(
             SessionConfig sessionConfig,
+            DefaultSessionFactory defaultSessionFactory,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
         super(sessionConfig);
+        this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
+        this.defaultSessionFactory = requireNonNull(defaultSessionFactory);
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
-        this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
-        this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
+        this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
+        this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+
+        this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
     }
 
     @Override
     public SessionConfig config() {
         return config;
+    }
+
+    @Override
+    public Session derive(SessionConfig config) {
+        requireNonNull(config);
+        DefaultSession result = defaultSessionFactory.create(config);
+        derivedDropSessionArtifactStores.add(result::dropSessionArtifactStores);
+        return result;
     }
 
     @Override
@@ -66,15 +85,15 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
-    public ArtifactStoreWriter createArtifactStoreWriter() {
+    public ArtifactStoreWriter artifactStoreWriter() {
         checkClosed();
-        return artifactStoreWriterFactory.create(config());
+        return artifactStoreWriter;
     }
 
     @Override
-    public ArtifactStoreMerger createArtifactStoreMerger() {
+    public ArtifactStoreMerger artifactStoreMerger() {
         checkClosed();
-        return artifactStoreMergerFactory.create(config());
+        return artifactStoreMerger;
     }
 
     @Override
@@ -93,14 +112,13 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 .collect(Collectors.toList());
     }
 
-    private static final String SESSION_BOUND_STORES_KEY = Session.class.getName() + "." + ArtifactStore.class;
-
+    @SuppressWarnings("unchecked")
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
         requireNonNull(uri);
 
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, () -> new ConcurrentHashMap<>());
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
         String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
             try {
                 String artifactStoreName;
@@ -156,9 +174,15 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @SuppressWarnings("unchecked")
     @Override
     public boolean dropSessionArtifactStores() {
+        boolean derived = false;
+        for (Supplier<Boolean> callable : derivedDropSessionArtifactStores) {
+            if (callable.get()) {
+                derived = true;
+            }
+        }
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(SESSION_BOUND_STORES_KEY, ConcurrentHashMap::new);
-        AtomicBoolean result = new AtomicBoolean(false);
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        AtomicBoolean result = new AtomicBoolean(derived);
         sessionBoundStore.values().forEach(n -> {
             try {
                 if (internalArtifactStoreManager.dropArtifactStore(n)) {

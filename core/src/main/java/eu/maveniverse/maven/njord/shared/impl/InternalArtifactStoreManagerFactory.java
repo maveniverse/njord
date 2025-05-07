@@ -5,9 +5,8 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.factories;
+package eu.maveniverse.maven.njord.shared.impl;
 
 import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
-import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
 
 public interface InternalArtifactStoreManagerFactory extends SessionConfigAwareFactory<InternalArtifactStoreManager> {}
