@@ -30,7 +30,7 @@ public class WriteMojo extends NjordMojoSupport {
     private String store;
 
     /**
-     * The directory to write out the store.
+     * The directory to write out the store to.
      */
     @Parameter(required = true, property = "directory")
     private String directory;

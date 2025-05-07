@@ -18,7 +18,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Validate given store against given target.
+ * Validate given store against given publisher.
  */
 @Mojo(name = "validate", threadSafe = true, requiresProject = false)
 public class ValidateMojo extends PublisherSupportMojo {

@@ -43,16 +43,9 @@ public final class NjordUtils {
         }
     }
 
-    public static Optional<Session> mayGetNjordSessionIfEnabled(RepositorySystemSession repositorySystemSession) {
-        requireNonNull(repositorySystemSession, "repositorySystemSession");
-        Optional<Session> ns = mayGetNjordSession(repositorySystemSession);
-        if (ns.isPresent() && ns.orElseThrow().config().enabled()) {
-            return ns;
-        } else {
-            return Optional.empty();
-        }
-    }
-
+    /**
+     * Returns Njord session instance, if inited in this Repository Session.
+     */
     public static Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
         Session ns = (Session) repositorySystemSession.getData().get(Session.class);

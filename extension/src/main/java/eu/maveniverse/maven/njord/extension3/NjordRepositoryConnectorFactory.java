@@ -53,8 +53,8 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     @Override
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
-        Optional<Session> nso = NjordUtils.mayGetNjordSessionIfEnabled(session);
-        if (nso.isPresent()) {
+        Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
+        if (nso.isPresent() && nso.orElseThrow().config().enabled()) {
             Session ns = nso.orElseThrow();
             String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
             if (url != null && url.startsWith(NAME + ":")) {

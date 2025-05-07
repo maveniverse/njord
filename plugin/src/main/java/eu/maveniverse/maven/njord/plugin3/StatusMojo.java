@@ -29,7 +29,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
- * Provides status for given project.
+ * Shows publishing status and configuration for given project.
  */
 @Mojo(name = "status", threadSafe = true, aggregator = true)
 public class StatusMojo extends PublisherSupportMojo {
