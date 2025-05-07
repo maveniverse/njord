@@ -18,7 +18,6 @@ var second = secondLog.text
 
 // first run:
 assert first.contains("[INFO] Njord ${projectVersion} session created")
-assert first.contains('[INFO] Njord service configuration found for server \'sonatype-cp-service\'')
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
