@@ -137,7 +137,7 @@ Next, let's see an example of Apache Maven project (I used `maven-gpg-plugin`):
 5. Optionally, validate locally staged content: `mvn njord:validate -Ddetails -Dstore=release-xxx` (use store name from above)
 6. Publish it to ASF: `mvn njord:publish -Dstore=release-xxx -Dpublisher=apache-rao` (use store name from above), if operation successful, store is dropped.
 7. From now on, the repository is staged on RAO, so you can close it, vote, and all the usual fluff as before.
-8. To drop locally staged stores use: `mvn njord:drop -Dstor=release-xxx` (use store name from above)
+8. To drop locally staged stores use: `mvn njord:drop -Dstore=release-xxx` (use store name from above)
 
 Build requirements:
 * Java 21
