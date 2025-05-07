@@ -36,7 +36,7 @@ public class ExportMojo extends NjordMojoSupport {
     private String path;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             Path targetPath = SessionConfig.getCanonicalPath(Path.of(path).toAbsolutePath());

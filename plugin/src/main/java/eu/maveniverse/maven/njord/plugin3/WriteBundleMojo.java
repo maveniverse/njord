@@ -37,7 +37,7 @@ public class WriteBundleMojo extends NjordMojoSupport {
     private String directory;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             Path targetDirectory =

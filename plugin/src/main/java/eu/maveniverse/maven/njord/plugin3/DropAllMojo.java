@@ -25,7 +25,7 @@ public class DropAllMojo extends NjordMojoSupport {
     private boolean yes;
 
     @Override
-    protected void doExecute(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         if (yes) {
             logger.info("Dropping all ArtifactStore");
             AtomicInteger count = new AtomicInteger();

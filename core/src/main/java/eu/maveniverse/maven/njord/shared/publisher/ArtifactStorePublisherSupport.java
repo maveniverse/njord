@@ -5,15 +5,12 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.impl.publisher;
+package eu.maveniverse.maven.njord.shared.publisher;
 
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.ComponentSupport;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;

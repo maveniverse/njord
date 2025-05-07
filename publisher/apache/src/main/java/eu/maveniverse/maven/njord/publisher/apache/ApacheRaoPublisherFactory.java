@@ -36,7 +36,7 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
 
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        ApachePublisherConfig raoConfig = ApachePublisherConfig.with(sessionConfig);
+        ApachePublisherConfig raoConfig = new ApachePublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
                 .build();

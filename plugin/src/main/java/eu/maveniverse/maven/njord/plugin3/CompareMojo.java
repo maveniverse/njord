@@ -46,7 +46,7 @@ public class CompareMojo extends NjordMojoSupport {
     private boolean details;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoFailureException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         Optional<ArtifactStore> store1Optional = ns.artifactStoreManager().selectArtifactStore(store1);
         if (store1Optional.isEmpty()) {
             logger.warn("ArtifactStore with given name not found: {}", store1);

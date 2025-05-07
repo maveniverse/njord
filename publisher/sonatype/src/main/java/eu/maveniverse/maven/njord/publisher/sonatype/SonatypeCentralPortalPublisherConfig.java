@@ -7,75 +7,22 @@
  */
 package eu.maveniverse.maven.njord.publisher.sonatype;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
 
-public final class SonatypeCentralPortalPublisherConfig {
-    public static SonatypeCentralPortalPublisherConfig with(SessionConfig config) {
-        requireNonNull(config, "config");
+public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig {
+    public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
+    public static final String RELEASE_REPOSITORY_URL = "https://central.sonatype.com/api/v1/publisher/upload";
+    public static final String SNAPSHOT_REPOSITORY_ID = "sonatype-cp";
+    public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots";
 
-        String releaseRepositoryId = "sonatype-cp";
-        String releaseRepositoryUrl = "https://central.sonatype.com/api/v1/publisher/upload";
-        String snapshotRepositoryId = "sonatype-cp";
-        String snapshotRepositoryUrl = "https://central.sonatype.com/repository/maven-snapshots";
-
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryId")) {
-            releaseRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-s01.releaseRepositoryId");
-        }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.releaseRepositoryUrl")) {
-            releaseRepositoryUrl = config.effectiveProperties().get("njord.publisher.sonatype-cp.releaseRepositoryUrl");
-        }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryId")) {
-            snapshotRepositoryId = config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryId");
-        }
-        if (config.effectiveProperties().containsKey("njord.publisher.sonatype-cp.snapshotRepositoryUrl")) {
-            snapshotRepositoryUrl =
-                    config.effectiveProperties().get("njord.publisher.sonatype-cp.snapshotRepositoryUrl");
-        }
-
-        return new SonatypeCentralPortalPublisherConfig(
-                releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
-    }
-
-    public static SonatypeCentralPortalPublisherConfig of(
-            String releaseRepositoryId,
-            String releaseRepositoryUrl,
-            String snapshotRepositoryId,
-            String snapshotRepositoryUrl) {
-        return new SonatypeCentralPortalPublisherConfig(
-                releaseRepositoryId, releaseRepositoryUrl, snapshotRepositoryId, snapshotRepositoryUrl);
-    }
-
-    private final String releaseRepositoryId;
-    private final String releaseRepositoryUrl;
-    private final String snapshotRepositoryId;
-    private final String snapshotRepositoryUrl;
-
-    private SonatypeCentralPortalPublisherConfig(
-            String releaseRepositoryId,
-            String releaseRepositoryUrl,
-            String snapshotRepositoryId,
-            String snapshotRepositoryUrl) {
-        this.releaseRepositoryId = requireNonNull(releaseRepositoryId);
-        this.releaseRepositoryUrl = requireNonNull(releaseRepositoryUrl);
-        this.snapshotRepositoryId = requireNonNull(snapshotRepositoryId);
-        this.snapshotRepositoryUrl = requireNonNull(snapshotRepositoryUrl);
-    }
-
-    public String releaseRepositoryId() {
-        return releaseRepositoryId;
-    }
-
-    public String releaseRepositoryUrl() {
-        return releaseRepositoryUrl;
-    }
-
-    public String snapshotRepositoryId() {
-        return snapshotRepositoryId;
-    }
-
-    public String snapshotRepositoryUrl() {
-        return snapshotRepositoryUrl;
+    public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
+        super(
+                sessionConfig,
+                SonatypeCentralPortalPublisherFactory.NAME,
+                RELEASE_REPOSITORY_ID,
+                RELEASE_REPOSITORY_URL,
+                SNAPSHOT_REPOSITORY_ID,
+                SNAPSHOT_REPOSITORY_URL);
     }
 }

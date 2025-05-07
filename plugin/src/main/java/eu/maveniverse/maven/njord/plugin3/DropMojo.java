@@ -24,7 +24,7 @@ public class DropMojo extends NjordMojoSupport {
     private String store;
 
     @Override
-    protected void doExecute(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         if (ns.artifactStoreManager().dropArtifactStore(store)) {
             logger.info("Dropped ArtifactStore {}", store);
         } else {

@@ -112,6 +112,34 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri) {
+        try {
+            if (!uri.contains(":")) {
+                if (uri.isEmpty()) {
+                    // empty -> default
+                    return internalArtifactStoreManager.defaultTemplate();
+                } else {
+                    // non-empty -> template name
+                    return selectTemplate(uri);
+                }
+            } else if (uri.startsWith("template:")) {
+                // template:xxx
+                return selectTemplate(uri.substring(9));
+            } else if (uri.startsWith("store:")) {
+                // store:xxx
+                return internalArtifactStoreManager
+                        .selectArtifactStore(uri.substring(6))
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown store"))
+                        .template();
+            } else {
+                throw new IllegalArgumentException("Invalid repository URI: " + uri);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
@@ -154,7 +182,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         }
     }
 
-    private String createUsingTemplate(String templateName) throws IOException {
+    private ArtifactStoreTemplate selectTemplate(String templateName) {
         List<ArtifactStoreTemplate> templates = internalArtifactStoreManager.listTemplates().stream()
                 .filter(t -> t.name().equals(templateName))
                 .collect(Collectors.toList());
@@ -165,9 +193,14 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             if (config.prefix().isPresent()) {
                 template = template.withPrefix(config.prefix().orElseThrow());
             }
-            try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(template)) {
-                return artifactStore.name();
-            }
+            return template;
+        }
+    }
+
+    private String createUsingTemplate(String templateName) throws IOException {
+        try (ArtifactStore artifactStore =
+                internalArtifactStoreManager.createArtifactStore(selectTemplate(templateName))) {
+            return artifactStore.name();
         }
     }
 

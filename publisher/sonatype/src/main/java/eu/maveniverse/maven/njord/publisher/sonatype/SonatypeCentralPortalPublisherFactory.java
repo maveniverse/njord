@@ -40,7 +40,7 @@ public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublis
 
     @Override
     public ArtifactStorePublisher create(SessionConfig sessionConfig) {
-        SonatypeCentralPortalPublisherConfig cpConfig = SonatypeCentralPortalPublisherConfig.with(sessionConfig);
+        SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
                 .build();

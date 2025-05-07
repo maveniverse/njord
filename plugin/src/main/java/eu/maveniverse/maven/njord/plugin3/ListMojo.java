@@ -20,7 +20,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "list", threadSafe = true, requiresProject = false)
 public class ListMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         logger.info("List of existing ArtifactStore:");
         List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNames();
         for (String storeName : storeNames) {

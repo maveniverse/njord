@@ -14,6 +14,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
 import java.util.Collection;
@@ -72,6 +73,12 @@ public interface Session extends Closeable {
                 .filter(p -> name.equals(p.name()))
                 .findFirst();
     }
+
+    /**
+     * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(String)} method for syntax).
+     * For existing stores it will return the template of the store.
+     */
+    ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri);
 
     /**
      * Creates session-bound artifact store and memoize it during session.

@@ -35,7 +35,7 @@ public class MergeAllMojo extends NjordMojoSupport {
     private boolean failIfNothingDone;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         ArtifactStoreTemplate template = null;
         HashSet<String> names = new HashSet<>();
         for (String name : ns.artifactStoreManager().listArtifactStoreNames()) {

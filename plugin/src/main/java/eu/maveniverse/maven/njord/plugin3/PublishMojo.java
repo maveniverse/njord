@@ -26,7 +26,7 @@ public class PublishMojo extends PublisherSupportMojo {
     private boolean drop;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoFailureException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         try (ArtifactStore from = getArtifactStore(ns)) {
             getArtifactStorePublisher(ns).publish(from);
         }

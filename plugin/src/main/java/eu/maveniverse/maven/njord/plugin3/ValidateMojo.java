@@ -29,7 +29,7 @@ public class ValidateMojo extends PublisherSupportMojo {
     private boolean details;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoFailureException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         ArtifactStorePublisher p = getArtifactStorePublisher(ns);
         try (ArtifactStore from = getArtifactStore(ns)) {
             Optional<ArtifactStoreValidator> v = p.validatorFor(from);

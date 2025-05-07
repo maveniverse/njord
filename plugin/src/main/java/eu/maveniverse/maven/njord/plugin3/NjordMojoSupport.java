@@ -9,13 +9,21 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
+import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,20 +35,91 @@ public abstract class NjordMojoSupport extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
-        if (njordSession.isEmpty()) {
-            throw new MojoExecutionException("Njord extension is not installed");
-        }
-        try (Session ns = njordSession.orElseThrow()) {
-            if (ns.config().enabled()) {
-                doExecute(ns);
+        try {
+            Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
+            if (njordSession.isEmpty()) {
+                doWithoutSession();
             } else {
-                logger.info("Njord is disabled");
+                Session ns = njordSession.orElseThrow();
+                if (ns.config().enabled()) {
+                    doWithSession(ns);
+                } else {
+                    logger.info("Njord is disabled");
+                }
             }
         } catch (IOException e) {
-            throw new MojoFailureException(e);
+            throw new MojoExecutionException(e.getMessage(), e);
         }
     }
 
-    protected abstract void doExecute(Session ns) throws IOException, MojoExecutionException, MojoFailureException;
+    protected abstract void doWithSession(Session ns) throws IOException, MojoExecutionException, MojoFailureException;
+
+    protected void doWithoutSession() throws IOException, MojoExecutionException, MojoFailureException {
+        throw new MojoExecutionException("Njord extension is not installed");
+    }
+
+    protected void printTemplate(ArtifactStoreTemplate template, boolean defaultTemplate) {
+        logger.info("- {} {}", template.name(), defaultTemplate ? " (default)" : " ");
+        logger.info("    Default prefix: '{}'", template.prefix());
+        logger.info("    Allow redeploy: {}", template.allowRedeploy());
+        logger.info(
+                "    Checksum Factories: {}",
+                template.checksumAlgorithmFactories().isPresent()
+                        ? template.checksumAlgorithmFactories().orElseThrow()
+                        : "Globally configured");
+        logger.info(
+                "    Omit checksums for: {}",
+                template.omitChecksumsForExtensions().isPresent()
+                        ? template.omitChecksumsForExtensions().orElseThrow()
+                        : "Globally configured");
+    }
+
+    protected void printPublisher(ArtifactStorePublisher publisher) {
+        logger.info("- '{}' -> {}", publisher.name(), publisher.description());
+        if (publisher.targetReleaseRepository().isPresent()
+                || publisher.targetSnapshotRepository().isPresent()) {
+            ArtifactStoreRequirements artifactStoreRequirements = publisher.artifactStoreRequirements();
+            logger.info("  Checksums:");
+            logger.info(
+                    "    Mandatory: {}",
+                    artifactStoreRequirements.mandatoryChecksumAlgorithms().orElse(List.of()).stream()
+                            .map(ChecksumAlgorithmFactory::getName)
+                            .collect(Collectors.joining(", ")));
+            logger.info(
+                    "    Supported: {}",
+                    artifactStoreRequirements.optionalChecksumAlgorithms().orElse(List.of()).stream()
+                            .map(ChecksumAlgorithmFactory::getName)
+                            .collect(Collectors.joining(", ")));
+            logger.info("  Signatures:");
+            logger.info(
+                    "    Mandatory: {}",
+                    artifactStoreRequirements.mandatorySignatureTypes().orElse(List.of()).stream()
+                            .map(SignatureType::name)
+                            .collect(Collectors.joining(", ")));
+            logger.info(
+                    "    Supported: {}",
+                    artifactStoreRequirements.optionalSignatureTypes().orElse(List.of()).stream()
+                            .map(SignatureType::name)
+                            .collect(Collectors.joining(", ")));
+            logger.info("  Published artifacts will be available from:");
+            logger.info(
+                    "    RELEASES:  {}", fmt(publisher.targetReleaseRepository().orElse(null)));
+            logger.info(
+                    "    SNAPSHOTS: {}",
+                    fmt(publisher.targetSnapshotRepository().orElse(null)));
+        }
+        logger.info("  Service endpoints:");
+        logger.info(
+                "    RELEASES:  {}", fmt(publisher.serviceReleaseRepository().orElse(null)));
+        logger.info(
+                "    SNAPSHOTS: {}", fmt(publisher.serviceSnapshotRepository().orElse(null)));
+    }
+
+    private String fmt(RemoteRepository repo) {
+        if (repo == null) {
+            return "n/a";
+        } else {
+            return repo.getId() + " @ " + repo.getUrl();
+        }
+    }
 }

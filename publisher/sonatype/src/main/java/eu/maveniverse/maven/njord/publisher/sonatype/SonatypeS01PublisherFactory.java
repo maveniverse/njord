@@ -34,7 +34,7 @@ public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory
 
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        SonatypeS01PublisherConfig s01Config = SonatypeS01PublisherConfig.with(sessionConfig);
+        SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(sessionConfig);
         RemoteRepository releasesRepository = new RemoteRepository.Builder(
                         s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())
                 .build();

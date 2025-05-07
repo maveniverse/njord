@@ -38,7 +38,7 @@ public class RedeployMojo extends NjordMojoSupport {
     private boolean drop;
 
     @Override
-    protected void doExecute(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         Optional<ArtifactStore> fromOptional = ns.artifactStoreManager().selectArtifactStore(from);
         Optional<ArtifactStore> toOptional = ns.artifactStoreManager().selectArtifactStore(to);
         if (fromOptional.isEmpty()) {

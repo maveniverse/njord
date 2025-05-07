@@ -32,7 +32,7 @@ public class ImportAllMojo extends NjordMojoSupport {
     private String dir;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Path sourceDirectory = SessionConfig.getCanonicalPath(Path.of(dir).toAbsolutePath());
         if (!Files.isDirectory(sourceDirectory)) {
             throw new MojoExecutionException("Import directory does not exist");

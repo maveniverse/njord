@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "list-comparators", threadSafe = true, requiresProject = false)
 public class ListComparatorsMojo extends NjordMojoSupport {
     @Override
-    protected void doExecute(Session ns) {
+    protected void doWithSession(Session ns) {
         logger.info("Listing available comparators:");
         for (ArtifactStoreComparator comparator : ns.availableComparators()) {
             logger.info("- '{}' - {}", comparator.name(), comparator.description());

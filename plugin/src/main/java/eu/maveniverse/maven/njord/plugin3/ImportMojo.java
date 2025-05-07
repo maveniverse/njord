@@ -29,7 +29,7 @@ public class ImportMojo extends NjordMojoSupport {
     private String file;
 
     @Override
-    protected void doExecute(Session ns) throws IOException, MojoExecutionException {
+    protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Path source = SessionConfig.getCanonicalPath(Path.of(file).toAbsolutePath());
         if (!Files.exists(source)) {
             throw new MojoExecutionException("Import file not found: " + file);

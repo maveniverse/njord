@@ -35,25 +35,40 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     @Parameter(property = "publisher")
     protected String publisher;
 
-    protected ArtifactStore getArtifactStore(Session ns) throws IOException, MojoFailureException {
+    protected List<String> getArtifactStoreNameCandidates(Session ns) throws IOException {
         if (store == null && ns.config().prefix().isPresent()) {
             String prefix = ns.config().prefix().orElseThrow();
-            logger.info("No store name specified but prefix is set to '{}'; using heuristic to find store", prefix);
-            List<String> storeNames = ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
-            if (!storeNames.isEmpty()) {
-                if (storeNames.size() == 1) {
-                    store = storeNames.get(0);
-                    logger.info("Found one store, using it: '{}'", store);
-                } else {
-                    store = storeNames.get(storeNames.size() - 1);
-                    logger.info("Found multiple stores, using latest: '{}'", store);
-                }
-            }
+            return ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
         }
-        if (store == null) {
+        if (store != null) {
+            return List.of(store);
+        } else {
+            return List.of();
+        }
+    }
+
+    protected Optional<String> getArtifactStoreName(Session ns) throws IOException {
+        List<String> storeNames = getArtifactStoreNameCandidates(ns);
+        if (!storeNames.isEmpty()) {
+            if (storeNames.size() == 1) {
+                store = storeNames.get(0);
+                logger.info("Found one store, using it: '{}'", store);
+            } else {
+                store = storeNames.get(storeNames.size() - 1);
+                logger.info("Found multiple stores, using latest: '{}'", store);
+            }
+            return Optional.of(store);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    protected ArtifactStore getArtifactStore(Session ns) throws IOException, MojoFailureException {
+        Optional<String> storeName = getArtifactStoreName(ns);
+        if (storeName.isEmpty()) {
             throw new MojoFailureException("ArtifactStore name was not specified nor could be found");
         }
-
+        String store = storeName.orElseThrow();
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isEmpty()) {
             logger.warn("ArtifactStore with given name not found: {}", store);
@@ -62,10 +77,9 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         return storeOptional.orElseThrow();
     }
 
-    protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {
+    protected Optional<String> getArtifactStorePublisherName(Session ns) {
         if (publisher == null && ns.config().publisher().isPresent()) {
             publisher = ns.config().publisher().orElseThrow();
-            logger.info("No publisher specified but session publisher is set to '{}'; using it", publisher);
         }
         if (publisher == null && mavenSession.getTopLevelProject() != null) {
             MavenProject project = mavenSession.getTopLevelProject();
@@ -87,15 +101,19 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
             if (distributionRepositoryId != null) {
                 Optional<Map<String, String>> sco = ns.config().serviceConfiguration(distributionRepositoryId);
                 if (sco.isPresent()) {
-                    logger.info("Njord service configuration found for server '{}'", distributionRepositoryId);
                     publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
                 }
             }
         }
-        if (publisher == null) {
+        return Optional.ofNullable(publisher);
+    }
+
+    protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {
+        Optional<String> publisherName = getArtifactStorePublisherName(ns);
+        if (publisherName.isEmpty()) {
             throw new MojoFailureException("Publisher name was not specified nor could be found");
         }
-
+        String publisher = publisherName.orElseThrow();
         Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisher);
         if (po.isEmpty()) {
             throw new MojoFailureException("Publisher not found: " + publisher);

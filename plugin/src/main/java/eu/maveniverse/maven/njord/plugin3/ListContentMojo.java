@@ -29,7 +29,7 @@ public class ListContentMojo extends NjordMojoSupport {
     private String store;
 
     @Override
-    protected void doExecute(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             try (ArtifactStore store = storeOptional.orElseThrow()) {

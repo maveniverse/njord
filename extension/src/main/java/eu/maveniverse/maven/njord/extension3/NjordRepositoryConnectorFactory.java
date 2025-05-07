@@ -11,9 +11,8 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
-import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,10 +33,14 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     public static final String NAME = "njord";
 
     private final Logger logger = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
     private final BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
     @Inject
-    public NjordRepositoryConnectorFactory(BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
+    public NjordRepositoryConnectorFactory(
+            ArtifactDeployerRedirector artifactDeployerRedirector,
+            BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
         this.basicRepositoryConnectorFactory = requireNonNull(basicRepositoryConnectorFactory);
     }
 
@@ -53,17 +56,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         Optional<Session> nso = NjordUtils.mayGetNjordSessionIfEnabled(session);
         if (nso.isPresent()) {
             Session ns = nso.orElseThrow();
-            String url = repository.getUrl();
-            Optional<Map<String, String>> sco = ns.config().serviceConfiguration(repository.getId());
-            if (!url.startsWith(NAME + ":")
-                    && sco.isPresent()
-                    && ns.config().topLevelProject().isPresent()) {
-                logger.info("Njord service configuration found for server '{}'", repository.getId());
-                Map<String, String> config = sco.orElseThrow();
-                url = ns.config().topLevelProject().orElseThrow().artifact().isSnapshot()
-                        ? config.get(SessionConfig.CONFIG_SNAPSHOT_URL)
-                        : config.get(SessionConfig.CONFIG_RELEASE_URL);
-            }
+            String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
             if (url != null && url.startsWith(NAME + ":")) {
                 ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                 return new NjordRepositoryConnector(

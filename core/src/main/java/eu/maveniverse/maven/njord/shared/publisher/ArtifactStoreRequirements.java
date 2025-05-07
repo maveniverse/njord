@@ -64,19 +64,4 @@ public interface ArtifactStoreRequirements {
     default Optional<ArtifactStoreValidator> snapshotValidator() {
         return Optional.empty();
     }
-
-    /**
-     * No requirements.
-     */
-    ArtifactStoreRequirements NONE = new ArtifactStoreRequirements() {
-        @Override
-        public String name() {
-            return "none";
-        }
-
-        @Override
-        public String description() {
-            return "No requirements";
-        }
-    };
 }
