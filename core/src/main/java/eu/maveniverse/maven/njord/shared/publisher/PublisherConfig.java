@@ -11,6 +11,8 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 
+import java.util.Map;
+
 public class PublisherConfig {
     private final String releaseRepositoryId;
     private final String releaseRepositoryUrl;
@@ -27,17 +29,14 @@ public class PublisherConfig {
         requireNonNull(sessionConfig, "sessionConfig");
         requireNonNull(name);
 
-        this.releaseRepositoryId = sessionConfig
-                .effectiveProperties()
+        Map<String, String> effectiveProperties = sessionConfig.effectiveProperties();
+        this.releaseRepositoryId = effectiveProperties
                 .getOrDefault("njord.publisher." + name + ".releaseRepositoryId", defaultReleaseRepositoryId);
-        this.releaseRepositoryUrl = sessionConfig
-                .effectiveProperties()
+        this.releaseRepositoryUrl = effectiveProperties
                 .getOrDefault("njord.publisher." + name + ".releaseRepositoryUrl", defaultReleaseRepositoryUrl);
-        this.snapshotRepositoryId = sessionConfig
-                .effectiveProperties()
+        this.snapshotRepositoryId = effectiveProperties
                 .getOrDefault("njord.publisher." + name + ".snapshotRepositoryId", defaultSnapshotRepositoryId);
-        this.snapshotRepositoryUrl = sessionConfig
-                .effectiveProperties()
+        this.snapshotRepositoryUrl = effectiveProperties
                 .getOrDefault("njord.publisher." + name + ".snapshotRepositoryUrl", defaultSnapshotRepositoryUrl);
     }
 

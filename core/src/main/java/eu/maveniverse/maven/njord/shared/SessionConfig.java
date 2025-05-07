@@ -83,6 +83,11 @@ public interface SessionConfig {
     Path propertiesPath();
 
     /**
+     * Properties defined in {@link #propertiesPath()} properties file.
+     */
+    Map<String, String> njordProperties();
+
+    /**
      * User properties set in environment.
      */
     Map<String, String> userProperties();
@@ -95,7 +100,15 @@ public interface SessionConfig {
     /**
      * Effective properties that should be used to get configuration from (applies precedence).
      */
-    Map<String, String> effectiveProperties();
+    default Map<String, String> effectiveProperties() {
+        Map<String, String> properties = new HashMap<>(systemProperties());
+        properties.putAll(njordProperties());
+        if (currentProject().isPresent()) {
+            properties.putAll(currentProject().orElseThrow().projectProperties());
+        }
+        properties.putAll(userProperties());
+        return Map.copyOf(properties);
+    }
 
     /**
      * Resolver session, never {@code null}.
@@ -426,9 +439,9 @@ public interface SessionConfig {
             private final String version;
             private final Path basedir;
             private final Path propertiesPath;
+            private final Map<String, String> njordProperties;
             private final Map<String, String> userProperties;
             private final Map<String, String> systemProperties;
-            private final Map<String, String> effectiveProperties;
             private final RepositorySystemSession session;
             private final List<RemoteRepository> remoteRepositories;
             private final CurrentProject currentProject;
@@ -460,13 +473,9 @@ public interface SessionConfig {
                     }
                 }
 
+                this.njordProperties = Map.copyOf(toMap(properties));
                 this.userProperties = Map.copyOf(requireNonNull(userProperties, "userProperties"));
                 this.systemProperties = Map.copyOf(requireNonNull(systemProperties, "systemProperties"));
-                HashMap<String, String> eff = new HashMap<>();
-                eff.putAll(systemProperties);
-                eff.putAll(toMap(properties));
-                eff.putAll(userProperties);
-                this.effectiveProperties = Map.copyOf(eff);
 
                 this.session = requireNonNull(session);
                 this.remoteRepositories = List.copyOf(requireNonNull(remoteRepositories));
@@ -499,6 +508,11 @@ public interface SessionConfig {
             }
 
             @Override
+            public Map<String, String> njordProperties() {
+                return njordProperties;
+            }
+
+            @Override
             public Map<String, String> userProperties() {
                 return userProperties;
             }
@@ -506,11 +520,6 @@ public interface SessionConfig {
             @Override
             public Map<String, String> systemProperties() {
                 return systemProperties;
-            }
-
-            @Override
-            public Map<String, String> effectiveProperties() {
-                return effectiveProperties;
             }
 
             @Override
