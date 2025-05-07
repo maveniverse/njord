@@ -260,7 +260,7 @@ public interface SessionConfig {
         if (!"org.apache.maven:standalone-pom".equals(project.getGroupId() + ":" + project.getArtifactId())) {
             final Artifact artifact = RepositoryUtils.toArtifact(project.getArtifact());
             final Map<String, String> properties = Map.copyOf(Utils.toMap(project.getProperties()));
-            final List<RemoteRepository> remoteRepositories = project.getRemoteProjectRepositories();
+            final List<RemoteRepository> remoteRepositories = List.copyOf(project.getRemoteProjectRepositories());
             final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
             if (project.getDistributionManagement() != null) {
                 DeploymentRepository dr = project.getDistributionManagement().getRepository();
