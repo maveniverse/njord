@@ -10,7 +10,6 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-
 import java.util.Map;
 
 public class PublisherConfig {
@@ -30,14 +29,14 @@ public class PublisherConfig {
         requireNonNull(name);
 
         Map<String, String> effectiveProperties = sessionConfig.effectiveProperties();
-        this.releaseRepositoryId = effectiveProperties
-                .getOrDefault("njord.publisher." + name + ".releaseRepositoryId", defaultReleaseRepositoryId);
-        this.releaseRepositoryUrl = effectiveProperties
-                .getOrDefault("njord.publisher." + name + ".releaseRepositoryUrl", defaultReleaseRepositoryUrl);
-        this.snapshotRepositoryId = effectiveProperties
-                .getOrDefault("njord.publisher." + name + ".snapshotRepositoryId", defaultSnapshotRepositoryId);
-        this.snapshotRepositoryUrl = effectiveProperties
-                .getOrDefault("njord.publisher." + name + ".snapshotRepositoryUrl", defaultSnapshotRepositoryUrl);
+        this.releaseRepositoryId = effectiveProperties.getOrDefault(
+                "njord.publisher." + name + ".releaseRepositoryId", defaultReleaseRepositoryId);
+        this.releaseRepositoryUrl = effectiveProperties.getOrDefault(
+                "njord.publisher." + name + ".releaseRepositoryUrl", defaultReleaseRepositoryUrl);
+        this.snapshotRepositoryId = effectiveProperties.getOrDefault(
+                "njord.publisher." + name + ".snapshotRepositoryId", defaultSnapshotRepositoryId);
+        this.snapshotRepositoryUrl = effectiveProperties.getOrDefault(
+                "njord.publisher." + name + ".snapshotRepositoryUrl", defaultSnapshotRepositoryUrl);
     }
 
     public String releaseRepositoryId() {
