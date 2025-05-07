@@ -26,7 +26,7 @@ With Njord you can have benefits:
 * have only as many server entries in your `settings.xml` as many publishing services you use, as opposed to current
   status, where each project uses "own" server ID for distribution management, that again causes that users working
   on several projects (ie releasing them) must have copies of auth for each server of each project. Currently, there
-  are only 4 services publishing to Maven Central, so all you need is 4 server entries with auth in your `settings.xml`.
+  are only 4 services publishing to Maven Central, so all you need is at most 4 server entries with auth in your `settings.xml`.
 * support publishing that is not "natively" supported by Maven, without hoops and looks and any change needed in
   your project. Moreover, publishing comes with local staging as well in non-intrusive way.
 
