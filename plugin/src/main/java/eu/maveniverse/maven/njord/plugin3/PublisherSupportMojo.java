@@ -46,6 +46,13 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     @Parameter(property = "publisher")
     protected String publisher;
 
+    /**
+     * Returns artifact store candidate names.
+     * <ul>
+     *     <li>if {@code store} parameter is set, it is returned as singleton list</li>
+     *     <li>if {@link SessionConfig#prefix()} is present (so is set in user or project properties, if project is available), is used to look for existing stores using it</li>
+     * </ul>
+     */
     protected List<String> getArtifactStoreNameCandidates(Session ns) throws IOException {
         if (store == null && ns.config().prefix().isPresent()) {
             String prefix = ns.config().prefix().orElseThrow();
@@ -58,6 +65,9 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         }
     }
 
+    /**
+     * Returns last (newest, last staged) Artifact Store name, if exists.
+     */
     protected Optional<String> getArtifactStoreName(Session ns) throws IOException {
         List<String> storeNames = getArtifactStoreNameCandidates(ns);
         if (!storeNames.isEmpty()) {
@@ -88,6 +98,15 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         return storeOptional.orElseThrow();
     }
 
+    /**
+     * Returns publisher name, if possible.
+     * <ul>
+     *     <li>if {@code publisher} parameter is set, is returned</li>
+     *     <li>if {@link SessionConfig#publisher()} is present (so is set in user or project properties, if project is available), is returned</li>
+     *     <li>if there is project available, distribution management repository ID is checked is it publisher name, if yes, is returned</li>
+     *     <li>if there is configuration in settings for distribution management repository ID server, it is checked and if configuration exists, is returned</li>
+     * </ul>
+     */
     protected Optional<String> getArtifactStorePublisherName(Session ns) {
         if (publisher == null && ns.config().publisher().isPresent()) {
             publisher = ns.config().publisher().orElseThrow();
@@ -110,9 +129,14 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
                 }
             }
             if (distributionRepositoryId != null) {
-                Optional<Map<String, String>> sco = ns.config().serviceConfiguration(distributionRepositoryId);
-                if (sco.isPresent()) {
-                    publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
+                Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(distributionRepositoryId);
+                if (po.isPresent()) {
+                    store = po.orElseThrow().name();
+                } else {
+                    Optional<Map<String, String>> sco = ns.config().serviceConfiguration(distributionRepositoryId);
+                    if (sco.isPresent()) {
+                        publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
+                    }
                 }
             }
         }
