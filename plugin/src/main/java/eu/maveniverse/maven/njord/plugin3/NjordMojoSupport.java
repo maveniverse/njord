@@ -14,7 +14,6 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -82,25 +81,33 @@ public abstract class NjordMojoSupport extends AbstractMojo {
             logger.info("  Checksums:");
             logger.info(
                     "    Mandatory: {}",
-                    artifactStoreRequirements.mandatoryChecksumAlgorithms().orElse(List.of()).stream()
-                            .map(ChecksumAlgorithmFactory::getName)
-                            .collect(Collectors.joining(", ")));
+                    artifactStoreRequirements.mandatoryChecksumAlgorithms().isEmpty()
+                            ? "No checksum requirements set"
+                            : artifactStoreRequirements.mandatoryChecksumAlgorithms().orElseThrow().stream()
+                                    .map(ChecksumAlgorithmFactory::getName)
+                                    .collect(Collectors.joining(", ")));
             logger.info(
                     "    Supported: {}",
-                    artifactStoreRequirements.optionalChecksumAlgorithms().orElse(List.of()).stream()
-                            .map(ChecksumAlgorithmFactory::getName)
-                            .collect(Collectors.joining(", ")));
+                    artifactStoreRequirements.optionalChecksumAlgorithms().isEmpty()
+                            ? "No checksum requirements set"
+                            : artifactStoreRequirements.optionalChecksumAlgorithms().orElseThrow().stream()
+                                    .map(ChecksumAlgorithmFactory::getName)
+                                    .collect(Collectors.joining(", ")));
             logger.info("  Signatures:");
             logger.info(
                     "    Mandatory: {}",
-                    artifactStoreRequirements.mandatorySignatureTypes().orElse(List.of()).stream()
-                            .map(SignatureType::name)
-                            .collect(Collectors.joining(", ")));
+                    artifactStoreRequirements.mandatorySignatureTypes().isEmpty()
+                            ? "No signature requirements set"
+                            : artifactStoreRequirements.mandatorySignatureTypes().orElseThrow().stream()
+                                    .map(SignatureType::name)
+                                    .collect(Collectors.joining(", ")));
             logger.info(
                     "    Supported: {}",
-                    artifactStoreRequirements.optionalSignatureTypes().orElse(List.of()).stream()
-                            .map(SignatureType::name)
-                            .collect(Collectors.joining(", ")));
+                    artifactStoreRequirements.optionalSignatureTypes().isEmpty()
+                            ? "No signature requirements set"
+                            : artifactStoreRequirements.optionalSignatureTypes().orElseThrow().stream()
+                                    .map(SignatureType::name)
+                                    .collect(Collectors.joining(", ")));
             logger.info("  Published artifacts will be available from:");
             logger.info(
                     "    RELEASES:  {}", fmt(publisher.targetReleaseRepository().orElse(null)));

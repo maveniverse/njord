@@ -64,4 +64,19 @@ public interface ArtifactStoreRequirements {
     default Optional<ArtifactStoreValidator> snapshotValidator() {
         return Optional.empty();
     }
+
+    /**
+     * The NONE requirements to be used when there are no requirements expected.
+     */
+    ArtifactStoreRequirements NONE = new ArtifactStoreRequirements() {
+        @Override
+        public String name() {
+            return "NONE";
+        }
+
+        @Override
+        public String description() {
+            return "No requirements set";
+        }
+    };
 }
