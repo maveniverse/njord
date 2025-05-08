@@ -4,7 +4,7 @@
 
 Requirements:
 * Java 11+
-* Maven 3.9+
+* Maven 3.9+ (tested with 3.9.9 and 4.0.0-rc-3)
 
 Note: this code is Proof of Concept, with a lot of To-Be-Done parts and intentionally simple as possible.
 
