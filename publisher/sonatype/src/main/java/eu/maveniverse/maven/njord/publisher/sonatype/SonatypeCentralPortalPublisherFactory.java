@@ -18,6 +18,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(SonatypeCentralPortalPublisherFactory.NAME)
@@ -41,12 +42,20 @@ public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublis
     @Override
     public ArtifactStorePublisher create(SessionConfig sessionConfig) {
         SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(sessionConfig);
-        RemoteRepository releasesRepository = new RemoteRepository.Builder(
-                        cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
-                .build();
-        RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
-                        cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
-                .build();
+        RemoteRepository releasesRepository =
+                cpConfig.releaseRepositoryId() != null && cpConfig.releaseRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
+                                .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
+        RemoteRepository snapshotsRepository =
+                cpConfig.snapshotRepositoryId() != null && cpConfig.snapshotRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
+                                .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
 
         return new SonatypeCentralPortalPublisher(
                 sessionConfig,

@@ -8,11 +8,14 @@
 package eu.maveniverse.maven.njord.shared.publisher;
 
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
  * Maven Central publisher factory is an artifact store publisher factory that creates publishers for Maven Central.
  */
 public interface MavenCentralPublisherFactory extends ArtifactStorePublisherFactory {
-    RemoteRepository CENTRAL =
-            new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build();
+    RemoteRepository CENTRAL = new RemoteRepository.Builder(
+                    "central", "default", "https://repo.maven.apache.org/maven2/")
+            .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+            .build();
 }

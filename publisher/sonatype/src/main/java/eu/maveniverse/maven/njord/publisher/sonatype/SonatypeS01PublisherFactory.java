@@ -16,6 +16,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(SonatypeS01PublisherFactory.NAME)
@@ -35,12 +36,20 @@ public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
         SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(sessionConfig);
-        RemoteRepository releasesRepository = new RemoteRepository.Builder(
-                        s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())
-                .build();
-        RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
-                        s01Config.snapshotRepositoryId(), "default", s01Config.snapshotRepositoryUrl())
-                .build();
+        RemoteRepository releasesRepository =
+                s01Config.releaseRepositoryId() != null && s01Config.releaseRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())
+                                .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
+        RemoteRepository snapshotsRepository =
+                s01Config.snapshotRepositoryId() != null && s01Config.snapshotRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        s01Config.snapshotRepositoryId(), "default", s01Config.snapshotRepositoryUrl())
+                                .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
 
         return new SonatypeNx2Publisher(
                 sessionConfig,

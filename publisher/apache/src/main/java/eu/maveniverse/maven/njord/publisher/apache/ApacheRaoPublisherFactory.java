@@ -18,6 +18,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(ApacheRaoPublisherFactory.NAME)
@@ -37,18 +38,26 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
     @Override
     public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
         ApachePublisherConfig raoConfig = new ApachePublisherConfig(sessionConfig);
-        RemoteRepository releasesRepository = new RemoteRepository.Builder(
-                        raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
-                .build();
-        RemoteRepository snapshotsRepository = new RemoteRepository.Builder(
-                        raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
-                .build();
+        RemoteRepository releasesRepository =
+                raoConfig.releaseRepositoryId() != null && raoConfig.releaseRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
+                                .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
+        RemoteRepository snapshotsRepository =
+                raoConfig.snapshotRepositoryId() != null && raoConfig.snapshotRepositoryUrl() != null
+                        ? new RemoteRepository.Builder(
+                                        raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
+                                .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                                .build()
+                        : null;
 
         return new SonatypeNx2Publisher(
                 sessionConfig,
                 repositorySystem,
                 NAME,
-                "Publishes to ASF",
+                "Publishes to ASF RAO",
                 CENTRAL,
                 snapshotsRepository,
                 releasesRepository,

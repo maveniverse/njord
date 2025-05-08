@@ -30,7 +30,7 @@ public class PublishMojo extends PublisherSupportMojo {
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         try (ArtifactStore from = getArtifactStore(ns)) {
             ArtifactStorePublisher publisher = getArtifactStorePublisher(ns);
-            logger.info("Publishing {} to {}", from, publisher.name());
+            logger.info("Publishing {} with {}", from, publisher.name());
             publisher.publish(from);
         }
         if (drop) {
