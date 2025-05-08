@@ -9,8 +9,8 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
+import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 
 /**
  * Verifies checksum for every artifact.

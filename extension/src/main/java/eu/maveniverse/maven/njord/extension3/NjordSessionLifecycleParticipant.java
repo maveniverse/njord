@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.SessionFactory;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
@@ -25,22 +26,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Lifecycle participant that creates Njord config.
+ * Lifecycle participant that creates Njord session.
  */
 @Singleton
 @Named
-public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant {
+public class NjordSessionLifecycleParticipant extends AbstractMavenLifecycleParticipant {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SessionFactory sessionFactory;
+    private final Provider<SessionFactory> sessionFactoryProvider;
 
     @Inject
-    public NjordLifecycleParticipant(SessionFactory sessionFactory) {
-        this.sessionFactory = requireNonNull(sessionFactory);
+    public NjordSessionLifecycleParticipant(Provider<SessionFactory> sessionFactoryProvider) {
+        this.sessionFactoryProvider = requireNonNull(sessionFactoryProvider);
     }
 
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
+        requireNonNull(session);
         try {
             // session config
             SessionConfig sc = SessionConfig.defaults(
@@ -49,7 +51,7 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
                     .currentProject(SessionConfig.fromMavenProject(session.getCurrentProject()))
                     .build();
 
-            Session ns = NjordUtils.init(sc, sessionFactory::create);
+            Session ns = NjordUtils.init(sc, sessionFactoryProvider.get()::create);
             if (ns.config().enabled()) {
                 logger.info("Njord {} session created", ns.config().version().orElse("UNKNOWN"));
             }
@@ -60,10 +62,11 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
 
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
+        requireNonNull(session);
         try {
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                Session njordSession = ns.orElseThrow();
+                Session njordSession = ns.orElseThrow(() -> new IllegalStateException("Value unavailable"));
                 if (njordSession.config().enabled()) {
                     if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
                         logger.warn("Session failed; dropped stores created in failed session");

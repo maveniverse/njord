@@ -7,11 +7,10 @@
  */
 package eu.maveniverse.maven.njord.shared;
 
-import static eu.maveniverse.maven.njord.shared.impl.Utils.toMap;
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.Utils;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.shared.core.maven.MavenUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -272,7 +271,7 @@ public interface SessionConfig {
         requireNonNull(project);
         if (!"org.apache.maven:standalone-pom".equals(project.getGroupId() + ":" + project.getArtifactId())) {
             final Artifact artifact = RepositoryUtils.toArtifact(project.getArtifact());
-            final Map<String, String> properties = Map.copyOf(Utils.toMap(project.getProperties()));
+            final Map<String, String> properties = Map.copyOf(MavenUtils.toMap(project.getProperties()));
             final List<RemoteRepository> remoteRepositories = List.copyOf(project.getRemoteProjectRepositories());
             final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
             if (project.getDistributionManagement() != null) {
@@ -328,7 +327,7 @@ public interface SessionConfig {
         return new Builder(
                 ConfigUtils.getBoolean(session, true, CONFIG_ENABLED),
                 ConfigUtils.getBoolean(session, false, CONFIG_DRY_RUN),
-                Utils.discoverArtifactVersion(
+                MavenUtils.discoverArtifactVersion(
                         SessionConfig.class.getClassLoader(), "eu.maveniverse.maven.njord", "core", null),
                 discoverBaseDirectory(),
                 Path.of("njord.properties"),
@@ -473,7 +472,7 @@ public interface SessionConfig {
                     }
                 }
 
-                this.njordProperties = Map.copyOf(toMap(properties));
+                this.njordProperties = Map.copyOf(MavenUtils.toMap(properties));
                 this.userProperties = Map.copyOf(requireNonNull(userProperties, "userProperties"));
                 this.systemProperties = Map.copyOf(requireNonNull(systemProperties, "systemProperties"));
 

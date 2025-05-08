@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
+import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,15 +22,11 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Comparator support.
  */
-public abstract class ArtifactStoreComparatorSupport implements ArtifactStoreComparator {
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+public abstract class ArtifactStoreComparatorSupport extends ComponentSupport implements ArtifactStoreComparator {
     protected final SessionConfig sessionConfig;
     protected final String name;
     protected final String description;

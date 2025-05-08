@@ -22,6 +22,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
+import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;

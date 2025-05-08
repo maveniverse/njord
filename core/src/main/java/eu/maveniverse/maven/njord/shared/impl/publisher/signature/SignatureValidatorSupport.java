@@ -7,9 +7,9 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
+import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 
 public abstract class SignatureValidatorSupport extends CloseableSupport implements SignatureValidator {
     private final SignatureType type;

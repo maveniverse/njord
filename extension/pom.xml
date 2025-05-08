@@ -20,12 +20,20 @@
   <artifactId>extension</artifactId>
 
   <name>${project.groupId}:${project.artifactId}</name>
+  <properties>
+    <maven.compiler.release>8</maven.compiler.release>
+  </properties>
 
   <dependencies>
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>eu.maveniverse.maven.shared</groupId>
+      <artifactId>extension</artifactId>
     </dependency>
 
     <dependency>

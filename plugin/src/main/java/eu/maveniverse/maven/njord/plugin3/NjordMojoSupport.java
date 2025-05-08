@@ -13,27 +13,23 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.shared.plugin.MojoSupport;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public abstract class NjordMojoSupport extends AbstractMojo {
-    protected final Logger logger = LoggerFactory.getLogger(NjordMojoSupport.class);
-
+public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
     protected MavenSession mavenSession;
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void executeMojo() throws MojoExecutionException, MojoFailureException {
         try {
             Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
             if (njordSession.isEmpty()) {

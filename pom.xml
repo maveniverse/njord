@@ -70,6 +70,7 @@
     <requireRuntimeMavenVersion.range>[3.9.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
+    <version.maveniverseShared>0.1.1</version.maveniverseShared>
     <version.maven>3.9.9</version.maven>
     <version.resolver>1.9.22</version.resolver>
     <version.slf4j>2.0.17</version.slf4j>
@@ -78,6 +79,22 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>eu.maveniverse.maven.shared</groupId>
+        <artifactId>core</artifactId>
+        <version>${version.maveniverseShared}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.shared</groupId>
+        <artifactId>extension</artifactId>
+        <version>${version.maveniverseShared}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.shared</groupId>
+        <artifactId>plugin</artifactId>
+        <version>${version.maveniverseShared}</version>
+      </dependency>
+
       <!-- Logging (except API, runtime only) -->
       <dependency>
         <groupId>org.slf4j</groupId>
