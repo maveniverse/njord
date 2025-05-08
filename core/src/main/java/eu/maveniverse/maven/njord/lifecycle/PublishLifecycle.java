@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.lifecycle;
 
-import eu.maveniverse.maven.njord.shared.impl.Utils;
+import eu.maveniverse.maven.shared.core.maven.MavenUtils;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Named;
@@ -24,7 +24,7 @@ import org.apache.maven.lifecycle.mapping.LifecyclePhase;
 public class PublishLifecycle implements Provider<Lifecycle> {
     public static final String NAME = "publish";
 
-    private static final String VERSION = Utils.discoverArtifactVersion(
+    private static final String VERSION = MavenUtils.discoverArtifactVersion(
             PublishLifecycle.class.getClassLoader(), "eu.maveniverse.maven.njord", "extension", "BOOM");
 
     private final Lifecycle lifecycle;

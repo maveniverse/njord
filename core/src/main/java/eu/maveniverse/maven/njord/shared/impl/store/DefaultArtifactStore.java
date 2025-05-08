@@ -9,12 +9,12 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.CloseableSupport;
-import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
-import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.shared.core.component.CloseableSupport;
+import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;

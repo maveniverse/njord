@@ -11,14 +11,14 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.CloseableConfigSupport;
-import eu.maveniverse.maven.njord.shared.impl.DirectoryLocker;
-import eu.maveniverse.maven.njord.shared.impl.FileUtils;
 import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
-import eu.maveniverse.maven.njord.shared.impl.Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
+import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
+import eu.maveniverse.maven.shared.core.maven.MavenUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -370,7 +370,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         try (InputStream in = Files.newInputStream(metaStoreProperties)) {
             properties.load(in);
         }
-        return Utils.toMap(properties);
+        return MavenUtils.toMap(properties);
     }
 
     private void saveStoreProperties(Path basedir, Map<String, String> properties) throws IOException {
