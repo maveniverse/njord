@@ -7,12 +7,14 @@
  */
 package eu.maveniverse.maven.njord.publisher.deploy;
 
+import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -27,7 +29,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                 sessionConfig,
                 repositorySystem,
                 DeployPublisherFactory.NAME,
-                "Publishes to any repository just like maven-deploy-plugin would (needs configuration)",
+                "Publishes to any repository just like maven-deploy-plugin would",
                 releasesRepository,
                 snapshotsRepository,
                 releasesRepository,
@@ -44,7 +46,12 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
         }
         // just deploy as m-deploy-p would
         try (ArtifactStore store = artifactStore) {
-            new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(store);
+            new ArtifactStoreDeployer(
+                            repositorySystem,
+                            new DefaultRepositorySystemSession(sessionConfig.session())
+                                    .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                            repository)
+                    .deploy(store);
         }
     }
 }

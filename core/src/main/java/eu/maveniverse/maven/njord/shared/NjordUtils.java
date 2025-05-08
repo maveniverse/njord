@@ -14,6 +14,12 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 
 public final class NjordUtils {
+    /**
+     * Special flag to be used in Resolver session config properties: flags that Njord connector should not intervene,
+     * and should remain dormant, "skip" connector creation and let other connectors do the work.
+     */
+    public static final String RESOLVER_SESSION_CONNECTOR_SKIP = SessionConfig.NAME + ".connector.skip";
+
     private NjordUtils() {}
 
     /**

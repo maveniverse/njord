@@ -22,6 +22,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,20 +54,24 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     @Override
     public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
-        Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
-        if (nso.isPresent()
-                && nso.orElseThrow(() -> new IllegalStateException("Value unavailable"))
-                        .config()
-                        .enabled()) {
-            Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
-            String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
-            if (url != null && url.startsWith(NAME + ":")) {
-                ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
-                return new NjordRepositoryConnector(
-                        artifactStore,
-                        repository,
-                        basicRepositoryConnectorFactory.newInstance(
-                                artifactStore.storeRepositorySession(session), artifactStore.storeRemoteRepository()));
+        boolean connectorSkip = ConfigUtils.getBoolean(session, false, NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP);
+        if (!connectorSkip) {
+            Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
+            if (nso.isPresent()
+                    && nso.orElseThrow(() -> new IllegalStateException("Value unavailable"))
+                            .config()
+                            .enabled()) {
+                Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
+                String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
+                if (url != null && url.startsWith(NAME + ":")) {
+                    ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
+                    return new NjordRepositoryConnector(
+                            artifactStore,
+                            repository,
+                            basicRepositoryConnectorFactory.newInstance(
+                                    artifactStore.storeRepositorySession(session),
+                                    artifactStore.storeRemoteRepository()));
+                }
             }
         }
         throw new NoRepositoryConnectorException(repository);
