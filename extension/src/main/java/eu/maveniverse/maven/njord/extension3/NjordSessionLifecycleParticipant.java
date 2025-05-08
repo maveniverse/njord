@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.SessionFactory;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
@@ -32,15 +33,16 @@ import org.slf4j.LoggerFactory;
 public class NjordSessionLifecycleParticipant extends AbstractMavenLifecycleParticipant {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SessionFactory sessionFactory;
+    private final Provider<SessionFactory> sessionFactoryProvider;
 
     @Inject
-    public NjordSessionLifecycleParticipant(SessionFactory sessionFactory) {
-        this.sessionFactory = requireNonNull(sessionFactory);
+    public NjordSessionLifecycleParticipant(Provider<SessionFactory> sessionFactoryProvider) {
+        this.sessionFactoryProvider = requireNonNull(sessionFactoryProvider);
     }
 
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
+        requireNonNull(session);
         try {
             // session config
             SessionConfig sc = SessionConfig.defaults(
@@ -49,7 +51,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                     .currentProject(SessionConfig.fromMavenProject(session.getCurrentProject()))
                     .build();
 
-            Session ns = NjordUtils.init(sc, sessionFactory::create);
+            Session ns = NjordUtils.init(sc, sessionFactoryProvider.get()::create);
             if (ns.config().enabled()) {
                 logger.info("Njord {} session created", ns.config().version().orElse("UNKNOWN"));
             }
@@ -60,6 +62,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
 
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
+        requireNonNull(session);
         try {
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {

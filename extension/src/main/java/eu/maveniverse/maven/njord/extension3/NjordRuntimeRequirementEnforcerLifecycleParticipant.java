@@ -25,12 +25,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Lifecycle participant that enforces Njord requirements.
  * <p>
- * This class is intentionally self-contained and compiled with Java 8 to make it able to run on wides range of
- * Maven and Java versions, to report sane error for user why Njord refuses to work in user environment.
+ * This class is intentionally self-contained and compiled with Java 8 to make it able to run on wide range of
+ * Maven and Java versions, to report sane error for user why Njord refuses to work in their environment.
  */
 @Singleton
 @Named
 public class NjordRuntimeRequirementEnforcerLifecycleParticipant extends AbstractMavenLifecycleParticipant {
+    private static final String NJORD_MAVEN_REQUIREMENT = "[3.9,)";
+    private static final String NJORD_JAVA_REQUIREMENT = "[11,)";
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override
@@ -49,9 +52,8 @@ public class NjordRuntimeRequirementEnforcerLifecycleParticipant extends Abstrac
         }
         try {
             GenericVersionScheme versionScheme = new GenericVersionScheme();
-            VersionConstraint mavenConstraint = versionScheme.parseVersionConstraint("[3.9,)");
-            VersionConstraint javaConstraint = versionScheme.parseVersionConstraint("[11,)");
-
+            VersionConstraint mavenConstraint = versionScheme.parseVersionConstraint(NJORD_MAVEN_REQUIREMENT);
+            VersionConstraint javaConstraint = versionScheme.parseVersionConstraint(NJORD_JAVA_REQUIREMENT);
             Version mavenVersion = versionScheme.parseVersion(mavenVersionString);
             Version javaVersion = versionScheme.parseVersion(javaVersionString);
 
