@@ -99,15 +99,7 @@ public interface SessionConfig {
     /**
      * Effective properties that should be used to get configuration from (applies precedence).
      */
-    default Map<String, String> effectiveProperties() {
-        Map<String, String> properties = new HashMap<>(systemProperties());
-        properties.putAll(njordProperties());
-        if (currentProject().isPresent()) {
-            properties.putAll(currentProject().orElseThrow().projectProperties());
-        }
-        properties.putAll(userProperties());
-        return Map.copyOf(properties);
-    }
+    Map<String, String> effectiveProperties();
 
     /**
      * Resolver session, never {@code null}.
@@ -122,27 +114,14 @@ public interface SessionConfig {
     /**
      * Remote repositories provided by environment and project, if present, never {@code null}.
      */
-    default List<RemoteRepository> allRemoteRepositories() {
-        ArrayList<RemoteRepository> remoteRepositories = new ArrayList<>(remoteRepositories());
-        if (currentProject().isPresent()) {
-            remoteRepositories.addAll(currentProject().orElseThrow().remoteRepositories());
-        }
-        return remoteRepositories;
-    }
+    List<RemoteRepository> allRemoteRepositories();
 
     /**
      * Whether to apply "auto prefix" (user provided one or derived from current project) or use "template prefix" for
      * created store names. Defaults to {@code true}: when {@link #currentProject()} is available, store prefix is
      * derived from the project, otherwise from template.
      */
-    default boolean autoPrefix() {
-        String value = effectiveProperties().get(CONFIG_AUTOPREFIX);
-        if (value == null && currentProject().isPresent()) {
-            CurrentProject cp = currentProject().orElseThrow();
-            value = cp.projectProperties().get(CONFIG_AUTOPREFIX);
-        }
-        return value == null || Boolean.parseBoolean(value);
-    }
+    boolean autoPrefix();
 
     /**
      * The prefix to override template prefix, if needed. If {@link #autoPrefix()} is {@code true}, this value is always
@@ -151,17 +130,7 @@ public interface SessionConfig {
      * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
      * POM as project property.
      */
-    default Optional<String> prefix() {
-        String value = effectiveProperties().get(CONFIG_PREFIX);
-        if (value == null && currentProject().isPresent()) {
-            CurrentProject cp = currentProject().orElseThrow();
-            value = cp.projectProperties().get(CONFIG_PREFIX);
-            if (value == null && autoPrefix()) {
-                value = cp.artifact().getArtifactId();
-            }
-        }
-        return Optional.ofNullable(value);
-    }
+    Optional<String> prefix();
 
     /**
      * The publisher to use, if specified.
@@ -169,14 +138,7 @@ public interface SessionConfig {
      * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
      * POM as project property.
      */
-    default Optional<String> publisher() {
-        String value = effectiveProperties().get(CONFIG_PUBLISHER);
-        if (value == null && currentProject().isPresent()) {
-            CurrentProject cp = currentProject().orElseThrow();
-            value = cp.projectProperties().get(CONFIG_PUBLISHER);
-        }
-        return Optional.ofNullable(value);
-    }
+    Optional<String> publisher();
 
     /**
      * Shim for "current project". Provides needed information from project.
@@ -441,8 +403,13 @@ public interface SessionConfig {
             private final Map<String, String> njordProperties;
             private final Map<String, String> userProperties;
             private final Map<String, String> systemProperties;
+            private final Map<String, String> effectiveProperties;
             private final RepositorySystemSession session;
             private final List<RemoteRepository> remoteRepositories;
+            private final List<RemoteRepository> allRemoteRepositories;
+            private final boolean autoPrefix;
+            private final String prefix;
+            private final String publisher;
             private final CurrentProject currentProject;
 
             private Impl(
@@ -476,8 +443,43 @@ public interface SessionConfig {
                 this.userProperties = Map.copyOf(requireNonNull(userProperties, "userProperties"));
                 this.systemProperties = Map.copyOf(requireNonNull(systemProperties, "systemProperties"));
 
+                Map<String, String> ep = new HashMap<>(systemProperties);
+                ep.putAll(njordProperties);
+                if (currentProject != null) {
+                    properties.putAll(currentProject.projectProperties());
+                }
+                properties.putAll(userProperties);
+                this.effectiveProperties = Map.copyOf(ep);
+
                 this.session = requireNonNull(session);
                 this.remoteRepositories = List.copyOf(requireNonNull(remoteRepositories));
+                ArrayList<RemoteRepository> arr = new ArrayList<>(remoteRepositories);
+                if (currentProject != null) {
+                    arr.addAll(currentProject.remoteRepositories());
+                }
+                this.allRemoteRepositories = List.copyOf(arr);
+
+                String autoPrefixString = effectiveProperties.get(CONFIG_AUTOPREFIX);
+                if (autoPrefixString == null && currentProject != null) {
+                    autoPrefixString = currentProject.projectProperties().get(CONFIG_AUTOPREFIX);
+                }
+                this.autoPrefix = autoPrefixString == null || Boolean.parseBoolean(autoPrefixString);
+
+                String prefixString = effectiveProperties.get(CONFIG_PREFIX);
+                if (prefixString == null && currentProject != null) {
+                    prefixString = currentProject.projectProperties().get(CONFIG_PREFIX);
+                    if (prefixString == null && autoPrefix) {
+                        prefixString = currentProject.artifact().getArtifactId();
+                    }
+                }
+                this.prefix = prefixString;
+
+                String publisherString = effectiveProperties.get(CONFIG_PUBLISHER);
+                if (publisherString == null && currentProject != null) {
+                    publisherString = currentProject.projectProperties().get(CONFIG_PUBLISHER);
+                }
+                this.publisher = publisherString;
+
                 this.currentProject = currentProject;
             }
 
@@ -522,6 +524,11 @@ public interface SessionConfig {
             }
 
             @Override
+            public Map<String, String> effectiveProperties() {
+                return effectiveProperties;
+            }
+
+            @Override
             public RepositorySystemSession session() {
                 return session;
             }
@@ -529,6 +536,25 @@ public interface SessionConfig {
             @Override
             public List<RemoteRepository> remoteRepositories() {
                 return remoteRepositories;
+            }
+
+            public List<RemoteRepository> allRemoteRepositories() {
+                return allRemoteRepositories;
+            }
+
+            @Override
+            public boolean autoPrefix() {
+                return autoPrefix;
+            }
+
+            @Override
+            public Optional<String> prefix() {
+                return Optional.ofNullable(prefix);
+            }
+
+            @Override
+            public Optional<String> publisher() {
+                return Optional.ofNullable(publisher);
             }
 
             @Override
