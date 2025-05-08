@@ -3,7 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/eu.maveniverse.maven.njord/extension.svg?label=Maven%20Central)](https://search.maven.org/artifact/eu.maveniverse.maven.njord/extension)
 
 Requirements:
-* Java 17+
+* Java 11+
 * Maven 3.9+
 
 Note: this code is Proof of Concept, with a lot of To-Be-Done parts and intentionally simple as possible.
