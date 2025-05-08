@@ -538,6 +538,7 @@ public interface SessionConfig {
                 return remoteRepositories;
             }
 
+            @Override
             public List<RemoteRepository> allRemoteRepositories() {
                 return allRemoteRepositories;
             }
