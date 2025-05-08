@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Merges {@code from} store onto {@code to} store, eventually dropping {@code from} store.
  */
-@Mojo(name = "merge", threadSafe = true, requiresProject = false)
+@Mojo(name = "merge", threadSafe = true, requiresProject = false, aggregator = true)
 public class MergeMojo extends NjordMojoSupport {
     /**
      * The name of the source store.

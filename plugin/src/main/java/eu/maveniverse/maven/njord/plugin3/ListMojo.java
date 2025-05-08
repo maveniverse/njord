@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 /**
  * List all existing stores.
  */
-@Mojo(name = "list", threadSafe = true, requiresProject = false)
+@Mojo(name = "list", threadSafe = true, requiresProject = false, aggregator = true)
 public class ListMojo extends NjordMojoSupport {
     @Override
     protected void doWithSession(Session ns) throws IOException {

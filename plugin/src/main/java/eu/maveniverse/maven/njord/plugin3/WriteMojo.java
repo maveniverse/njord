@@ -21,7 +21,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Writes out a store as "remote Maven repository" directory structure to given directory.
  */
-@Mojo(name = "write", threadSafe = true, requiresProject = false)
+@Mojo(name = "write", threadSafe = true, requiresProject = false, aggregator = true)
 public class WriteMojo extends NjordMojoSupport {
     /**
      * The name of the store to be written out.

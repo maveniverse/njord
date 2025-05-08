@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 /**
  * Lists available publishers.
  */
-@Mojo(name = "list-publishers", threadSafe = true, requiresProject = false)
+@Mojo(name = "list-publishers", threadSafe = true, requiresProject = false, aggregator = true)
 public class ListPublishersMojo extends NjordMojoSupport {
     @Override
     protected void doWithSession(Session ns) {

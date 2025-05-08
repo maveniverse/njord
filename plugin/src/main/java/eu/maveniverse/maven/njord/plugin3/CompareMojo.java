@@ -19,7 +19,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Compares two given stores against each other.
  */
-@Mojo(name = "compare", threadSafe = true, requiresProject = false)
+@Mojo(name = "compare", threadSafe = true, requiresProject = false, aggregator = true)
 public class CompareMojo extends NjordMojoSupport {
     /**
      * The name of the first store to compare.

@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * and merge them into one, resetting store name, so user will end up with one (merged) store named as
  * <pre>prefix-00001</pre>. In any other case, this mojo will fail and report error.
  */
-@Mojo(name = "merge-all", threadSafe = true, requiresProject = false)
+@Mojo(name = "merge-all", threadSafe = true, requiresProject = false, aggregator = true)
 public class MergeAllMojo extends NjordMojoSupport {
     /**
      * Fail if no store got merged, by default {@code true}.

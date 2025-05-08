@@ -20,7 +20,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Imports a store from "transportable bundle".
  */
-@Mojo(name = "import", threadSafe = true, requiresProject = false)
+@Mojo(name = "import", threadSafe = true, requiresProject = false, aggregator = true)
 public class ImportMojo extends NjordMojoSupport {
     /**
      * The bundle file to import.

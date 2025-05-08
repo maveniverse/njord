@@ -20,7 +20,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Validate given store against given publisher.
  */
-@Mojo(name = "validate", threadSafe = true, requiresProject = false)
+@Mojo(name = "validate", threadSafe = true, requiresProject = false, aggregator = true)
 public class ValidateMojo extends PublisherSupportMojo {
     /**
      * Show detailed validation report.
@@ -56,7 +56,7 @@ public class ValidateMojo extends PublisherSupportMojo {
                     }
                 }
             } else {
-                logger.info("Not validated artifact store, no applicable validator set for publisher {}", p.name());
+                logger.info("No applicable validator for {} set in publisher {}; validation skipped", from, p.name());
             }
         }
     }

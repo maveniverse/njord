@@ -16,7 +16,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 /**
  * List all existing templates.
  */
-@Mojo(name = "list-templates", threadSafe = true, requiresProject = false)
+@Mojo(name = "list-templates", threadSafe = true, requiresProject = false, aggregator = true)
 public class ListTemplatesMojo extends NjordMojoSupport {
     @Override
     protected void doWithSession(Session ns) throws IOException {

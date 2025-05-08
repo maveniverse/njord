@@ -18,7 +18,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Publishes given store to given target.
  */
-@Mojo(name = "publish", threadSafe = true, requiresProject = false)
+@Mojo(name = "publish", threadSafe = true, requiresProject = false, aggregator = true)
 public class PublishMojo extends PublisherSupportMojo {
     /**
      * Whether source store should be dropped after successful operation.
