@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 /**
  * Lists available comparators.
  */
-@Mojo(name = "list-comparators", threadSafe = true, requiresProject = false)
+@Mojo(name = "list-comparators", threadSafe = true, requiresProject = false, aggregator = true)
 public class ListComparatorsMojo extends NjordMojoSupport {
     @Override
     protected void doWithSession(Session ns) {

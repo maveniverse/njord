@@ -20,7 +20,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 /**
  * Lists content of given store.
  */
-@Mojo(name = "list-content", threadSafe = true, requiresProject = false)
+@Mojo(name = "list-content", threadSafe = true, requiresProject = false, aggregator = true)
 public class ListContentMojo extends NjordMojoSupport {
     /**
      * The name of the store to have content listed.

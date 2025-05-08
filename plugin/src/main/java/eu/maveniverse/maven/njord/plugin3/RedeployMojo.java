@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Redeploys {@code from} store onto {@code to} store, eventually dropping {@code from} store.
  */
-@Mojo(name = "redeploy", threadSafe = true, requiresProject = false)
+@Mojo(name = "redeploy", threadSafe = true, requiresProject = false, aggregator = true)
 public class RedeployMojo extends NjordMojoSupport {
     /**
      * The name of the source store.

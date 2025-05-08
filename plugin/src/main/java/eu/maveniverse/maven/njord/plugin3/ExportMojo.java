@@ -20,7 +20,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Export out a store as "transportable bundle" to given path.
  */
-@Mojo(name = "export", threadSafe = true, requiresProject = false)
+@Mojo(name = "export", threadSafe = true, requiresProject = false, aggregator = true)
 public class ExportMojo extends NjordMojoSupport {
     /**
      * The name of the store to export.

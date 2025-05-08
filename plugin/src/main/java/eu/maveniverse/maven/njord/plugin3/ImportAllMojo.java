@@ -23,7 +23,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Imports all stores from "transportable bundle" files found in given directory.
  */
-@Mojo(name = "import-all", threadSafe = true, requiresProject = false)
+@Mojo(name = "import-all", threadSafe = true, requiresProject = false, aggregator = true)
 public class ImportAllMojo extends NjordMojoSupport {
     /**
      * The directory to import from, by default is current directory.

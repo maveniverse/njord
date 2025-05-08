@@ -15,7 +15,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Drops given store.
  */
-@Mojo(name = "drop", threadSafe = true, requiresProject = false)
+@Mojo(name = "drop", threadSafe = true, requiresProject = false, aggregator = true)
 public class DropMojo extends NjordMojoSupport {
     /**
      * The name of the store to drop. As operation is destructive, this parameter is mandatory.

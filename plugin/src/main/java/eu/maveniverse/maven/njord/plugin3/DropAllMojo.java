@@ -16,7 +16,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 /**
  * Tabula rasa: drops all stores. For safety reasons, you need extra {@code -Dyes}.
  */
-@Mojo(name = "drop-all", threadSafe = true, requiresProject = false)
+@Mojo(name = "drop-all", threadSafe = true, requiresProject = false, aggregator = true)
 public class DropAllMojo extends NjordMojoSupport {
     /**
      * This property must be specified as "safety net" for this operation to succeed, as it is destructive.

@@ -22,7 +22,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * Write out a store as "bundle" ZIP to given path. The ZIP file has remote repository layout and contains all the
  * artifacts and metadata.
  */
-@Mojo(name = "write-bundle", threadSafe = true, requiresProject = false)
+@Mojo(name = "write-bundle", threadSafe = true, requiresProject = false, aggregator = true)
 public class WriteBundleMojo extends NjordMojoSupport {
     /**
      * The name of the store to be written out.
