@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.extension3.lifecycle;
+package eu.maveniverse.maven.njord.lifecycle;
 
 import eu.maveniverse.maven.njord.shared.impl.Utils;
 import java.util.List;

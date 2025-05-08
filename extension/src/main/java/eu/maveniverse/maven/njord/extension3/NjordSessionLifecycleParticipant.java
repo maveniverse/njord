@@ -25,17 +25,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Lifecycle participant that creates Njord config.
+ * Lifecycle participant that creates Njord session.
  */
 @Singleton
 @Named
-public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant {
+public class NjordSessionLifecycleParticipant extends AbstractMavenLifecycleParticipant {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SessionFactory sessionFactory;
 
     @Inject
-    public NjordLifecycleParticipant(SessionFactory sessionFactory) {
+    public NjordSessionLifecycleParticipant(SessionFactory sessionFactory) {
         this.sessionFactory = requireNonNull(sessionFactory);
     }
 
@@ -63,7 +63,7 @@ public class NjordLifecycleParticipant extends AbstractMavenLifecycleParticipant
         try {
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                Session njordSession = ns.orElseThrow();
+                Session njordSession = ns.orElseThrow(() -> new IllegalStateException("Value unavailable"));
                 if (njordSession.config().enabled()) {
                     if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
                         logger.warn("Session failed; dropped stores created in failed session");
