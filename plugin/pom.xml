@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.njord</groupId>
     <artifactId>njord</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.3-SNAPSHOT</version>
   </parent>
 
   <groupId>eu.maveniverse.maven.plugins</groupId>
