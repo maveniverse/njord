@@ -79,12 +79,12 @@ public class StatusMojo extends PublisherSupportMojo {
                 artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentSnapshot, RepositoryMode.SNAPSHOT);
 
         logger.info("Project deployment:");
-        logger.info("* RELEASE");
-        logger.info("  ID: {}", deploymentRelease.getId());
+        logger.info("* Release");
+        logger.info("  Repository Id: {}", deploymentRelease.getId());
         RemoteRepository releaseAuthSource =
                 artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentRelease);
         if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
-            logger.info("  Auth source: {}", releaseAuthSource.getId());
+            logger.info("  Auth source Id: {}", releaseAuthSource.getId());
         }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
         if (!Objects.equals(deploymentRelease.getUrl(), deploymentReleaseUrl)) {
@@ -92,16 +92,15 @@ public class StatusMojo extends PublisherSupportMojo {
             if (deploymentReleaseUrl.startsWith("njord:")) {
                 ArtifactStoreTemplate template =
                         ns.selectSessionArtifactStoreTemplate(deploymentReleaseUrl.substring("njord:".length()));
-                logger.info("  Template:");
                 printTemplate(template, false);
             }
         }
-        logger.info("* SNAPSHOT");
-        logger.info("  ID: {}", deploymentSnapshot.getId());
+        logger.info("* Snapshot");
+        logger.info("  Repository Id: {}", deploymentSnapshot.getId());
         RemoteRepository snapshotAuthSource =
                 artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentSnapshot);
         if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
-            logger.info("  Auth source: {}", snapshotAuthSource.getId());
+            logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
         }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
         if (!Objects.equals(deploymentSnapshot.getUrl(), deploymentSnapshotUrl)) {
