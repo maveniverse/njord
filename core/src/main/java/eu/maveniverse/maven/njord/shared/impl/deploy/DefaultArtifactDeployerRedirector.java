@@ -7,11 +7,11 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.deploy;
 
-import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import javax.inject.Named;
@@ -22,20 +22,19 @@ import org.eclipse.aether.repository.RemoteRepository;
 @Named
 public class DefaultArtifactDeployerRedirector extends ComponentSupport implements ArtifactDeployerRedirector {
     @Override
-    public String getRepositoryUrl(Session ns, RemoteRepository repository) {
+    public String getRepositoryUrl(SessionConfig sc, RemoteRepository repository) {
         String url = repository.getUrl();
-        if (!url.startsWith(SessionConfig.NAME + ":")
-                && ns.config().currentProject().isPresent()) {
+        if (!url.startsWith(SessionConfig.NAME + ":") && sc.currentProject().isPresent()) {
             return getRepositoryUrl(
-                    ns, repository, ns.config().currentProject().orElseThrow().repositoryMode());
+                    sc, repository, sc.currentProject().orElseThrow().repositoryMode());
         }
         return url;
     }
 
     @Override
-    public String getRepositoryUrl(Session ns, RemoteRepository repository, RepositoryMode repositoryMode) {
+    public String getRepositoryUrl(SessionConfig sc, RemoteRepository repository, RepositoryMode repositoryMode) {
         String url = repository.getUrl();
-        Optional<Map<String, String>> sco = ns.config().serviceConfiguration(repository.getId());
+        Optional<Map<String, String>> sco = sc.serviceConfiguration(repository.getId());
         if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
             Map<String, String> config = sco.orElseThrow();
             String redirectUrl;
@@ -54,5 +53,28 @@ public class DefaultArtifactDeployerRedirector extends ComponentSupport implemen
             }
         }
         return url;
+    }
+
+    @Override
+    public RemoteRepository getAuthRepositoryId(SessionConfig sc, RemoteRepository repository) {
+        RemoteRepository authSource = repository;
+        LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
+        authSourcesVisited.add(authSource.getId());
+        Optional<Map<String, String>> config = sc.serviceConfiguration(authSource.getId());
+        while (config.isPresent()) {
+            String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
+            if (authRedirect != null) {
+                authSource = new RemoteRepository.Builder(
+                                authRedirect, authSource.getContentType(), authSource.getUrl())
+                        .build();
+                if (!authSourcesVisited.add(authSource.getId())) {
+                    throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
+                }
+                config = sc.serviceConfiguration(authSource.getId());
+            } else {
+                break;
+            }
+        }
+        return authSource;
     }
 }

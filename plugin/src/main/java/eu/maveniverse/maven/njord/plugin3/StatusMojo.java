@@ -74,13 +74,18 @@ public class StatusMojo extends PublisherSupportMojo {
                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                 .build();
         String deploymentReleaseUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns, deploymentRelease, RepositoryMode.RELEASE);
+                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentRelease, RepositoryMode.RELEASE);
         String deploymentSnapshotUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns, deploymentSnapshot, RepositoryMode.SNAPSHOT);
+                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentSnapshot, RepositoryMode.SNAPSHOT);
 
         logger.info("Project deployment:");
         logger.info("* RELEASE");
         logger.info("  ID: {}", deploymentRelease.getId());
+        RemoteRepository releaseAuthSource =
+                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentRelease);
+        if (releaseAuthSource != deploymentRelease) {
+            logger.info("  Auth source: {}", releaseAuthSource.getId());
+        }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
         if (!Objects.equals(deploymentRelease.getUrl(), deploymentReleaseUrl)) {
             logger.info("  Effective URL: {}", deploymentReleaseUrl);
@@ -93,6 +98,11 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* SNAPSHOT");
         logger.info("  ID: {}", deploymentSnapshot.getId());
+        RemoteRepository snapshotAuthSource =
+                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentSnapshot);
+        if (snapshotAuthSource != deploymentSnapshot) {
+            logger.info("  Auth source: {}", snapshotAuthSource.getId());
+        }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
         if (!Objects.equals(deploymentSnapshot.getUrl(), deploymentSnapshotUrl)) {
             logger.info("  Effective URL: {}", deploymentSnapshotUrl);

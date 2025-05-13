@@ -14,6 +14,7 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -28,15 +29,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Optional;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private final ArtifactStoreWriter artifactStoreWriter;
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     public SonatypeCentralPortalPublisher(
             SessionConfig sessionConfig,
@@ -44,7 +43,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
-            ArtifactStoreWriterFactory artifactStoreWriterFactory) {
+            ArtifactStoreWriterFactory artifactStoreWriterFactory,
+            ArtifactDeployerRedirector artifactDeployerRedirector) {
         super(
                 sessionConfig,
                 repositorySystem,
@@ -56,6 +56,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 snapshotsRepository,
                 artifactStoreRequirements);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
@@ -74,31 +75,14 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     throw new IllegalStateException("Bundle ZIP was not created");
                 }
 
-                // handle auth redirect
-                RemoteRepository authSource = repository;
-                LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
-                authSourcesVisited.add(authSource.getId());
-                Optional<Map<String, String>> config = sessionConfig.serviceConfiguration(authSource.getId());
-                while (config.isPresent()) {
-                    String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
-                    if (authRedirect != null) {
-                        authSource = new RemoteRepository.Builder(
-                                        authRedirect, authSource.getContentType(), authSource.getUrl())
-                                .build();
-                        if (!authSourcesVisited.add(authSource.getId())) {
-                            throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
-                        }
-                        config = sessionConfig.serviceConfiguration(authSource.getId());
-                    } else {
-                        break;
-                    }
-                }
                 // build auth token
                 String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         sessionConfig.session(),
-                        repositorySystem.newDeploymentRepository(sessionConfig.session(), authSource))) {
+                        repositorySystem.newDeploymentRepository(
+                                sessionConfig.session(),
+                                artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository)))) {
                     if (repoAuthContext != null) {
                         String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                         String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
