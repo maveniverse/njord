@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeCentralRequirementsFactory;
 import eu.maveniverse.maven.njord.publisher.sonatype.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -27,12 +28,16 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
 
     private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     @Inject
     public ApacheRaoPublisherFactory(
-            RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
+            RepositorySystem repositorySystem,
+            SonatypeCentralRequirementsFactory centralRequirementsFactory,
+            ArtifactDeployerRedirector artifactDeployerRedirector) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
@@ -62,6 +67,7 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
-                centralRequirementsFactory.create(sessionConfig));
+                centralRequirementsFactory.create(sessionConfig),
+                artifactDeployerRedirector);
     }
 }

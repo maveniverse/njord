@@ -76,13 +76,12 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
 
                 // build auth token
+                RemoteRepository authSource = artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository);
                 String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         sessionConfig.session(),
-                        repositorySystem.newDeploymentRepository(
-                                sessionConfig.session(),
-                                artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository)))) {
+                        repositorySystem.newDeploymentRepository(sessionConfig.session(), authSource))) {
                     if (repoAuthContext != null) {
                         String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                         String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
@@ -93,7 +92,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
                 if (authValue == null) {
                     throw new IllegalStateException(
-                            "No authorization information found for repository " + repository.getId());
+                            "No authorization information found for repository " + authSource.getId());
                 }
 
                 // we need to use own HTTP client here

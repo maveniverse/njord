@@ -83,7 +83,7 @@ public class StatusMojo extends PublisherSupportMojo {
         logger.info("  ID: {}", deploymentRelease.getId());
         RemoteRepository releaseAuthSource =
                 artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentRelease);
-        if (releaseAuthSource != deploymentRelease) {
+        if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
             logger.info("  Auth source: {}", releaseAuthSource.getId());
         }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
@@ -100,7 +100,7 @@ public class StatusMojo extends PublisherSupportMojo {
         logger.info("  ID: {}", deploymentSnapshot.getId());
         RemoteRepository snapshotAuthSource =
                 artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentSnapshot);
-        if (snapshotAuthSource != deploymentSnapshot) {
+        if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
             logger.info("  Auth source: {}", snapshotAuthSource.getId());
         }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
