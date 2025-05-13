@@ -42,19 +42,49 @@ public interface SessionConfig {
 
     String KEY_PREFIX = NAME + ".";
 
+    /**
+     * Configuration key in properties (system, user or project) to enable/disable Njord. Defaults to {@code true}.
+     */
     String CONFIG_ENABLED = KEY_PREFIX + "enabled";
 
+    /**
+     * Configuration key in properties (system, user or project) for "dry run". Defaults to {@code false}.
+     */
     String CONFIG_DRY_RUN = KEY_PREFIX + "dryRun";
 
+    /**
+     * Configuration key in properties (system, user or project) for "auto prefix": if project is present, use its top
+     * level project artifact id as prefix. Defaults to {@code true}.
+     */
     String CONFIG_AUTOPREFIX = KEY_PREFIX + "autoprefix";
 
+    /**
+     * Configuration key in properties (system, user or project) for explicitly set prefix to use. If {@link #CONFIG_AUTOPREFIX}
+     * is {@code true} and there is a project in context, prefix will be automatically set to top level project artifact id.
+     */
     String CONFIG_PREFIX = KEY_PREFIX + "prefix";
 
+    /**
+     * Configuration key in {@code settings/servers/server/configuration} or properties (system, user or project)
+     * for publisher to use with this server.
+     */
     String CONFIG_PUBLISHER = KEY_PREFIX + "publisher";
 
+    /**
+     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL.
+     */
     String CONFIG_RELEASE_URL = KEY_PREFIX + "releaseUrl";
 
+    /**
+     * Configuration key in {@code settings/servers/server/configuration} for snapshot Njord URL.
+     */
     String CONFIG_SNAPSHOT_URL = KEY_PREFIX + "snapshotUrl";
+
+    /**
+     * Configuration key in {@code settings/servers/server/configuration} for authentication redirect. If this
+     * key is present, Njord will take authentication from redirected server entry instead.
+     */
+    String CONFIG_AUTH_REDIRECT = KEY_PREFIX + "authRedirect";
 
     /**
      * Is Njord enabled? If this method returns {@code false}, Njord will step aside (like it was not loaded).

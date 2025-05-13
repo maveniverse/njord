@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.apache;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 
 public final class ApachePublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "apache.releases.https";
@@ -21,9 +22,9 @@ public final class ApachePublisherConfig extends PublisherConfig {
         super(
                 sessionConfig,
                 ApacheRaoPublisherFactory.NAME,
-                RELEASE_REPOSITORY_ID,
+                repositoryId(sessionConfig, RepositoryMode.RELEASE, RELEASE_REPOSITORY_ID),
                 RELEASE_REPOSITORY_URL,
-                SNAPSHOT_REPOSITORY_ID,
+                repositoryId(sessionConfig, RepositoryMode.SNAPSHOT, SNAPSHOT_REPOSITORY_ID),
                 SNAPSHOT_REPOSITORY_URL);
     }
 }

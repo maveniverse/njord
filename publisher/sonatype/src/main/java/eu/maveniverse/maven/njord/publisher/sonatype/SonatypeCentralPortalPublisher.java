@@ -28,6 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -71,12 +74,31 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     throw new IllegalStateException("Bundle ZIP was not created");
                 }
 
-                // we need to use own HTTP client here
+                // handle auth redirect
+                RemoteRepository authSource = repository;
+                LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
+                authSourcesVisited.add(authSource.getId());
+                Optional<Map<String, String>> config = sessionConfig.serviceConfiguration(authSource.getId());
+                while (config.isPresent()) {
+                    String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
+                    if (authRedirect != null) {
+                        authSource = new RemoteRepository.Builder(
+                                        authRedirect, authSource.getContentType(), authSource.getUrl())
+                                .build();
+                        if (!authSourcesVisited.add(authSource.getId())) {
+                            throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
+                        }
+                        config = sessionConfig.serviceConfiguration(authSource.getId());
+                    } else {
+                        break;
+                    }
+                }
+                // build auth token
                 String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         sessionConfig.session(),
-                        repositorySystem.newDeploymentRepository(sessionConfig.session(), repository))) {
+                        repositorySystem.newDeploymentRepository(sessionConfig.session(), authSource))) {
                     if (repoAuthContext != null) {
                         String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                         String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
@@ -90,6 +112,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                             "No authorization information found for repository " + repository.getId());
                 }
 
+                // we need to use own HTTP client here
                 String deploymentId;
                 try {
                     Methanol httpClient = Methanol.create();
