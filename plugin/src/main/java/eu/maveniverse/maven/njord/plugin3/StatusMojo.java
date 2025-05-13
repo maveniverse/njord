@@ -47,7 +47,7 @@ public class StatusMojo extends PublisherSupportMojo {
                                 mavenSession.getRepositorySession(),
                                 RepositoryUtils.toRepos(
                                         mavenSession.getRequest().getRemoteRepositories()))
-                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getCurrentProject()))
+                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
                         .build(),
                 sessionFactory::create)) {
             doWithSession(ns);
@@ -56,7 +56,7 @@ public class StatusMojo extends PublisherSupportMojo {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
-        MavenProject cp = mavenSession.getCurrentProject();
+        MavenProject cp = mavenSession.getTopLevelProject();
         if (cp.getDistributionManagement() == null) {
             logger.warn("No distribution management for project {}", cp.getName());
             throw new MojoFailureException("No distribution management found");
@@ -79,6 +79,9 @@ public class StatusMojo extends PublisherSupportMojo {
                 artifactDeployerRedirector.getRepositoryUrl(ns, deploymentSnapshot, RepositoryMode.SNAPSHOT);
 
         logger.info("Project deployment:");
+        if (ns.config().prefix().isPresent()) {
+            logger.info("  Store prefix: {}", ns.config().prefix().orElseThrow());
+        }
         logger.info("* RELEASE");
         logger.info("  ID: {}", deploymentRelease.getId());
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
@@ -127,9 +130,12 @@ public class StatusMojo extends PublisherSupportMojo {
             logger.info("No configured publishers found");
         } else {
             logger.info("Project publishing:");
-            Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(pno.orElseThrow());
+            String publisherName = pno.orElseThrow();
+            Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisherName);
             if (po.isPresent()) {
                 printPublisher(po.orElseThrow());
+            } else {
+                logger.warn("Unknown publisher set: {}", publisherName);
             }
         }
 
