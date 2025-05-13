@@ -48,7 +48,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             SessionConfig sc = SessionConfig.defaults(
                             session.getRepositorySession(),
                             RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
-                    .currentProject(SessionConfig.fromMavenProject(session.getCurrentProject()))
+                    .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
                     .build();
 
             Session ns = NjordUtils.init(sc, sessionFactoryProvider.get()::create);
