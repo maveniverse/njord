@@ -13,6 +13,7 @@ import com.github.mizosoft.methanol.MediaType;
 import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
+import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
@@ -29,6 +30,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Objects;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -124,9 +127,24 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
             }
         } else { // snapshot
+            // handle auth redirection, if needed
+            RemoteRepository authSource = repositorySystem.newDeploymentRepository(
+                    sessionConfig.session(), artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository));
+            if (!Objects.equals(repository.getId(), authSource.getId())) {
+                repository = new RemoteRepository.Builder(repository)
+                        .setAuthentication(authSource.getAuthentication())
+                        .setProxy(authSource.getProxy())
+                        .build();
+            }
             // just deploy to snapshots as m-deploy-p would
             try (ArtifactStore store = artifactStore) {
-                new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(store);
+                new ArtifactStoreDeployer(
+                                repositorySystem,
+                                new DefaultRepositorySystemSession(sessionConfig.session())
+                                        .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                                repository,
+                                true)
+                        .deploy(store);
             }
         }
     }

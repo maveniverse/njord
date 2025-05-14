@@ -143,10 +143,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 return selectTemplate(uri.substring(9));
             } else if (uri.startsWith("store:")) {
                 // store:xxx
-                return internalArtifactStoreManager
+                try (ArtifactStore artifactStore = internalArtifactStoreManager
                         .selectArtifactStore(uri.substring(6))
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown store"))
-                        .template();
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown store"))) {
+                    return artifactStore.template();
+                }
             } else {
                 throw new IllegalArgumentException("Invalid repository URI: " + uri);
             }
@@ -245,9 +246,10 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 ArtifactStorePublisher p = po.orElseThrow();
                 sessionBoundStore.values().forEach(n -> {
                     try {
-                        logger.info("Publishing {}", n);
-                        try (ArtifactStore as =
-                                artifactStoreManager().selectArtifactStore(n).orElseThrow()) {
+                        logger.info("Publishing {} with {}", n, publisherName);
+                        try (ArtifactStore as = internalArtifactStoreManager
+                                .selectArtifactStore(n)
+                                .orElseThrow()) {
                             p.publish(as);
                             result.addAndGet(1);
                         }
