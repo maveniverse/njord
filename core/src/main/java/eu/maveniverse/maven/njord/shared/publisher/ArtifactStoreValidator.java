@@ -41,6 +41,14 @@ public interface ArtifactStoreValidator {
                     + children().stream().map(ValidationResult::warningCount).reduce(0, Integer::sum);
         }
 
+        /**
+         * Total error count (this instance and all children).
+         */
+        default int errorCount() {
+            return error().size()
+                    + children().stream().map(ValidationResult::errorCount).reduce(0, Integer::sum);
+        }
+
         String name();
 
         Collection<String> info();

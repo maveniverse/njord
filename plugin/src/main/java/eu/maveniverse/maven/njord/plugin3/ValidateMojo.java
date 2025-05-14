@@ -28,6 +28,12 @@ public class ValidateMojo extends PublisherSupportMojo {
     @Parameter(required = true, property = "details", defaultValue = "false")
     private boolean details;
 
+    /**
+     * If showing details, show full validation report (even valid checks too).
+     */
+    @Parameter(required = true, property = "full", defaultValue = "false")
+    private boolean full;
+
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         ArtifactStorePublisher p = getArtifactStorePublisher(ns);
@@ -38,7 +44,7 @@ public class ValidateMojo extends PublisherSupportMojo {
                 ArtifactStoreValidator.ValidationResult vr = vro.orElseThrow();
                 if (details) {
                     logger.info("Validation results for {}", from.name());
-                    dumpValidationResult("", vr);
+                    dumpValidationResult("", vr, full);
                 }
                 if (!vr.isValid()) {
                     logger.error("ArtifactStore {} failed validation", from);
@@ -61,25 +67,45 @@ public class ValidateMojo extends PublisherSupportMojo {
         }
     }
 
-    private void dumpValidationResult(String prefix, ArtifactStoreValidator.ValidationResult vr) {
-        logger.info("{} {}", prefix, vr.name());
-        if (!vr.error().isEmpty()) {
-            for (String msg : vr.error()) {
-                logger.error("{}    {}", prefix, msg);
+    private void dumpValidationResult(String prefix, ArtifactStoreValidator.ValidationResult vr, boolean full) {
+        if (full) {
+            logger.info("{} {}", prefix, vr.name());
+            if (!vr.error().isEmpty()) {
+                for (String msg : vr.error()) {
+                    logger.error("{}    {}", prefix, msg);
+                }
             }
-        }
-        if (!vr.warning().isEmpty()) {
-            for (String msg : vr.warning()) {
-                logger.warn("{}    {}", prefix, msg);
+            if (!vr.warning().isEmpty()) {
+                for (String msg : vr.warning()) {
+                    logger.warn("{}    {}", prefix, msg);
+                }
             }
-        }
-        if (!vr.info().isEmpty()) {
-            for (String msg : vr.info()) {
-                logger.info("{}    {}", prefix, msg);
+            if (!vr.info().isEmpty()) {
+                for (String msg : vr.info()) {
+                    logger.info("{}    {}", prefix, msg);
+                }
+            }
+        } else {
+            if (vr.isValid()) {
+                if (!vr.children().isEmpty()) {
+                    logger.info("{} {} OK", prefix, vr.name());
+                }
+            } else {
+                logger.info("{} {}", prefix, vr.name());
+                if (!vr.error().isEmpty()) {
+                    for (String msg : vr.error()) {
+                        logger.error("{}    {}", prefix, msg);
+                    }
+                }
+                if (!vr.warning().isEmpty()) {
+                    for (String msg : vr.warning()) {
+                        logger.warn("{}    {}", prefix, msg);
+                    }
+                }
             }
         }
         for (ArtifactStoreValidator.ValidationResult child : vr.children()) {
-            dumpValidationResult(prefix + "  ", child);
+            dumpValidationResult(prefix + "  ", child, full);
         }
     }
 }
