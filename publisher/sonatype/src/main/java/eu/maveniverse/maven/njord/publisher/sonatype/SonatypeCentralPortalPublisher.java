@@ -14,6 +14,7 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -34,6 +35,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private final ArtifactStoreWriter artifactStoreWriter;
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     public SonatypeCentralPortalPublisher(
             SessionConfig sessionConfig,
@@ -41,7 +43,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
-            ArtifactStoreWriterFactory artifactStoreWriterFactory) {
+            ArtifactStoreWriterFactory artifactStoreWriterFactory,
+            ArtifactDeployerRedirector artifactDeployerRedirector) {
         super(
                 sessionConfig,
                 repositorySystem,
@@ -53,6 +56,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 snapshotsRepository,
                 artifactStoreRequirements);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
@@ -71,12 +75,13 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     throw new IllegalStateException("Bundle ZIP was not created");
                 }
 
-                // we need to use own HTTP client here
+                // build auth token
+                RemoteRepository authSource = artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository);
                 String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         sessionConfig.session(),
-                        repositorySystem.newDeploymentRepository(sessionConfig.session(), repository))) {
+                        repositorySystem.newDeploymentRepository(sessionConfig.session(), authSource))) {
                     if (repoAuthContext != null) {
                         String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                         String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
@@ -87,9 +92,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
                 if (authValue == null) {
                     throw new IllegalStateException(
-                            "No authorization information found for repository " + repository.getId());
+                            "No authorization information found for repository " + authSource.getId());
                 }
 
+                // we need to use own HTTP client here
                 String deploymentId;
                 try {
                     Methanol httpClient = Methanol.create();

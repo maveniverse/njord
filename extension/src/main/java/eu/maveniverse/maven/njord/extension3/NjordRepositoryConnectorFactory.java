@@ -62,7 +62,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                             .config()
                             .enabled()) {
                 Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
-                String url = artifactDeployerRedirector.getRepositoryUrl(ns, repository);
+                String url = artifactDeployerRedirector.getRepositoryUrl(ns.config(), repository);
                 if (url != null && url.startsWith(NAME + ":")) {
                     ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                     return new NjordRepositoryConnector(

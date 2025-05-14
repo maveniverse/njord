@@ -7,16 +7,22 @@
  */
 package eu.maveniverse.maven.njord.publisher.sonatype;
 
+import static java.util.Objects.requireNonNull;
+
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
+import java.util.Objects;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
+
     public SonatypeNx2Publisher(
             SessionConfig sessionConfig,
             RepositorySystem repositorySystem,
@@ -26,7 +32,8 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
-            ArtifactStoreRequirements artifactStoreRequirements) {
+            ArtifactStoreRequirements artifactStoreRequirements,
+            ArtifactDeployerRedirector artifactDeployerRedirector) {
         super(
                 sessionConfig,
                 repositorySystem,
@@ -37,6 +44,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                 serviceReleaseRepository,
                 serviceSnapshotRepository,
                 artifactStoreRequirements);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
@@ -46,6 +54,15 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
+        // handle auth redirection, if needed
+        RemoteRepository authSource = repositorySystem.newDeploymentRepository(
+                sessionConfig.session(), artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository));
+        if (!Objects.equals(repository.getId(), authSource.getId())) {
+            repository = new RemoteRepository.Builder(repository)
+                    .setAuthentication(authSource.getAuthentication())
+                    .build();
+        }
+        // deploy as m-deploy-p would
         new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(artifactStore);
     }
 }

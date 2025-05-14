@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.deploy;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -29,10 +30,13 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
     private static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
 
     private final RepositorySystem repositorySystem;
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     @Inject
-    public DeployPublisherFactory(RepositorySystem repositorySystem) {
+    public DeployPublisherFactory(
+            RepositorySystem repositorySystem, ArtifactDeployerRedirector artifactDeployerRedirector) {
         this.repositorySystem = requireNonNull(repositorySystem);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
@@ -66,6 +70,7 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
                 repositorySystem,
                 releasesRepository,
                 snapshotsRepository,
-                ArtifactStoreRequirements.NONE);
+                ArtifactStoreRequirements.NONE,
+                artifactDeployerRedirector);
     }
 }

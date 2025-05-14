@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.deploy;
 
-import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -16,11 +16,16 @@ public interface ArtifactDeployerRedirector {
      * Tells, based on Njord config, what is the real URL used for given remote repository. Never returns {@code null},
      * and without any configuration just returns passed in repository URL.
      */
-    String getRepositoryUrl(Session ns, RemoteRepository repository);
+    String getRepositoryUrl(SessionConfig sc, RemoteRepository repository);
 
     /**
      * Tells, based on Njord config, what is the real URL used for given remote repository. Never returns {@code null},
      * and without any configuration just returns passed in repository URL.
      */
-    String getRepositoryUrl(Session ns, RemoteRepository repository, RepositoryMode repositoryMode);
+    String getRepositoryUrl(SessionConfig sc, RemoteRepository repository, RepositoryMode repositoryMode);
+
+    /**
+     * Returns the remote repository to source auth from for the passed in remote repository. Never returns {@code null}.
+     */
+    RemoteRepository getAuthRepositoryId(SessionConfig sc, RemoteRepository repository);
 }

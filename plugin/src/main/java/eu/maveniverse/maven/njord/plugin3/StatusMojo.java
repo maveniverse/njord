@@ -74,28 +74,37 @@ public class StatusMojo extends PublisherSupportMojo {
                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                 .build();
         String deploymentReleaseUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns, deploymentRelease, RepositoryMode.RELEASE);
+                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentRelease, RepositoryMode.RELEASE);
         String deploymentSnapshotUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns, deploymentSnapshot, RepositoryMode.SNAPSHOT);
+                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentSnapshot, RepositoryMode.SNAPSHOT);
 
         logger.info("Project deployment:");
         if (ns.config().prefix().isPresent()) {
             logger.info("  Store prefix: {}", ns.config().prefix().orElseThrow());
         }
-        logger.info("* RELEASE");
-        logger.info("  ID: {}", deploymentRelease.getId());
+        logger.info("* Release");
+        logger.info("  Repository Id: {}", deploymentRelease.getId());
+        RemoteRepository releaseAuthSource =
+                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentRelease);
+        if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
+            logger.info("  Auth source Id: {}", releaseAuthSource.getId());
+        }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
         if (!Objects.equals(deploymentRelease.getUrl(), deploymentReleaseUrl)) {
             logger.info("  Effective URL: {}", deploymentReleaseUrl);
             if (deploymentReleaseUrl.startsWith("njord:")) {
                 ArtifactStoreTemplate template =
                         ns.selectSessionArtifactStoreTemplate(deploymentReleaseUrl.substring("njord:".length()));
-                logger.info("  Template:");
                 printTemplate(template, false);
             }
         }
-        logger.info("* SNAPSHOT");
-        logger.info("  ID: {}", deploymentSnapshot.getId());
+        logger.info("* Snapshot");
+        logger.info("  Repository Id: {}", deploymentSnapshot.getId());
+        RemoteRepository snapshotAuthSource =
+                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentSnapshot);
+        if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
+            logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
+        }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
         if (!Objects.equals(deploymentSnapshot.getUrl(), deploymentSnapshotUrl)) {
             logger.info("  Effective URL: {}", deploymentSnapshotUrl);

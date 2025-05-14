@@ -10,7 +10,9 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.util.Map;
+import org.eclipse.aether.repository.RemoteRepository;
 
 public class PublisherConfig {
     private final String releaseRepositoryId;
@@ -37,6 +39,22 @@ public class PublisherConfig {
                 "njord.publisher." + name + ".snapshotRepositoryId", defaultSnapshotRepositoryId);
         this.snapshotRepositoryUrl = effectiveProperties.getOrDefault(
                 "njord.publisher." + name + ".snapshotRepositoryUrl", defaultSnapshotRepositoryUrl);
+    }
+
+    protected static String repositoryId(SessionConfig sessionConfig, RepositoryMode mode, String defaultRepositoryId) {
+        requireNonNull(sessionConfig);
+        requireNonNull(mode);
+        if (sessionConfig.currentProject().isPresent()) {
+            RemoteRepository repository = sessionConfig
+                    .currentProject()
+                    .orElseThrow()
+                    .distributionManagementRepositories()
+                    .get(mode);
+            if (repository != null) {
+                return repository.getId();
+            }
+        }
+        return defaultRepositoryId;
     }
 
     public String releaseRepositoryId() {

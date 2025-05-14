@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 
 public final class SonatypeS01PublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-s01";
@@ -21,9 +22,9 @@ public final class SonatypeS01PublisherConfig extends PublisherConfig {
         super(
                 sessionConfig,
                 SonatypeS01PublisherFactory.NAME,
-                RELEASE_REPOSITORY_ID,
+                repositoryId(sessionConfig, RepositoryMode.RELEASE, RELEASE_REPOSITORY_ID),
                 RELEASE_REPOSITORY_URL,
-                SNAPSHOT_REPOSITORY_ID,
+                repositoryId(sessionConfig, RepositoryMode.SNAPSHOT, SNAPSHOT_REPOSITORY_ID),
                 SNAPSHOT_REPOSITORY_URL);
     }
 }
