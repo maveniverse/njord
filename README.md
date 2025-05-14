@@ -2,6 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/eu.maveniverse.maven.njord/extension.svg?label=Maven%20Central)](https://search.maven.org/artifact/eu.maveniverse.maven.njord/extension)
 
+Documentation available: https://maveniverse.eu/docs/njord/
+
 Requirements:
 * Java 11+
 * Maven 3.9+ (tested with 3.9.9 and 4.0.0-rc-3)
