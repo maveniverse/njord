@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
@@ -17,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Objects;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -60,9 +62,16 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
         if (!Objects.equals(repository.getId(), authSource.getId())) {
             repository = new RemoteRepository.Builder(repository)
                     .setAuthentication(authSource.getAuthentication())
+                    .setProxy(authSource.getProxy())
                     .build();
         }
         // deploy as m-deploy-p would
-        new ArtifactStoreDeployer(repositorySystem, sessionConfig.session(), repository).deploy(artifactStore);
+        new ArtifactStoreDeployer(
+                        repositorySystem,
+                        new DefaultRepositorySystemSession(sessionConfig.session())
+                                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                        repository,
+                        true)
+                .deploy(artifactStore);
     }
 }

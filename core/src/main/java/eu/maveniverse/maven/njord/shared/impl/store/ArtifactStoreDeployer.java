@@ -28,14 +28,17 @@ public class ArtifactStoreDeployer {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
     private final RemoteRepository repository;
+    private final boolean repositoryPrepared;
 
     public ArtifactStoreDeployer(
             RepositorySystem repositorySystem,
             RepositorySystemSession repositorySystemSession,
-            RemoteRepository repository) {
+            RemoteRepository repository,
+            boolean repositoryPrepared) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
         this.repository = requireNonNull(repository);
+        this.repositoryPrepared = repositoryPrepared;
     }
 
     public void deploy(ArtifactStore artifactStore) throws IOException {
@@ -52,7 +55,11 @@ public class ArtifactStoreDeployer {
         requireNonNull(artifacts);
         DeployRequest deployRequest = new DeployRequest();
         deployRequest.setArtifacts(artifacts);
-        deployRequest.setRepository(repositorySystem.newDeploymentRepository(repositorySystemSession, repository));
+        if (repositoryPrepared) {
+            deployRequest.setRepository(repository);
+        } else {
+            deployRequest.setRepository(repositorySystem.newDeploymentRepository(repositorySystemSession, repository));
+        }
         deployRequest.setTrace(new RequestTrace(artifactStore));
         try {
             repositorySystem.deploy(repositorySystemSession, deployRequest);

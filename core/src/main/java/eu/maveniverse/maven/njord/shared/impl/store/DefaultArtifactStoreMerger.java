@@ -56,7 +56,8 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             sessionConfig.session(),
-                            new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build())
+                            new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
+                            false)
                     .deploy(from);
         }
     }
@@ -105,7 +106,8 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             sessionConfig.session(),
-                            new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build())
+                            new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
+                            false)
                     .deploy(from, toBeWritten);
         }
     }

@@ -58,6 +58,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
         if (!Objects.equals(repository.getId(), authSource.getId())) {
             repository = new RemoteRepository.Builder(repository)
                     .setAuthentication(authSource.getAuthentication())
+                    .setProxy(repository.getProxy())
                     .build();
         }
         // just deploy as m-deploy-p would
@@ -66,7 +67,8 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                             repositorySystem,
                             new DefaultRepositorySystemSession(sessionConfig.session())
                                     .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                            repository)
+                            repository,
+                            true)
                     .deploy(store);
         }
     }
