@@ -118,8 +118,14 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         try {
             if (!uri.contains(":")) {
                 if (uri.isEmpty()) {
-                    // empty -> default
-                    return internalArtifactStoreManager.defaultTemplate();
+                    // empty -> default IF project is available
+                    if (config.currentProject().isPresent()) {
+                        return internalArtifactStoreManager.defaultTemplate(
+                                config.currentProject().orElseThrow().repositoryMode());
+                    } else {
+                        throw new IllegalStateException(
+                                "No project present, cannot deduce repository mode: specify template explicitly as `njord:template:<TEMPLATE>`");
+                    }
                 } else {
                     // non-empty -> template name
                     return selectTemplate(uri);
@@ -153,9 +159,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 String artifactStoreName;
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
-                        // empty -> default
-                        artifactStoreName = createUsingTemplate(
-                                internalArtifactStoreManager.defaultTemplate().name());
+                        // empty -> default IF project is available
+                        if (config.currentProject().isPresent()) {
+                            artifactStoreName = createUsingTemplate(internalArtifactStoreManager
+                                    .defaultTemplate(config.currentProject()
+                                            .orElseThrow()
+                                            .repositoryMode())
+                                    .name());
+                        } else {
+                            throw new IllegalStateException(
+                                    "No project present, cannot deduce repository mode: specify template explicitly as `njord:template:<TEMPLATE>`");
+                        }
                     } else {
                         // non-empty -> template name
                         artifactStoreName = createUsingTemplate(uri);

@@ -32,9 +32,9 @@ public interface ArtifactStoreManager {
     Optional<ArtifactStore> selectArtifactStore(String name) throws IOException;
 
     /**
-     * Returns the default template.
+     * Returns the default template for given repository mode.
      */
-    ArtifactStoreTemplate defaultTemplate();
+    ArtifactStoreTemplate defaultTemplate(RepositoryMode repositoryMode);
 
     /**
      * List templates.

@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.util.Collection;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -22,9 +23,12 @@ public class ListTemplatesMojo extends NjordMojoSupport {
     protected void doWithSession(Session ns) throws IOException {
         logger.info("List of existing ArtifactStoreTemplate:");
         Collection<ArtifactStoreTemplate> templates = ns.artifactStoreManager().listTemplates();
-        ArtifactStoreTemplate defaultTemplate = ns.artifactStoreManager().defaultTemplate();
+        ArtifactStoreTemplate defaultReleaseTemplate =
+                ns.artifactStoreManager().defaultTemplate(RepositoryMode.RELEASE);
+        ArtifactStoreTemplate defaultSnapshotTemplate =
+                ns.artifactStoreManager().defaultTemplate(RepositoryMode.SNAPSHOT);
         for (ArtifactStoreTemplate template : templates) {
-            printTemplate(template, template == defaultTemplate);
+            printTemplate(template, template == defaultReleaseTemplate || template == defaultSnapshotTemplate);
         }
         logger.info("Total of {} ArtifactStoreTemplate.", templates.size());
     }
