@@ -456,7 +456,15 @@ public interface SessionConfig {
                 this.enabled = enabled;
                 this.dryRun = dryRun;
                 this.version = version;
-                this.basedir = requireNonNull(basedir, "basedir");
+                this.basedir = getCanonicalPath(basedir);
+                if (!Files.isDirectory(this.basedir)) {
+                    try {
+                        Files.createDirectories(this.basedir);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException("Cannot create basedir", e);
+                    }
+                }
+
                 requireNonNull(propertiesPath, "propertiesPath");
                 this.propertiesPath = getCanonicalPath(basedir.resolve(propertiesPath));
 
@@ -465,7 +473,7 @@ public interface SessionConfig {
                     try (InputStream inputStream = Files.newInputStream(this.propertiesPath)) {
                         properties.load(inputStream);
                     } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+                        throw new UncheckedIOException("Cannot load properties", e);
                     }
                 }
 
