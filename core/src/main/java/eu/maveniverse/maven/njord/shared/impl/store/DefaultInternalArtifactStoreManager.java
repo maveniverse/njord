@@ -108,10 +108,18 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
-    public ArtifactStoreTemplate defaultTemplate() {
+    public ArtifactStoreTemplate defaultTemplate(RepositoryMode repositoryMode) {
         checkClosed();
+        requireNonNull(repositoryMode);
 
-        return ArtifactStoreTemplate.RELEASE_SCA;
+        switch (repositoryMode) {
+            case RELEASE:
+                return ArtifactStoreTemplate.RELEASE_SCA;
+            case SNAPSHOT:
+                return ArtifactStoreTemplate.SNAPSHOT_SCA;
+            default:
+                throw new IllegalArgumentException("Unsupported repository mode: " + repositoryMode);
+        }
     }
 
     @Override

@@ -54,7 +54,10 @@ public abstract class NjordMojoSupport extends MojoSupport {
     }
 
     protected void printTemplate(ArtifactStoreTemplate template, boolean defaultTemplate) {
-        logger.info("- {} {}", template.name(), defaultTemplate ? " (default)" : " ");
+        logger.info(
+                "- {} {}",
+                template.name(),
+                defaultTemplate ? " (default " + template.repositoryMode().name() + ")" : " ");
         logger.info("    Default prefix: '{}'", template.prefix());
         logger.info("    Allow redeploy: {}", template.allowRedeploy());
         logger.info(
