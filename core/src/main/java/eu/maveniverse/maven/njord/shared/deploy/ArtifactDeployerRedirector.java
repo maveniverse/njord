@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.deploy;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.Optional;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public interface ArtifactDeployerRedirector {
@@ -28,4 +29,9 @@ public interface ArtifactDeployerRedirector {
      * Returns the remote repository to source auth from for the passed in remote repository. Never returns {@code null}.
      */
     RemoteRepository getAuthRepositoryId(SessionConfig sc, RemoteRepository repository);
+
+    /**
+     * Returns the name of wanted/configured {@link eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher}.
+     */
+    Optional<String> getArtifactStorePublisherName(SessionConfig sc);
 }

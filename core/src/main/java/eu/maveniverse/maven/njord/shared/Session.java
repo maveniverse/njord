@@ -89,9 +89,16 @@ public interface Session extends Closeable {
     ArtifactStore getOrCreateSessionArtifactStore(String uri);
 
     /**
+     * Publishes all session-bound artifact stores created in this session. Session publishes all own created
+     * and derived session created stores. Hence, top level session publishes all created stores in given
+     * Maven session. Returns the count of published stores.
+     */
+    int publishSessionArtifactStores();
+
+    /**
      * Drops all session-bound artifact stores created in this session. Session drops all own created
      * and derived session created stores. Hence, top level session drops all created stores in given
-     * Maven session.
+     * Maven session. Returns the count of dropped stores.
      */
-    boolean dropSessionArtifactStores();
+    int dropSessionArtifactStores();
 }

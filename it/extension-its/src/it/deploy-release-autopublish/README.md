@@ -1,4 +1,4 @@
-# Deploy Release
+# Deploy Release w/ autoPublish
 
 Tests deploy publisher.
 
