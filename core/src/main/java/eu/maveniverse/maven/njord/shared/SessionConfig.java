@@ -529,7 +529,8 @@ public interface SessionConfig {
                 if (prefixString == null && currentProject != null) {
                     prefixString = currentProject.projectProperties().get(CONFIG_PREFIX);
                     if (prefixString == null && autoPrefix) {
-                        prefixString = currentProject.artifact().getArtifactId();
+                        prefixString = currentProject.artifact().getArtifactId() + "-"
+                                + currentProject.artifact().getVersion();
                     }
                 }
                 this.prefix = prefixString;
