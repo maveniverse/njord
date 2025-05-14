@@ -77,4 +77,28 @@ public class DefaultArtifactDeployerRedirector extends ComponentSupport implemen
         }
         return authSource;
     }
+
+    @Override
+    public Optional<String> getArtifactStorePublisherName(SessionConfig sc) {
+        if (sc.publisher().isPresent()) {
+            return sc.publisher();
+        }
+        if (sc.currentProject().isPresent()) {
+            RemoteRepository distributionRepository = sc.currentProject()
+                    .orElseThrow()
+                    .distributionManagementRepositories()
+                    .get(sc.currentProject().orElseThrow().repositoryMode());
+            if (distributionRepository != null) {
+                Optional<Map<String, String>> sco = sc.serviceConfiguration(distributionRepository.getId());
+                if (sco.isPresent()) {
+                    String publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
+                    if (publisher != null) {
+                        return Optional.of(publisher);
+                    }
+                }
+                return Optional.of(distributionRepository.getId());
+            }
+        }
+        return Optional.empty();
+    }
 }

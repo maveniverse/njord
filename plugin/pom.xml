@@ -29,21 +29,6 @@
       <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>deploy</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>apache</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>sonatype</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>eu.maveniverse.maven.shared</groupId>

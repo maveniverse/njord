@@ -9,20 +9,23 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import javax.inject.Inject;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
 /**
  * Publisher support mojo.
  */
 public abstract class PublisherSupportMojo extends NjordMojoSupport {
+    @Inject
+    private ArtifactDeployerRedirector artifactDeployerRedirector;
+
     /**
      * The name of the store to publish. If not given, Njord will try to figure it out: will look for existing
      * stores created from staging this project and will <em>choose latest (newest)</em> out of them if multiple
@@ -108,39 +111,10 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      * </ul>
      */
     protected Optional<String> getArtifactStorePublisherName(Session ns) {
-        if (publisher == null && ns.config().publisher().isPresent()) {
-            publisher = ns.config().publisher().orElseThrow();
+        if (publisher != null) {
+            return Optional.of(publisher);
         }
-        if (publisher == null && mavenSession.getTopLevelProject() != null) {
-            MavenProject project = mavenSession.getTopLevelProject();
-            String distributionRepositoryId = null;
-            if (project.getArtifact().isSnapshot()) {
-                if (project.getDistributionManagement() != null
-                        && project.getDistributionManagement().getSnapshotRepository() != null) {
-                    distributionRepositoryId = project.getDistributionManagement()
-                            .getSnapshotRepository()
-                            .getId();
-                }
-            } else {
-                if (project.getDistributionManagement() != null
-                        && project.getDistributionManagement().getRepository() != null) {
-                    distributionRepositoryId =
-                            project.getDistributionManagement().getRepository().getId();
-                }
-            }
-            if (distributionRepositoryId != null) {
-                Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(distributionRepositoryId);
-                if (po.isPresent()) {
-                    store = po.orElseThrow().name();
-                } else {
-                    Optional<Map<String, String>> sco = ns.config().serviceConfiguration(distributionRepositoryId);
-                    if (sco.isPresent()) {
-                        publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
-                    }
-                }
-            }
-        }
-        return Optional.ofNullable(publisher);
+        return artifactDeployerRedirector.getArtifactStorePublisherName(ns.config());
     }
 
     protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {

@@ -56,10 +56,16 @@ public interface SessionConfig {
      * Configuration key in properties (system, user or project) for "auto prefix": if project is present, use its top
      * level project artifact id as prefix. Defaults to {@code true}.
      */
-    String CONFIG_AUTOPREFIX = KEY_PREFIX + "autoprefix";
+    String CONFIG_AUTO_PREFIX = KEY_PREFIX + "autoPrefix";
 
     /**
-     * Configuration key in properties (system, user or project) for explicitly set prefix to use. If {@link #CONFIG_AUTOPREFIX}
+     * Configuration key in properties (system, user or project) for "auto publish": publish automatically all stores
+     * created within session at the end of session. Defaults to {@code false}.
+     */
+    String CONFIG_AUTO_PUBLISH = KEY_PREFIX + "autoPublish";
+
+    /**
+     * Configuration key in properties (system, user or project) for explicitly set prefix to use. If {@link #CONFIG_AUTO_PREFIX}
      * is {@code true} and there is a project in context, prefix will be automatically set to top level project artifact id.
      */
     String CONFIG_PREFIX = KEY_PREFIX + "prefix";
@@ -150,8 +156,17 @@ public interface SessionConfig {
      * Whether to apply "auto prefix" (user provided one or derived from current project) or use "template prefix" for
      * created store names. Defaults to {@code true}: when {@link #currentProject()} is available, store prefix is
      * derived from the project, otherwise from template.
+     *
+     * @see #CONFIG_AUTO_PREFIX
      */
     boolean autoPrefix();
+
+    /**
+     * Whether to automatically publish session created stores. Defaults to {@code false}.
+     *
+     * @see #CONFIG_AUTO_PUBLISH
+     */
+    boolean autoPublish();
 
     /**
      * The prefix to override template prefix, if needed. If {@link #autoPrefix()} is {@code true}, this value is always
@@ -438,6 +453,7 @@ public interface SessionConfig {
             private final List<RemoteRepository> remoteRepositories;
             private final List<RemoteRepository> allRemoteRepositories;
             private final boolean autoPrefix;
+            private final boolean autoPublish;
             private final String prefix;
             private final String publisher;
             private final CurrentProject currentProject;
@@ -497,11 +513,17 @@ public interface SessionConfig {
                 }
                 this.allRemoteRepositories = List.copyOf(arr);
 
-                String autoPrefixString = effectiveProperties.get(CONFIG_AUTOPREFIX);
+                String autoPrefixString = effectiveProperties.get(CONFIG_AUTO_PREFIX);
                 if (autoPrefixString == null && currentProject != null) {
-                    autoPrefixString = currentProject.projectProperties().get(CONFIG_AUTOPREFIX);
+                    autoPrefixString = currentProject.projectProperties().get(CONFIG_AUTO_PREFIX);
                 }
                 this.autoPrefix = autoPrefixString == null || Boolean.parseBoolean(autoPrefixString);
+
+                String autoPublishString = effectiveProperties.get(CONFIG_AUTO_PUBLISH);
+                if (autoPublishString == null && currentProject != null) {
+                    autoPublishString = currentProject.projectProperties().get(CONFIG_AUTO_PUBLISH);
+                }
+                this.autoPublish = Boolean.parseBoolean(autoPublishString);
 
                 String prefixString = effectiveProperties.get(CONFIG_PREFIX);
                 if (prefixString == null && currentProject != null) {
@@ -584,6 +606,11 @@ public interface SessionConfig {
             @Override
             public boolean autoPrefix() {
                 return autoPrefix;
+            }
+
+            @Override
+            public boolean autoPublish() {
+                return autoPublish;
             }
 
             @Override

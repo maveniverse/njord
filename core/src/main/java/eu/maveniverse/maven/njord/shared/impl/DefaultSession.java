@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -28,10 +29,11 @@ import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -41,10 +43,12 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
+    private final ArtifactDeployerRedirector artifactDeployerRedirector;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
 
-    private final CopyOnWriteArrayList<Supplier<Boolean>> derivedDropSessionArtifactStores;
+    private final CopyOnWriteArrayList<Supplier<Integer>> derivedPublishSessionArtifactStores;
+    private final CopyOnWriteArrayList<Supplier<Integer>> derivedDropSessionArtifactStores;
 
     public DefaultSession(
             SessionConfig sessionConfig,
@@ -52,6 +56,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
+            ArtifactDeployerRedirector artifactDeployerRedirector,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
         super(sessionConfig);
@@ -60,9 +65,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
+        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
 
+        this.derivedPublishSessionArtifactStores = new CopyOnWriteArrayList<>();
         this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
     }
 
@@ -75,6 +82,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     public Session derive(SessionConfig config) {
         requireNonNull(config);
         DefaultSession result = defaultSessionFactory.create(config);
+        derivedPublishSessionArtifactStores.add(result::publishSessionArtifactStores);
         derivedDropSessionArtifactStores.add(result::dropSessionArtifactStores);
         return result;
     }
@@ -221,20 +229,56 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean dropSessionArtifactStores() {
-        boolean derived = false;
-        for (Supplier<Boolean> callable : derivedDropSessionArtifactStores) {
-            if (callable.get()) {
-                derived = true;
-            }
+    public int publishSessionArtifactStores() {
+        int published = 0;
+        for (Supplier<Integer> callable : derivedPublishSessionArtifactStores) {
+            published += callable.get();
         }
         ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
                 config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
-        AtomicBoolean result = new AtomicBoolean(derived);
+        AtomicInteger result = new AtomicInteger(published);
+        Optional<String> pno = artifactDeployerRedirector.getArtifactStorePublisherName(config);
+        if (pno.isPresent()) {
+            String publisherName = pno.orElseThrow();
+            Optional<ArtifactStorePublisher> po = selectArtifactStorePublisher(publisherName);
+            if (po.isPresent()) {
+                ArtifactStorePublisher p = po.orElseThrow();
+                sessionBoundStore.values().forEach(n -> {
+                    try {
+                        logger.info("Publishing {}", n);
+                        try (ArtifactStore as =
+                                artifactStoreManager().selectArtifactStore(n).orElseThrow()) {
+                            p.publish(as);
+                            result.addAndGet(1);
+                        }
+                        internalArtifactStoreManager.dropArtifactStore(n);
+                    } catch (IOException e) {
+                        logger.warn("Could not select ArtifactStore with name {}", n, e);
+                    }
+                });
+            } else {
+                throw new IllegalArgumentException("Publisher not found: " + publisherName);
+            }
+        } else {
+            throw new IllegalStateException("Njord autoPublish enabled, but publisher not set");
+        }
+        return result.get();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public int dropSessionArtifactStores() {
+        int dropped = 0;
+        for (Supplier<Integer> callable : derivedDropSessionArtifactStores) {
+            dropped += callable.get();
+        }
+        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        AtomicInteger result = new AtomicInteger(dropped);
         sessionBoundStore.values().forEach(n -> {
             try {
                 if (internalArtifactStoreManager.dropArtifactStore(n)) {
-                    result.set(true);
+                    result.addAndGet(1);
                 }
             } catch (IOException e) {
                 logger.warn("Could not select ArtifactStore with name {}", n, e);

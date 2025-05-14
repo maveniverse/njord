@@ -68,8 +68,16 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             if (ns.isPresent()) {
                 Session njordSession = ns.orElseThrow(() -> new IllegalStateException("Value unavailable"));
                 if (njordSession.config().enabled()) {
-                    if (session.getResult().hasExceptions() && njordSession.dropSessionArtifactStores()) {
-                        logger.warn("Session failed; dropped stores created in failed session");
+                    if (session.getResult().hasExceptions()) {
+                        int dropped = njordSession.dropSessionArtifactStores();
+                        if (dropped != 0) {
+                            logger.warn("Session failed; dropped {} stores created in this session", dropped);
+                        }
+                    } else if (njordSession.config().autoPublish()) {
+                        int published = njordSession.publishSessionArtifactStores();
+                        if (published != 0) {
+                            logger.info("Published {} stores created in this session", published);
+                        }
                     }
                     logger.info("Njord session closed");
                 }
