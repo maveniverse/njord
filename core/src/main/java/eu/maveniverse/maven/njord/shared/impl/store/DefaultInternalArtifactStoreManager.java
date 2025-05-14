@@ -150,6 +150,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 if (Files.exists(meta)) {
                     if (!config.dryRun()) {
                         FileUtils.deleteRecursively(basedir);
+                    } else {
+                        logger.info("Dry run; not dropping store {}", name);
                     }
                     return true;
                 }
@@ -382,9 +384,6 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private void saveStoreProperties(Path basedir, Map<String, String> properties) throws IOException {
-        if (config.dryRun()) {
-            return;
-        }
         Properties prop = new Properties();
         properties.forEach(prop::setProperty);
         Path metaStoreProperties = metaRepositoryProperties(basedir);
@@ -395,9 +394,6 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private void renameStore(Path basedir, String newName) throws IOException {
-        if (config.dryRun()) {
-            return;
-        }
         Map<String, String> props = loadStoreProperties(basedir);
         props.put("name", newName);
         saveStoreProperties(basedir, props);
