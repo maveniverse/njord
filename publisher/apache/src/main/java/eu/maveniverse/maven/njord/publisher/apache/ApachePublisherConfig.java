@@ -11,6 +11,20 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 
+/**
+ * ASF repository.apache.org config.
+ * <p>
+ * User usually does not want to fiddle with these (as this is SaaS, so URLs are fixed).
+ * Properties supported:
+ * <ul>
+ *     <li><code>njord.publisher.apache-rao.releaseRepositoryId</code> - the release service server.id</li>
+ *     <li><code>njord.publisher.apache-rao.releaseRepositoryUrl</code> - the release service URL</li>
+ *     <li><code>njord.publisher.apache-rao.snapshotRepositoryId</code> - the snapshot service server.id</li>
+ *     <li><code>njord.publisher.apache-rao.snapshotRepositoryUrl</code> - the snapshot service URL</li>
+ * </ul>
+ * If you are ASF publisher using Maven, you are most probably already set up, as <code>server.id</code> used
+ * by default matches with those on ASF Maven Parent POM.
+ */
 public final class ApachePublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "apache.releases.https";
     public static final String RELEASE_REPOSITORY_URL =

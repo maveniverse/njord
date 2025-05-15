@@ -22,6 +22,17 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
+/**
+ * The "deploy" publisher deploy as "Maven would do", but it operates on staged artifact store, no need to
+ * invoke the build for it.
+ * <p>
+ * It obeys one familiar property: <code>altDeploymentRepository</code> and very same syntax as Maven Deploy Plugin
+ * <code>id::url</code>. This implies that one can "deploy publish" any artifact store with command like this:
+ * <pre>
+ *   $ mvn njord:publish -Dpublisher=deploy -DaltDeploymentRepository=myserver::myurl
+ * </pre>
+ * And it simply deploys to given repository "as Maven would do".
+ */
 @Singleton
 @Named(DeployPublisherFactory.NAME)
 public class DeployPublisherFactory implements ArtifactStorePublisherFactory {

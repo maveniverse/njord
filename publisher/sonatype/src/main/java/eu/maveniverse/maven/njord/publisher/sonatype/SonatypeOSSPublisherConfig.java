@@ -11,6 +11,18 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 
+/**
+ * Sonatype OSS config.
+ * <p>
+ * User usually does not want to fiddle with these (as this is SaaS, so URLs are fixed).
+ * Properties supported:
+ * <ul>
+ *     <li><code>njord.publisher.sonatype-oss.releaseRepositoryId</code> - the release service server.id</li>
+ *     <li><code>njord.publisher.sonatype-oss.releaseRepositoryUrl</code> - the release service URL</li>
+ *     <li><code>njord.publisher.sonatype-oss.snapshotRepositoryId</code> - the snapshot service server.id</li>
+ *     <li><code>njord.publisher.sonatype-oss.snapshotRepositoryUrl</code> - the snapshot service URL</li>
+ * </ul>
+ */
 public final class SonatypeOSSPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-oss";
     public static final String RELEASE_REPOSITORY_URL = "https://oss.sonatype.org/service/local/staging/deploy/maven2";
