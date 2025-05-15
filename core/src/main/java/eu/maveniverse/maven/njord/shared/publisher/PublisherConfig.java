@@ -31,14 +31,20 @@ public class PublisherConfig {
         requireNonNull(name);
 
         Map<String, String> effectiveProperties = sessionConfig.effectiveProperties();
-        this.releaseRepositoryId = effectiveProperties.getOrDefault(
-                "njord.publisher." + name + ".releaseRepositoryId", defaultReleaseRepositoryId);
-        this.releaseRepositoryUrl = effectiveProperties.getOrDefault(
-                "njord.publisher." + name + ".releaseRepositoryUrl", defaultReleaseRepositoryUrl);
-        this.snapshotRepositoryId = effectiveProperties.getOrDefault(
-                "njord.publisher." + name + ".snapshotRepositoryId", defaultSnapshotRepositoryId);
-        this.snapshotRepositoryUrl = effectiveProperties.getOrDefault(
-                "njord.publisher." + name + ".snapshotRepositoryUrl", defaultSnapshotRepositoryUrl);
+        this.releaseRepositoryId =
+                effectiveProperties.getOrDefault(keyName(name, "releaseRepositoryId"), defaultReleaseRepositoryId);
+        this.releaseRepositoryUrl =
+                effectiveProperties.getOrDefault(keyName(name, "releaseRepositoryUrl"), defaultReleaseRepositoryUrl);
+        this.snapshotRepositoryId =
+                effectiveProperties.getOrDefault(keyName(name, "snapshotRepositoryId"), defaultSnapshotRepositoryId);
+        this.snapshotRepositoryUrl =
+                effectiveProperties.getOrDefault(keyName(name, "snapshotRepositoryUrl"), defaultSnapshotRepositoryUrl);
+    }
+
+    protected static String keyName(String name, String property) {
+        requireNonNull(name);
+        requireNonNull(property);
+        return "njord.publisher." + name + "." + property;
     }
 
     protected static String repositoryId(SessionConfig sessionConfig, RepositoryMode mode, String defaultRepositoryId) {
