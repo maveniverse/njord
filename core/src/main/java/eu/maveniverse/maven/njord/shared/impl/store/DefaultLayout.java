@@ -9,22 +9,13 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.store.Layout;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
  * Layout, that may, but does not have to be used by a store. For inter-store operations a layout should be defined.
  */
-public final class DefaultLayout implements Layout {
-    public static final String NAME = "default";
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
+public final class DefaultLayout {
     public String artifactPath(Artifact artifact) {
         requireNonNull(artifact);
         StringBuilder path = new StringBuilder(128);
@@ -41,7 +32,6 @@ public final class DefaultLayout implements Layout {
         return path.toString();
     }
 
-    @Override
     public String metadataPath(Metadata metadata) {
         requireNonNull(metadata);
         StringBuilder path = new StringBuilder(128);

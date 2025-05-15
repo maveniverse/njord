@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
-import eu.maveniverse.maven.njord.shared.store.Layout;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
@@ -54,7 +53,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
-    private final Layout storeLayout;
+    private final DefaultLayout storeLayout;
 
     public PathArtifactStore(
             String name,
@@ -206,32 +205,17 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
-    public void writeTo(Path directory, Layout layout) throws IOException {
+    public void writeTo(Path directory) throws IOException {
         requireNonNull(directory);
-        requireNonNull(layout);
         if (!Files.isDirectory(directory)) {
             throw new IOException("Directory does not exist");
         }
-        for (Artifact artifact : artifacts()) {
-            String artifactPath = layout.artifactPath(artifact);
-            Path targetPath = directory.resolve(artifactPath);
-            Optional<InputStream> artifactContent = artifactContent(artifact);
-            if (artifactContent.isPresent()) {
-                try (InputStream content = artifactContent.orElseThrow()) {
-                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
-                }
-            }
-        }
-        for (Metadata metadata : metadata()) {
-            String metadataPath = layout.metadataPath(metadata);
-            Path targetPath = directory.resolve(metadataPath);
-            Optional<InputStream> metadataContent = metadataContent(metadata);
-            if (metadataContent.isPresent()) {
-                try (InputStream content = metadataContent.orElseThrow()) {
-                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
-                }
-            }
-        }
+
+        FileUtils.copyRecursively(
+                basedir(),
+                directory,
+                p -> p.getFileName() == null || !p.getFileName().toString().startsWith("."),
+                false);
     }
 
     @Override

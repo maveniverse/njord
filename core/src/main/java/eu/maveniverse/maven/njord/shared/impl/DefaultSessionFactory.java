@@ -15,7 +15,6 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFa
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreProcessor;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import java.util.Map;
 import javax.inject.Inject;
@@ -31,7 +30,6 @@ public class DefaultSessionFactory implements SessionFactory {
     private final ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
-    private final Map<String, ArtifactStoreProcessor> artifactStoreProcessors;
 
     @Inject
     public DefaultSessionFactory(
@@ -40,15 +38,13 @@ public class DefaultSessionFactory implements SessionFactory {
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
-            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
-            Map<String, ArtifactStoreProcessor> artifactStoreProcessors) {
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
         this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactPublisherRedirectorFactory = requireNonNull(artifactPublisherRedirectorFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
-        this.artifactStoreProcessors = requireNonNull(artifactStoreProcessors);
     }
 
     @Override
@@ -61,7 +57,6 @@ public class DefaultSessionFactory implements SessionFactory {
                 artifactStoreMergerFactory,
                 artifactPublisherRedirectorFactory,
                 artifactStorePublisherFactories,
-                artifactStoreComparatorFactories,
-                artifactStoreProcessors);
+                artifactStoreComparatorFactories);
     }
 }
