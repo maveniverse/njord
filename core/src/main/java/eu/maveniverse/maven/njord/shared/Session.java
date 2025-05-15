@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
@@ -17,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -47,6 +49,11 @@ public interface Session extends Closeable {
     ArtifactStoreMerger artifactStoreMerger();
 
     /**
+     * Artifact store publisher redirector.
+     */
+    ArtifactPublisherRedirector artifactPublisherRedirector();
+
+    /**
      * Returns a collection of available publisher names.
      */
     Collection<ArtifactStorePublisher> availablePublishers();
@@ -73,6 +80,11 @@ public interface Session extends Closeable {
                 .filter(p -> name.equals(p.name()))
                 .findFirst();
     }
+
+    /**
+     * Processes artifact store.
+     */
+    ArtifactStore processArtifactStore(String processor, ArtifactStore artifactStore) throws IOException;
 
     /**
      * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(String)} method for syntax).

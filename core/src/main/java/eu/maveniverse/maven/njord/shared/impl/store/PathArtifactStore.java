@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.njord.shared.store.Layout;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
@@ -41,7 +42,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class DefaultArtifactStore extends CloseableSupport implements ArtifactStore {
+/**
+ * Artifact store backed by NIO2 {@link Path}. It completely lies on file system.
+ */
+public class PathArtifactStore extends CloseableSupport implements ArtifactStore {
     private final String name;
     private final ArtifactStoreTemplate template;
     private final Instant created;
@@ -50,8 +54,9 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
+    private final Layout storeLayout;
 
-    public DefaultArtifactStore(
+    public PathArtifactStore(
             String name,
             ArtifactStoreTemplate template,
             Instant created,
@@ -68,6 +73,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
         this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
         this.basedir = requireNonNull(basedir);
+        this.storeLayout = new DefaultLayout();
     }
 
     public Path basedir() {
@@ -141,21 +147,21 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     @Override
     public boolean artifactPresent(Artifact artifact) throws IOException {
         requireNonNull(artifact);
-        Path file = basedir.resolve(artifactPath(artifact));
+        Path file = basedir.resolve(storeLayout.artifactPath(artifact));
         return Files.isRegularFile(file);
     }
 
     @Override
     public boolean metadataPresent(Metadata metadata) throws IOException {
         requireNonNull(metadata);
-        Path file = basedir.resolve(metadataPath(metadata));
+        Path file = basedir.resolve(storeLayout.metadataPath(metadata));
         return Files.isRegularFile(file);
     }
 
     @Override
     public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
         requireNonNull(artifact);
-        Path file = basedir.resolve(artifactPath(artifact));
+        Path file = basedir.resolve(storeLayout.artifactPath(artifact));
         if (Files.isRegularFile(file)) {
             return Optional.of(Files.newInputStream(file));
         } else {
@@ -166,7 +172,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     @Override
     public Optional<InputStream> metadataContent(Metadata metadata) throws IOException {
         requireNonNull(metadata);
-        Path file = basedir.resolve(metadataPath(metadata));
+        Path file = basedir.resolve(storeLayout.metadataPath(metadata));
         if (Files.isRegularFile(file)) {
             return Optional.of(Files.newInputStream(file));
         } else {
@@ -200,16 +206,32 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     }
 
     @Override
-    public void writeTo(Path directory) throws IOException {
+    public void writeTo(Path directory, Layout layout) throws IOException {
         requireNonNull(directory);
+        requireNonNull(layout);
         if (!Files.isDirectory(directory)) {
             throw new IOException("Directory does not exist");
         }
-        FileUtils.copyRecursively(
-                basedir(),
-                directory,
-                p -> p.getFileName() == null || !p.getFileName().toString().startsWith("."),
-                false);
+        for (Artifact artifact : artifacts()) {
+            String artifactPath = layout.artifactPath(artifact);
+            Path targetPath = directory.resolve(artifactPath);
+            Optional<InputStream> artifactContent = artifactContent(artifact);
+            if (artifactContent.isPresent()) {
+                try (InputStream content = artifactContent.orElseThrow()) {
+                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
+                }
+            }
+        }
+        for (Metadata metadata : metadata()) {
+            String metadataPath = layout.metadataPath(metadata);
+            Path targetPath = directory.resolve(metadataPath);
+            Optional<InputStream> metadataContent = metadataContent(metadata);
+            if (metadataContent.isPresent()) {
+                try (InputStream content = metadataContent.orElseThrow()) {
+                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
+                }
+            }
+        }
     }
 
     @Override
@@ -234,7 +256,8 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         }
         // check DeployMode (already exists)
         if (!allowRedeploy()
-                && artifacts.stream().anyMatch(a -> Files.isRegularFile(basedir.resolve(artifactPath(a))))) {
+                && artifacts.stream()
+                        .anyMatch(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))) {
             throw new IllegalArgumentException("Redeployment is forbidden (artifact already exists)");
         }
 
@@ -250,14 +273,17 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
             public void close() throws IOException {
                 try {
                     if (!canceled.get()) {
-                        appendIndex("artifacts", artifacts, a -> ArtifactIdUtils.toId(a) + "=" + artifactPath(a));
+                        appendIndex(
+                                "artifacts",
+                                artifacts,
+                                a -> ArtifactIdUtils.toId(a) + "=" + storeLayout.artifactPath(a));
                         appendIndex(
                                 "metadata",
                                 metadata,
                                 m -> String.format(
                                                 "%s:%s:%s:%s",
                                                 m.getGroupId(), m.getArtifactId(), m.getVersion(), m.getType())
-                                        + "=" + metadataPath(m));
+                                        + "=" + storeLayout.metadataPath(m));
                     }
                 } finally {
                     DirectoryLocker.INSTANCE.unlockDirectory(basedir);
@@ -287,36 +313,6 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
                     template.name(),
                     artifacts().size());
         }
-    }
-
-    private String artifactPath(Artifact artifact) {
-        StringBuilder path = new StringBuilder(128);
-        path.append(artifact.getGroupId().replace('.', '/')).append('/');
-        path.append(artifact.getArtifactId()).append('/');
-        path.append(artifact.getBaseVersion()).append('/');
-        path.append(artifact.getArtifactId()).append('-').append(artifact.getVersion());
-        if (!artifact.getClassifier().isEmpty()) {
-            path.append('-').append(artifact.getClassifier());
-        }
-        if (!artifact.getExtension().isEmpty()) {
-            path.append('.').append(artifact.getExtension());
-        }
-        return path.toString();
-    }
-
-    private String metadataPath(Metadata metadata) {
-        StringBuilder path = new StringBuilder(128);
-        if (!metadata.getGroupId().isEmpty()) {
-            path.append(metadata.getGroupId().replace('.', '/')).append('/');
-            if (!metadata.getArtifactId().isEmpty()) {
-                path.append(metadata.getArtifactId()).append('/');
-                if (!metadata.getVersion().isEmpty()) {
-                    path.append(metadata.getVersion()).append('/');
-                }
-            }
-        }
-        path.append(metadata.getType());
-        return path.toString();
     }
 
     private <E> Collection<E> readIndex(String what, Function<String, E> transform) {

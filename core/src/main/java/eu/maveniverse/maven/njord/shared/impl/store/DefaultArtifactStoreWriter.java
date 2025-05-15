@@ -37,7 +37,7 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
-        artifactStore.writeTo(targetDirectory);
+        artifactStore.writeTo(targetDirectory, new DefaultLayout());
         return targetDirectory;
     }
 
@@ -57,7 +57,7 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         try (FileSystem fs =
                 FileSystems.newFileSystem(URI.create("jar:" + bundleFile.toUri()), Map.of("create", "true"), null)) {
             Path root = fs.getPath("/");
-            artifactStore.writeTo(root);
+            artifactStore.writeTo(root, new DefaultLayout());
         }
         return bundleFile;
     }

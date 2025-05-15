@@ -7,11 +7,8 @@
  */
 package eu.maveniverse.maven.njord.publisher.deploy;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.NjordUtils;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -23,17 +20,14 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DeployPublisher extends ArtifactStorePublisherSupport {
-    private final ArtifactDeployerRedirector artifactDeployerRedirector;
-
     public DeployPublisher(
-            SessionConfig sessionConfig,
+            Session session,
             RepositorySystem repositorySystem,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
-            ArtifactStoreRequirements artifactStoreRequirements,
-            ArtifactDeployerRedirector artifactDeployerRedirector) {
+            ArtifactStoreRequirements artifactStoreRequirements) {
         super(
-                sessionConfig,
+                session,
                 repositorySystem,
                 DeployPublisherFactory.NAME,
                 "Publishes to any repository just like maven-deploy-plugin would",
@@ -42,19 +36,19 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
-        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
         RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
-        if (sessionConfig.dryRun()) {
+        if (session.config().dryRun()) {
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
         // handle auth redirection, if needed
         RemoteRepository authSource = repositorySystem.newDeploymentRepository(
-                sessionConfig.session(), artifactDeployerRedirector.getAuthRepositoryId(sessionConfig, repository));
+                session.config().session(),
+                session.artifactPublisherRedirector().getAuthRepositoryId(repository));
         if (!Objects.equals(repository.getId(), authSource.getId())) {
             repository = new RemoteRepository.Builder(repository)
                     .setAuthentication(authSource.getAuthentication())
@@ -65,7 +59,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
         try (ArtifactStore store = artifactStore) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            new DefaultRepositorySystemSession(sessionConfig.session())
+                            new DefaultRepositorySystemSession(session.config().session())
                                     .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
                             repository,
                             true)

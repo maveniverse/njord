@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArchiveValidator;
@@ -43,10 +43,10 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
     private final ArtifactStoreValidator snapshotValidator;
 
     public SonatypeCentralRequirements(
-            SessionConfig sessionConfig,
+            Session session,
             ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
             ModelProvider modelProvider) {
-        requireNonNull(sessionConfig);
+        requireNonNull(session);
         requireNonNull(checksumAlgorithmFactorySelector);
         requireNonNull(modelProvider);
 
@@ -63,9 +63,15 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
         validators.add((sc) -> new PomCoordinatesValidatorFactory(
-                "POM Coordinates", sc.session(), sc.allRemoteRepositories(), modelProvider));
+                "POM Coordinates",
+                session.config().session(),
+                session.config().allRemoteRepositories(),
+                modelProvider));
         validators.add((sc) -> new PomProjectValidatorFactory(
-                "POM Completeness", sc.session(), sc.allRemoteRepositories(), modelProvider));
+                "POM Completeness",
+                session.config().session(),
+                session.config().allRemoteRepositories(),
+                modelProvider));
         validators.add((sc) -> new JavadocJarValidatorFactory("Javadoc Jar"));
         validators.add((sc) -> new SourceJarValidatorFactory("Source Jar"));
         validators.add((sc) -> new ArchiveValidator("Archive"));
@@ -78,8 +84,8 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
                 optionalSignatureTypes,
                 optionalSignatureValidators));
 
-        this.releaseValidator = new DefaultArtifactStoreValidator(
-                sessionConfig, "central", "Central Requirements", List.of(), validators);
+        this.releaseValidator =
+                new DefaultArtifactStoreValidator(session, "central", "Central Requirements", List.of(), validators);
         this.snapshotValidator = null;
     }
 

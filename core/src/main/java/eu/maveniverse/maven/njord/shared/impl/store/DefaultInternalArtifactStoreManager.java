@@ -191,7 +191,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         requireNonNull(file);
         checkClosed();
 
-        if (!(artifactStore instanceof DefaultArtifactStore)) {
+        if (!(artifactStore instanceof PathArtifactStore)) {
             throw new IllegalArgumentException("Unsupported store type: " + artifactStore.getClass());
         }
 
@@ -212,7 +212,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 throw new IOException("Directory does not exist");
             }
             FileUtils.copyRecursively(
-                    ((DefaultArtifactStore) artifactStore).basedir(),
+                    ((PathArtifactStore) artifactStore).basedir(),
                     root,
                     p -> p.getFileName() == null || !p.getFileName().toString().startsWith(".lock"),
                     false);
@@ -237,7 +237,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             if (Files.exists(repositoryProperties)) {
                 Map<String, String> properties = loadStoreProperties(fs.getPath("/"));
                 ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
-                try (DefaultArtifactStore artifactStore = createNewArtifactStore(template)) {
+                try (PathArtifactStore artifactStore = createNewArtifactStore(template)) {
                     storeName = artifactStore.name();
                     storeBasedir = artifactStore.basedir();
                     FileUtils.copyRecursively(
@@ -267,12 +267,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         return template;
     }
 
-    private DefaultArtifactStore loadExistingArtifactStore(String name) throws IOException {
+    private PathArtifactStore loadExistingArtifactStore(String name) throws IOException {
         Path basedir = config.basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
             Map<String, String> properties = loadStoreProperties(basedir);
-            return new DefaultArtifactStore(
+            return new PathArtifactStore(
                     properties.get("name"),
                     loadTemplateWithProperties(properties),
                     Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
@@ -298,7 +298,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             "aether.checksums.omitChecksumsForExtensions";
     private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 
-    private DefaultArtifactStore createNewArtifactStore(ArtifactStoreTemplate template) throws IOException {
+    private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template) throws IOException {
         String name = newArtifactStoreName(template.prefix());
         Path basedir = config.basedir().resolve(name);
         Files.createDirectories(basedir);
@@ -338,7 +338,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         properties.put("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
         saveStoreProperties(basedir, properties);
 
-        return new DefaultArtifactStore(
+        return new PathArtifactStore(
                 name,
                 template,
                 created,

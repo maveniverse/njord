@@ -9,4 +9,4 @@ package eu.maveniverse.maven.njord.shared.publisher;
 
 import eu.maveniverse.maven.njord.shared.SessionAwareFactory;
 
-public interface ArtifactStoreRequirementsFactory extends SessionAwareFactory<ArtifactStoreRequirements> {}
+public interface ArtifactPublisherRedirectorFactory extends SessionAwareFactory<ArtifactPublisherRedirector> {}

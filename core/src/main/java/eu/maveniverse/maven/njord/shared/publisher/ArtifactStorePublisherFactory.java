@@ -7,6 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
+import eu.maveniverse.maven.njord.shared.SessionAwareFactory;
 
-public interface ArtifactStorePublisherFactory extends SessionConfigAwareFactory<ArtifactStorePublisher> {}
+public interface ArtifactStorePublisherFactory extends SessionAwareFactory<ArtifactStorePublisher> {}

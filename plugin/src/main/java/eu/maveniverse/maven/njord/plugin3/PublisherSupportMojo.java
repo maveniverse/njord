@@ -9,13 +9,11 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -23,9 +21,6 @@ import org.apache.maven.plugins.annotations.Parameter;
  * Publisher support mojo.
  */
 public abstract class PublisherSupportMojo extends NjordMojoSupport {
-    @Inject
-    private ArtifactDeployerRedirector artifactDeployerRedirector;
-
     /**
      * The name of the store to publish. If not given, Njord will try to figure it out: will look for existing
      * stores created from staging this project and will <em>choose latest (newest)</em> out of them if multiple
@@ -114,7 +109,7 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
         if (publisher != null) {
             return Optional.of(publisher);
         }
-        return artifactDeployerRedirector.getArtifactStorePublisherName(ns.config());
+        return ns.artifactPublisherRedirector().getArtifactStorePublisherName();
     }
 
     protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {

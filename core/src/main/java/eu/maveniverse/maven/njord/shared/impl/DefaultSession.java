@@ -11,7 +11,8 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -20,6 +21,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreProcessor;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
@@ -44,9 +46,10 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
-    private final ArtifactDeployerRedirector artifactDeployerRedirector;
+    private final ArtifactPublisherRedirector artifactPublisherRedirector;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final Map<String, ArtifactStoreProcessor> artifactStoreProcessors;
 
     private final CopyOnWriteArrayList<Supplier<Integer>> derivedPublishSessionArtifactStores;
     private final CopyOnWriteArrayList<Supplier<Integer>> derivedDropSessionArtifactStores;
@@ -57,18 +60,21 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
-            ArtifactDeployerRedirector artifactDeployerRedirector,
+            ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
-            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
+            Map<String, ArtifactStoreProcessor> artifactStoreProcessors) {
         super(sessionConfig);
         this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
         this.defaultSessionFactory = requireNonNull(defaultSessionFactory);
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
-        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
+        this.artifactPublisherRedirector =
+                requireNonNull(artifactPublisherRedirectorFactory).create(this);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        this.artifactStoreProcessors = requireNonNull(artifactStoreProcessors);
 
         this.derivedPublishSessionArtifactStores = new CopyOnWriteArrayList<>();
         this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
@@ -107,10 +113,16 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
+    public ArtifactPublisherRedirector artifactPublisherRedirector() {
+        checkClosed();
+        return artifactPublisherRedirector;
+    }
+
+    @Override
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
         return artifactStorePublisherFactories.values().stream()
-                .map(f -> f.create(config()))
+                .map(f -> f.create(this))
                 .collect(Collectors.toList());
     }
 
@@ -118,8 +130,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     public Collection<ArtifactStoreComparator> availableComparators() {
         checkClosed();
         return artifactStoreComparatorFactories.values().stream()
-                .map(f -> f.create(config()))
+                .map(f -> f.create(this))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ArtifactStore processArtifactStore(String processor, ArtifactStore artifactStore) throws IOException {
+        ArtifactStoreProcessor p = artifactStoreProcessors.get(processor);
+        if (p == null) {
+            throw new IllegalArgumentException("Unknown artifact store processor: " + processor);
+        }
+        return p.process(artifactStore);
     }
 
     @Override
@@ -238,7 +259,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             return published;
         }
         AtomicInteger result = new AtomicInteger(published);
-        Optional<String> pno = artifactDeployerRedirector.getArtifactStorePublisherName(config);
+        Optional<String> pno = artifactPublisherRedirector.getArtifactStorePublisherName();
         if (pno.isPresent()) {
             String publisherName = pno.orElseThrow();
             Optional<ArtifactStorePublisher> po = selectArtifactStorePublisher(publisherName);

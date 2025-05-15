@@ -5,11 +5,16 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared;
+package eu.maveniverse.maven.njord.shared.store;
 
-public interface SessionConfigAwareFactory<E> {
+import java.io.IOException;
+
+/**
+ * A simple artifact store processor.
+ */
+public interface ArtifactStoreProcessor {
     /**
-     * Creates component that is config aware.
+     * Processes in some way the artifact store.
      */
-    E create(SessionConfig sessionConfig);
+    ArtifactStore process(ArtifactStore artifactStore) throws IOException;
 }
