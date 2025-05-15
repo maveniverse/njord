@@ -29,13 +29,13 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public class FilteredArtifactStore extends CloseableSupport implements ArtifactStore {
     private final ArtifactStore delegate;
-    private final Predicate<Artifact> artifactfilter;
+    private final Predicate<Artifact> artifactFilter;
     private final Predicate<Metadata> metadataFilter;
 
     public FilteredArtifactStore(
-            ArtifactStore delegate, Predicate<Artifact> artifactfilter, Predicate<Metadata> metadataFilter) {
+            ArtifactStore delegate, Predicate<Artifact> artifactFilter, Predicate<Metadata> metadataFilter) {
         this.delegate = requireNonNull(delegate);
-        this.artifactfilter = requireNonNull(artifactfilter);
+        this.artifactFilter = requireNonNull(artifactFilter);
         this.metadataFilter = requireNonNull(metadataFilter);
     }
 
@@ -76,7 +76,7 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public Collection<Artifact> artifacts() {
-        return delegate.artifacts().stream().filter(artifactfilter).collect(Collectors.toList());
+        return delegate.artifacts().stream().filter(artifactFilter).collect(Collectors.toList());
     }
 
     @Override
@@ -86,7 +86,7 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public boolean artifactPresent(Artifact artifact) throws IOException {
-        if (artifactfilter.test(artifact)) {
+        if (artifactFilter.test(artifact)) {
             return delegate.artifactPresent(artifact);
         } else {
             return false;
@@ -104,7 +104,7 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
-        if (artifactfilter.test(artifact)) {
+        if (artifactFilter.test(artifact)) {
             return delegate.artifactContent(artifact);
         } else {
             return Optional.empty();
