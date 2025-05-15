@@ -24,7 +24,6 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryId</code> - the snapshot service server.id</li>
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryUrl</code> - the snapshot service URL</li>
  *     <li><code>njord.publisher.sonatype-cp.bundleName</code> (alias <code>njord.bundleName</code>) - the name to use for bundle</li>
- *     <li><code>njord.publisher.sonatype-cp.processor</code> (alias <code>njord.processor</code>) - the processor to apply to store just before publishing</li>
  * </ul>
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
  * By default, value of <code>${project.artifactId}-${project.version}</code> is used IF current project is present.
@@ -36,7 +35,6 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
     public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots";
 
     private final String bundleName;
-    private final String processor;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(
@@ -53,20 +51,9 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
                 null,
                 keyName(SonatypeCentralPortalPublisherFactory.NAME, "bundleName"),
                 SessionConfig.CONFIG_PREFIX + "bundleName");
-
-        // njord.publisher.sonatype-cp.processor
-        this.processor = ConfigUtils.getString(
-                sessionConfig.effectiveProperties(),
-                null,
-                keyName(SonatypeCentralPortalPublisherFactory.NAME, "processor"),
-                SessionConfig.CONFIG_PREFIX + "processor");
     }
 
     public Optional<String> bundleName() {
         return Optional.ofNullable(bundleName);
-    }
-
-    public Optional<String> processor() {
-        return Optional.ofNullable(processor);
     }
 }
