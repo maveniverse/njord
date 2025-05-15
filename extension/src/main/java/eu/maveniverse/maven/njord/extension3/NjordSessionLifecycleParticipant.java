@@ -76,7 +76,9 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                     } else if (njordSession.config().autoPublish()) {
                         int published = njordSession.publishSessionArtifactStores();
                         if (published != 0) {
-                            logger.info("Published {} stores created in this session", published);
+                            logger.info("Auto publish: Published {} stores created in this session", published);
+                        } else {
+                            logger.info("Auto publish: No stores created in this session");
                         }
                     }
                     logger.info("Njord session closed");

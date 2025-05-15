@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -156,13 +157,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
         requireNonNull(uri);
 
-        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
             try {
                 String artifactStoreName;
@@ -228,15 +227,16 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public int publishSessionArtifactStores() {
         int published = 0;
         for (Supplier<Integer> callable : derivedPublishSessionArtifactStores) {
             published += callable.get();
         }
-        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
+        if (sessionBoundStore.isEmpty()) {
+            return published;
+        }
         AtomicInteger result = new AtomicInteger(published);
         Optional<String> pno = artifactDeployerRedirector.getArtifactStorePublisherName(config);
         if (pno.isPresent()) {
@@ -262,20 +262,18 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 throw new IllegalArgumentException("Publisher not found: " + publisherName);
             }
         } else {
-            throw new IllegalStateException("Njord autoPublish enabled, but publisher not set");
+            throw new IllegalStateException("Publisher name was not specified nor could be discovered");
         }
         return result.get();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public int dropSessionArtifactStores() {
         int dropped = 0;
         for (Supplier<Integer> callable : derivedDropSessionArtifactStores) {
             dropped += callable.get();
         }
-        ConcurrentHashMap<String, String> sessionBoundStore = (ConcurrentHashMap<String, String>)
-                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         AtomicInteger result = new AtomicInteger(dropped);
         sessionBoundStore.values().forEach(n -> {
             try {
@@ -292,5 +290,14 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     protected void doClose() throws IOException {
         internalArtifactStoreManager.close();
+    }
+
+    /**
+     * Returns map of "Njord URI" to "storeName" that were created in current session.
+     */
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<String, String> getSessionBoundStore() {
+        return (ConcurrentHashMap<String, String>)
+                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
     }
 }
