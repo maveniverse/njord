@@ -41,7 +41,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class DefaultArtifactStore extends CloseableSupport implements ArtifactStore {
+/**
+ * Artifact store backed by NIO2 {@link Path}. It completely lies on file system.
+ */
+public class PathArtifactStore extends CloseableSupport implements ArtifactStore {
     private final String name;
     private final ArtifactStoreTemplate template;
     private final Instant created;
@@ -51,7 +54,7 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
     private final List<String> omitChecksumsForExtensions;
     private final Path basedir;
 
-    public DefaultArtifactStore(
+    public PathArtifactStore(
             String name,
             ArtifactStoreTemplate template,
             Instant created,
@@ -205,11 +208,18 @@ public class DefaultArtifactStore extends CloseableSupport implements ArtifactSt
         if (!Files.isDirectory(directory)) {
             throw new IOException("Directory does not exist");
         }
-        FileUtils.copyRecursively(
-                basedir(),
-                directory,
-                p -> p.getFileName() == null || !p.getFileName().toString().startsWith("."),
-                false);
+        for (Artifact artifact : artifacts()) {
+            String artifactPath = artifactPath(artifact);
+            Path sourcePath = basedir.resolve(artifactPath);
+            Path targetPath = directory.resolve(artifactPath);
+            FileUtils.writeFile(targetPath, p -> Files.copy(sourcePath, p));
+        }
+        for (Metadata metadata : metadata()) {
+            String metadataPath = metadataPath(metadata);
+            Path sourcePath = basedir.resolve(metadataPath);
+            Path targetPath = directory.resolve(metadataPath);
+            FileUtils.writeFile(targetPath, p -> Files.copy(sourcePath, p));
+        }
     }
 
     @Override
