@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.github.mizosoft.methanol.MediaType;
 import com.github.mizosoft.methanol.Methanol;
+import com.github.mizosoft.methanol.MoreBodyPublishers;
 import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
@@ -25,6 +26,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -37,6 +39,7 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
+    private final SonatypeCentralPortalPublisherConfig publisherConfig;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
@@ -46,6 +49,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
+            SonatypeCentralPortalPublisherConfig publisherConfig,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactDeployerRedirector artifactDeployerRedirector) {
         super(
@@ -58,6 +62,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
+        this.publisherConfig = requireNonNull(publisherConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
@@ -76,6 +81,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 Path bundle = artifactStoreWriter.writeAsBundle(artifactStore, tmpDir);
                 if (bundle == null) {
                     throw new IllegalStateException("Bundle ZIP was not created");
+                }
+                String bundleName = bundle.getFileName().toString();
+                if (publisherConfig.bundleName().isPresent()) {
+                    bundleName = publisherConfig.bundleName().orElseThrow();
                 }
 
                 // build auth token
@@ -103,7 +112,12 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 try {
                     Methanol httpClient = Methanol.create();
                     MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
-                            .filePart("bundle", bundle, MediaType.APPLICATION_OCTET_STREAM)
+                            .formPart(
+                                    "bundle",
+                                    bundleName,
+                                    MoreBodyPublishers.ofMediaType(
+                                            HttpRequest.BodyPublishers.ofFile(bundle),
+                                            MediaType.APPLICATION_OCTET_STREAM))
                             .build();
                     HttpResponse<String> response = httpClient.send(
                             MutableRequest.POST(repository.getUrl(), multipartBodyPublisher)
