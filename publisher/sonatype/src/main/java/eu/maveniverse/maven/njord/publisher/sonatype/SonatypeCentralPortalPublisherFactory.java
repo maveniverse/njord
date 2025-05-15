@@ -67,6 +67,7 @@ public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublis
                 releasesRepository,
                 snapshotsRepository,
                 centralRequirementsFactory.create(sessionConfig),
+                cpConfig,
                 artifactStoreWriterFactory,
                 artifactDeployerRedirector);
     }
