@@ -26,8 +26,7 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.bundleName</code> (alias <code>njord.bundleName</code>) - the name to use for bundle</li>
  * </ul>
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
- * Define it somehow, possible to be interpolated (in Maven or Maven Config, both are interpolated) to something
- * like <code>${project.artifactId}-${project.version}</code>.
+ * By default, value of <code>${project.artifactId}-${project.version}</code> is used IF current project is present.
  */
 public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";

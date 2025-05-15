@@ -85,6 +85,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 String bundleName = bundle.getFileName().toString();
                 if (publisherConfig.bundleName().isPresent()) {
                     bundleName = publisherConfig.bundleName().orElseThrow();
+                } else if (sessionConfig.currentProject().isPresent()) {
+                    SessionConfig.CurrentProject cp =
+                            sessionConfig.currentProject().orElseThrow();
+                    bundleName =
+                            cp.artifact().getArtifactId() + "-" + cp.artifact().getVersion();
                 }
 
                 // build auth token
