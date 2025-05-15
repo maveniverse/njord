@@ -9,6 +9,8 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -27,6 +30,9 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
     protected MavenSession mavenSession;
+
+    @Inject
+    private SessionFactory sessionFactory;
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
@@ -50,7 +56,17 @@ public abstract class NjordMojoSupport extends MojoSupport {
     protected abstract void doWithSession(Session ns) throws IOException, MojoExecutionException, MojoFailureException;
 
     protected void doWithoutSession() throws IOException, MojoExecutionException, MojoFailureException {
-        throw new MojoExecutionException("Njord extension is not installed");
+        logger.warn("Njord extension is not installed; continuing with creating temporary session");
+        try (Session ns = NjordUtils.lazyInit(
+                SessionConfig.defaults(
+                                mavenSession.getRepositorySession(),
+                                RepositoryUtils.toRepos(
+                                        mavenSession.getRequest().getRemoteRepositories()))
+                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
+                        .build(),
+                sessionFactory::create)) {
+            doWithSession(ns);
+        }
     }
 
     protected void printTemplate(ArtifactStoreTemplate template, boolean defaultTemplate) {

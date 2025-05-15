@@ -7,10 +7,7 @@
  */
 package eu.maveniverse.maven.njord.plugin3;
 
-import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -19,8 +16,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.inject.Inject;
-import org.apache.maven.RepositoryUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
@@ -32,24 +27,6 @@ import org.eclipse.aether.repository.RepositoryPolicy;
  */
 @Mojo(name = "status", threadSafe = true, aggregator = true)
 public class StatusMojo extends PublisherSupportMojo {
-    @Inject
-    private SessionFactory sessionFactory;
-
-    @Override
-    protected void doWithoutSession() throws IOException, MojoFailureException {
-        logger.warn("Njord extension is not installed; continuing with creating temporary session");
-        try (Session ns = NjordUtils.lazyInit(
-                SessionConfig.defaults(
-                                mavenSession.getRepositorySession(),
-                                RepositoryUtils.toRepos(
-                                        mavenSession.getRequest().getRemoteRepositories()))
-                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
-                        .build(),
-                sessionFactory::create)) {
-            doWithSession(ns);
-        }
-    }
-
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         MavenProject cp = mavenSession.getTopLevelProject();
