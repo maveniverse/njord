@@ -31,10 +31,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Objects;
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.ConfigUtils;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private final SonatypeCentralPortalPublisherConfig publisherConfig;
@@ -109,7 +111,15 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 // we need to use own HTTP client here
                 String deploymentId;
                 try {
-                    Methanol httpClient = Methanol.create();
+                    // use Maven UA
+                    String userAgent = ConfigUtils.getString(
+                            session.config().session(),
+                            ConfigurationProperties.DEFAULT_USER_AGENT,
+                            "aether.connector.userAgent",
+                            "aether.transport.http.userAgent");
+
+                    Methanol httpClient =
+                            Methanol.newBuilder().userAgent(userAgent).build();
                     MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
                             .formPart(
                                     "bundle",
