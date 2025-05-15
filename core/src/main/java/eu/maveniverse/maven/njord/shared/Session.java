@@ -18,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -79,6 +80,11 @@ public interface Session extends Closeable {
                 .filter(p -> name.equals(p.name()))
                 .findFirst();
     }
+
+    /**
+     * Processes artifact store.
+     */
+    ArtifactStore processArtifactStore(String processor, ArtifactStore artifactStore) throws IOException;
 
     /**
      * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(String)} method for syntax).

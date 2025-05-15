@@ -21,6 +21,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.store.ArtifactStoreProcessor;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
@@ -48,6 +49,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final ArtifactPublisherRedirector artifactPublisherRedirector;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final Map<String, ArtifactStoreProcessor> artifactStoreProcessors;
 
     private final CopyOnWriteArrayList<Supplier<Integer>> derivedPublishSessionArtifactStores;
     private final CopyOnWriteArrayList<Supplier<Integer>> derivedDropSessionArtifactStores;
@@ -60,7 +62,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
-            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
+            Map<String, ArtifactStoreProcessor> artifactStoreProcessors) {
         super(sessionConfig);
         this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
         this.defaultSessionFactory = requireNonNull(defaultSessionFactory);
@@ -71,6 +74,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 requireNonNull(artifactPublisherRedirectorFactory).create(this);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        this.artifactStoreProcessors = requireNonNull(artifactStoreProcessors);
 
         this.derivedPublishSessionArtifactStores = new CopyOnWriteArrayList<>();
         this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
@@ -128,6 +132,15 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         return artifactStoreComparatorFactories.values().stream()
                 .map(f -> f.create(this))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ArtifactStore processArtifactStore(String processor, ArtifactStore artifactStore) throws IOException {
+        ArtifactStoreProcessor p = artifactStoreProcessors.get(processor);
+        if (p == null) {
+            throw new IllegalArgumentException("Unknown artifact store processor: " + processor);
+        }
+        return p.process(artifactStore);
     }
 
     @Override

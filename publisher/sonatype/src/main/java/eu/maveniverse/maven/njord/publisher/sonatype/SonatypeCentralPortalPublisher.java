@@ -66,6 +66,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
+        if (publisherConfig.processor().isPresent()) {
+            artifactStore =
+                    session.processArtifactStore(publisherConfig.processor().orElseThrow(), artifactStore);
+        }
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
             Path tmpDir = Files.createTempDirectory(name);
