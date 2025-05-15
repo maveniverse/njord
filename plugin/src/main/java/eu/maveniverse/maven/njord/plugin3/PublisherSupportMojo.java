@@ -120,7 +120,7 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {
         Optional<String> publisherName = getArtifactStorePublisherName(ns);
         if (publisherName.isEmpty()) {
-            throw new MojoFailureException("Publisher name was not specified nor could be found");
+            throw new MojoFailureException("Publisher name was not specified nor could be discovered");
         }
         String publisher = publisherName.orElseThrow();
         Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisher);
