@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -34,14 +33,10 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     public static final String NAME = "njord";
 
     private final Logger logger = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
-    private final ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory;
     private final BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
     @Inject
-    public NjordRepositoryConnectorFactory(
-            ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
-            BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
-        this.artifactPublisherRedirectorFactory = requireNonNull(artifactPublisherRedirectorFactory);
+    public NjordRepositoryConnectorFactory(BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
         this.basicRepositoryConnectorFactory = requireNonNull(basicRepositoryConnectorFactory);
     }
 
@@ -62,8 +57,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                             .config()
                             .enabled()) {
                 Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
-                String url =
-                        artifactPublisherRedirectorFactory.create(ns.config()).getRepositoryUrl(repository);
+                String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
                 if (url != null && url.startsWith(NAME + ":")) {
                     ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                     return new NjordRepositoryConnector(

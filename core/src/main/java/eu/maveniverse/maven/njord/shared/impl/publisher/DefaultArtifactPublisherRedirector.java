@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -19,19 +20,19 @@ import java.util.Optional;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DefaultArtifactPublisherRedirector extends ComponentSupport implements ArtifactPublisherRedirector {
-    private final SessionConfig sessionConfig;
+    private final Session session;
 
-    public DefaultArtifactPublisherRedirector(SessionConfig sessionConfig) {
-        this.sessionConfig = requireNonNull(sessionConfig);
+    public DefaultArtifactPublisherRedirector(Session session) {
+        this.session = requireNonNull(session);
     }
 
     @Override
     public String getRepositoryUrl(RemoteRepository repository) {
         String url = repository.getUrl();
         if (!url.startsWith(SessionConfig.NAME + ":")
-                && sessionConfig.currentProject().isPresent()) {
+                && session.config().currentProject().isPresent()) {
             return getRepositoryUrl(
-                    repository, sessionConfig.currentProject().orElseThrow().repositoryMode());
+                    repository, session.config().currentProject().orElseThrow().repositoryMode());
         }
         return url;
     }
@@ -39,7 +40,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     @Override
     public String getRepositoryUrl(RemoteRepository repository, RepositoryMode repositoryMode) {
         String url = repository.getUrl();
-        Optional<Map<String, String>> sco = sessionConfig.serviceConfiguration(repository.getId());
+        Optional<Map<String, String>> sco = session.config().serviceConfiguration(repository.getId());
         if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
             Map<String, String> config = sco.orElseThrow();
             String redirectUrl;
@@ -65,7 +66,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         RemoteRepository authSource = repository;
         LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
         authSourcesVisited.add(authSource.getId());
-        Optional<Map<String, String>> config = sessionConfig.serviceConfiguration(authSource.getId());
+        Optional<Map<String, String>> config = session.config().serviceConfiguration(authSource.getId());
         while (config.isPresent()) {
             String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
             if (authRedirect != null) {
@@ -75,7 +76,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 if (!authSourcesVisited.add(authSource.getId())) {
                     throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
                 }
-                config = sessionConfig.serviceConfiguration(authSource.getId());
+                config = session.config().serviceConfiguration(authSource.getId());
             } else {
                 break;
             }
@@ -85,17 +86,18 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
     @Override
     public Optional<String> getArtifactStorePublisherName() {
-        if (sessionConfig.publisher().isPresent()) {
-            return sessionConfig.publisher();
+        if (session.config().publisher().isPresent()) {
+            return session.config().publisher();
         }
-        if (sessionConfig.currentProject().isPresent()) {
-            RemoteRepository distributionRepository = sessionConfig
+        if (session.config().currentProject().isPresent()) {
+            RemoteRepository distributionRepository = session.config()
                     .currentProject()
                     .orElseThrow()
                     .distributionManagementRepositories()
-                    .get(sessionConfig.currentProject().orElseThrow().repositoryMode());
+                    .get(session.config().currentProject().orElseThrow().repositoryMode());
             if (distributionRepository != null) {
-                Optional<Map<String, String>> sco = sessionConfig.serviceConfiguration(distributionRepository.getId());
+                Optional<Map<String, String>> sco =
+                        session.config().serviceConfiguration(distributionRepository.getId());
                 if (sco.isPresent()) {
                     String publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
                     if (publisher != null) {

@@ -7,7 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
 import javax.inject.Named;
@@ -17,7 +17,7 @@ import javax.inject.Singleton;
 @Named
 public class DefaultArtifactPublisherRedirectorFactory implements ArtifactPublisherRedirectorFactory {
     @Override
-    public ArtifactPublisherRedirector create(SessionConfig sessionConfig) {
-        return new DefaultArtifactPublisherRedirector(sessionConfig);
+    public ArtifactPublisherRedirector create(Session session) {
+        return new DefaultArtifactPublisherRedirector(session);
     }
 }

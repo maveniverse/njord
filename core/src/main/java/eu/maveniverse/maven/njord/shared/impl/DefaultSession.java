@@ -68,7 +68,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
         this.artifactPublisherRedirector =
-                requireNonNull(artifactPublisherRedirectorFactory).create(sessionConfig);
+                requireNonNull(artifactPublisherRedirectorFactory).create(this);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
 
