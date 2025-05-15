@@ -10,8 +10,10 @@ package eu.maveniverse.maven.njord.shared.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
@@ -27,11 +29,14 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public class FilteredArtifactStore extends CloseableSupport implements ArtifactStore {
     private final ArtifactStore delegate;
-    private final Predicate<Artifact> filter;
+    private final Predicate<Artifact> artifactfilter;
+    private final Predicate<Metadata> metadataFilter;
 
-    public FilteredArtifactStore(ArtifactStore delegate, Predicate<Artifact> filter) {
+    public FilteredArtifactStore(
+            ArtifactStore delegate, Predicate<Artifact> artifactfilter, Predicate<Metadata> metadataFilter) {
         this.delegate = requireNonNull(delegate);
-        this.filter = requireNonNull(filter);
+        this.artifactfilter = requireNonNull(artifactfilter);
+        this.metadataFilter = requireNonNull(metadataFilter);
     }
 
     @Override
@@ -71,17 +76,17 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public Collection<Artifact> artifacts() {
-        return delegate.artifacts().stream().filter(filter).collect(Collectors.toList());
+        return delegate.artifacts().stream().filter(artifactfilter).collect(Collectors.toList());
     }
 
     @Override
     public Collection<Metadata> metadata() {
-        return delegate.metadata();
+        return delegate.metadata().stream().filter(metadataFilter).collect(Collectors.toList());
     }
 
     @Override
     public boolean artifactPresent(Artifact artifact) throws IOException {
-        if (filter.test(artifact)) {
+        if (artifactfilter.test(artifact)) {
             return delegate.artifactPresent(artifact);
         } else {
             return false;
@@ -90,12 +95,16 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public boolean metadataPresent(Metadata metadata) throws IOException {
-        return delegate.metadataPresent(metadata);
+        if (metadataFilter.test(metadata)) {
+            return delegate.metadataPresent(metadata);
+        } else {
+            return false;
+        }
     }
 
     @Override
     public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
-        if (filter.test(artifact)) {
+        if (artifactfilter.test(artifact)) {
             return delegate.artifactContent(artifact);
         } else {
             return Optional.empty();
@@ -104,7 +113,11 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
 
     @Override
     public Optional<InputStream> metadataContent(Metadata metadata) throws IOException {
-        return delegate.metadataContent(metadata);
+        if (metadataFilter.test(metadata)) {
+            return delegate.metadataContent(metadata);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -118,10 +131,31 @@ public class FilteredArtifactStore extends CloseableSupport implements ArtifactS
     }
 
     @Override
-    public void writeTo(Path directory) throws IOException {
-        for (Artifact artifact : artifacts()) {}
-
-        delegate.writeTo(directory);
+    public void writeTo(Path directory, Layout layout) throws IOException {
+        requireNonNull(directory);
+        if (!Files.isDirectory(directory)) {
+            throw new IOException("Directory does not exist");
+        }
+        for (Artifact artifact : artifacts()) {
+            String artifactPath = layout.artifactPath(artifact);
+            Path targetPath = directory.resolve(artifactPath);
+            Optional<InputStream> artifactContent = artifactContent(artifact);
+            if (artifactContent.isPresent()) {
+                try (InputStream content = artifactContent.orElseThrow()) {
+                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
+                }
+            }
+        }
+        for (Metadata metadata : metadata()) {
+            String metadataPath = layout.metadataPath(metadata);
+            Path targetPath = directory.resolve(metadataPath);
+            Optional<InputStream> metadataContent = metadataContent(metadata);
+            if (metadataContent.isPresent()) {
+                try (InputStream content = metadataContent.orElseThrow()) {
+                    FileUtils.writeFile(targetPath, p -> Files.copy(content, p));
+                }
+            }
+        }
     }
 
     @Override

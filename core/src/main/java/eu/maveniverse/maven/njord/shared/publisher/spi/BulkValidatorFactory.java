@@ -7,6 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.spi;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
+import eu.maveniverse.maven.njord.shared.SessionAwareFactory;
 
-public interface BulkValidatorFactory extends SessionConfigAwareFactory<BulkValidator> {}
+public interface BulkValidatorFactory extends SessionAwareFactory<BulkValidator> {}

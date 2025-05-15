@@ -7,6 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.store;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
+import eu.maveniverse.maven.njord.shared.SessionAwareFactory;
 
-public interface ArtifactStoreComparatorFactory extends SessionConfigAwareFactory<ArtifactStoreComparator> {}
+public interface ArtifactStoreComparatorFactory extends SessionAwareFactory<ArtifactStoreComparator> {}

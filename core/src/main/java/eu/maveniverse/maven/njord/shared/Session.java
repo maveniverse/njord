@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
@@ -45,6 +46,11 @@ public interface Session extends Closeable {
      * Returns store merger.
      */
     ArtifactStoreMerger artifactStoreMerger();
+
+    /**
+     * Artifact store publisher redirector.
+     */
+    ArtifactPublisherRedirector artifactPublisherRedirector();
 
     /**
      * Returns a collection of available publisher names.

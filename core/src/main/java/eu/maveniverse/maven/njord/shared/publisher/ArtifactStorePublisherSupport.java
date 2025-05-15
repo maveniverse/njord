@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared.publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
@@ -19,7 +19,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public abstract class ArtifactStorePublisherSupport extends ComponentSupport implements ArtifactStorePublisher {
-    protected final SessionConfig sessionConfig;
+    protected final Session session;
     protected final RepositorySystem repositorySystem;
     protected final String name;
     protected final String description;
@@ -30,7 +30,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
     protected final ArtifactStoreRequirements artifactStoreRequirements;
 
     protected ArtifactStorePublisherSupport(
-            SessionConfig sessionConfig,
+            Session session,
             RepositorySystem repositorySystem,
             String name,
             String description,
@@ -39,7 +39,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements) {
-        this.sessionConfig = requireNonNull(sessionConfig);
+        this.session = requireNonNull(session);
         this.repositorySystem = requireNonNull(repositorySystem);
         this.name = requireNonNull(name);
         this.description = requireNonNull(description);

@@ -7,6 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.store;
 
+import eu.maveniverse.maven.njord.shared.impl.store.DefaultLayout;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -103,9 +104,16 @@ public interface ArtifactStore extends Closeable {
     RemoteRepository storeRemoteRepository();
 
     /**
-     * Writes out the whole store to given directory retaining the layout of the store. The directory must exist.
+     * Writes out the whole store to given directory using default layout. The directory must exist.
      */
-    void writeTo(Path directory) throws IOException;
+    default void writeTo(Path directory) throws IOException {
+        writeTo(directory, new DefaultLayout());
+    }
+
+    /**
+     * Writes out the whole store to given directory using given layout. The directory must exist.
+     */
+    void writeTo(Path directory, Layout layout) throws IOException;
 
     /**
      * Content modifying operation handle. Caller must close this instance, even if operation is canceled.

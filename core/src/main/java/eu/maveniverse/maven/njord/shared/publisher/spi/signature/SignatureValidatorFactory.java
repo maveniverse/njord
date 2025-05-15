@@ -7,6 +7,6 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.spi.signature;
 
-import eu.maveniverse.maven.njord.shared.SessionConfigAwareFactory;
+import eu.maveniverse.maven.njord.shared.SessionAwareFactory;
 
-public interface SignatureValidatorFactory extends SessionConfigAwareFactory<SignatureValidator> {}
+public interface SignatureValidatorFactory extends SessionAwareFactory<SignatureValidator> {}

@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared;
 
 public interface SessionConfigAwareFactory<E> {
     /**
-     * Creates component that is session and config aware.
+     * Creates component that is config aware.
      */
     E create(SessionConfig sessionConfig);
 }

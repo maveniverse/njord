@@ -9,8 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,21 +25,17 @@ public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory
 
     private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
-    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     @Inject
     public SonatypeS01PublisherFactory(
-            RepositorySystem repositorySystem,
-            SonatypeCentralRequirementsFactory centralRequirementsFactory,
-            ArtifactDeployerRedirector artifactDeployerRedirector) {
+            RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
-        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
-    public SonatypeNx2Publisher create(SessionConfig sessionConfig) {
-        SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(sessionConfig);
+    public SonatypeNx2Publisher create(Session session) {
+        SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(session.config());
         RemoteRepository releasesRepository =
                 s01Config.releaseRepositoryId() != null && s01Config.releaseRepositoryUrl() != null
                         ? new RemoteRepository.Builder(
@@ -57,7 +52,7 @@ public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory
                         : null;
 
         return new SonatypeNx2Publisher(
-                sessionConfig,
+                session,
                 repositorySystem,
                 NAME,
                 "Publishes to Sonatype S01",
@@ -65,7 +60,6 @@ public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
-                centralRequirementsFactory.create(sessionConfig),
-                artifactDeployerRedirector);
+                centralRequirementsFactory.create(session));
     }
 }

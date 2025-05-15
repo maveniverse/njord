@@ -11,7 +11,6 @@ import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -33,9 +32,6 @@ import org.eclipse.aether.repository.RepositoryPolicy;
  */
 @Mojo(name = "status", threadSafe = true, aggregator = true)
 public class StatusMojo extends PublisherSupportMojo {
-    @Inject
-    private ArtifactDeployerRedirector artifactDeployerRedirector;
-
     @Inject
     private SessionFactory sessionFactory;
 
@@ -74,9 +70,9 @@ public class StatusMojo extends PublisherSupportMojo {
                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                 .build();
         String deploymentReleaseUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentRelease, RepositoryMode.RELEASE);
+                ns.artifactPublisherRedirector().getRepositoryUrl(deploymentRelease, RepositoryMode.RELEASE);
         String deploymentSnapshotUrl =
-                artifactDeployerRedirector.getRepositoryUrl(ns.config(), deploymentSnapshot, RepositoryMode.SNAPSHOT);
+                ns.artifactPublisherRedirector().getRepositoryUrl(deploymentSnapshot, RepositoryMode.SNAPSHOT);
 
         logger.info("Project deployment:");
         if (ns.config().prefix().isPresent()) {
@@ -84,8 +80,7 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Release");
         logger.info("  Repository Id: {}", deploymentRelease.getId());
-        RemoteRepository releaseAuthSource =
-                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentRelease);
+        RemoteRepository releaseAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentRelease);
         if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
             logger.info("  Auth source Id: {}", releaseAuthSource.getId());
         }
@@ -100,8 +95,7 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Snapshot");
         logger.info("  Repository Id: {}", deploymentSnapshot.getId());
-        RemoteRepository snapshotAuthSource =
-                artifactDeployerRedirector.getAuthRepositoryId(ns.config(), deploymentSnapshot);
+        RemoteRepository snapshotAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentSnapshot);
         if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
             logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
         }

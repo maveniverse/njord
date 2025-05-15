@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.comparator;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import javax.inject.Inject;
@@ -33,8 +33,11 @@ public class BitwiseArtifactStoreComparatorFactory implements ArtifactStoreCompa
     }
 
     @Override
-    public ArtifactStoreComparator create(SessionConfig sessionConfig) {
+    public ArtifactStoreComparator create(Session session) {
         return new BitwiseArtifactStoreComparator(
-                sessionConfig, NAME, "Compares store contents by bitwise comparison", checksumAlgorithmFactorySelector);
+                session.config(),
+                NAME,
+                "Compares store contents by bitwise comparison",
+                checksumAlgorithmFactorySelector);
     }
 }

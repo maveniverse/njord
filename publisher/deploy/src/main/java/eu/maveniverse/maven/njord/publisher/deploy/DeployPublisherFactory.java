@@ -9,8 +9,8 @@ package eu.maveniverse.maven.njord.publisher.deploy;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.deploy.ArtifactDeployerRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -41,21 +41,21 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
     private static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
 
     private final RepositorySystem repositorySystem;
-    private final ArtifactDeployerRedirector artifactDeployerRedirector;
 
     @Inject
-    public DeployPublisherFactory(
-            RepositorySystem repositorySystem, ArtifactDeployerRedirector artifactDeployerRedirector) {
+    public DeployPublisherFactory(RepositorySystem repositorySystem) {
         this.repositorySystem = requireNonNull(repositorySystem);
-        this.artifactDeployerRedirector = requireNonNull(artifactDeployerRedirector);
     }
 
     @Override
-    public ArtifactStorePublisher create(SessionConfig sessionConfig) {
+    public ArtifactStorePublisher create(Session session) {
+        requireNonNull(session);
+
         RemoteRepository releasesRepository = null;
         RemoteRepository snapshotsRepository = null;
-        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
-            String altDeploymentRepository = sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
+        if (session.config().effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
+            String altDeploymentRepository =
+                    session.config().effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
             String[] split = altDeploymentRepository.split("::");
             if (split.length != 2) {
                 throw new IllegalArgumentException(
@@ -69,19 +69,14 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
             snapshotsRepository = new RemoteRepository.Builder(id, "default", url)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
-        } else if (sessionConfig.currentProject().isPresent()) {
+        } else if (session.config().currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
-                    sessionConfig.currentProject().orElseThrow();
+                    session.config().currentProject().orElseThrow();
             releasesRepository = project.distributionManagementRepositories().get(RepositoryMode.RELEASE);
             snapshotsRepository = project.distributionManagementRepositories().get(RepositoryMode.SNAPSHOT);
         }
 
         return new DeployPublisher(
-                sessionConfig,
-                repositorySystem,
-                releasesRepository,
-                snapshotsRepository,
-                ArtifactStoreRequirements.NONE,
-                artifactDeployerRedirector);
+                session, repositorySystem, releasesRepository, snapshotsRepository, ArtifactStoreRequirements.NONE);
     }
 }

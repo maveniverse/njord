@@ -9,7 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
@@ -34,7 +34,7 @@ public class SonatypeCentralRequirementsFactory implements ArtifactStoreRequirem
     }
 
     @Override
-    public ArtifactStoreRequirements create(SessionConfig sessionConfig) {
-        return new SonatypeCentralRequirements(sessionConfig, checksumAlgorithmFactorySelector, modelProvider);
+    public ArtifactStoreRequirements create(Session session) {
+        return new SonatypeCentralRequirements(session, checksumAlgorithmFactorySelector, modelProvider);
     }
 }
