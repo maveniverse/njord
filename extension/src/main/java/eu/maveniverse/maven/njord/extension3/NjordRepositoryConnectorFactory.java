@@ -12,11 +12,12 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
@@ -33,11 +34,12 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     public static final String NAME = "njord";
 
     private final Logger logger = LoggerFactory.getLogger(NjordRepositoryConnectorFactory.class);
-    private final BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
+    private final Map<String, Provider<RepositoryConnectorFactory>> repositoryConnectorFactories;
 
     @Inject
-    public NjordRepositoryConnectorFactory(BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
-        this.basicRepositoryConnectorFactory = requireNonNull(basicRepositoryConnectorFactory);
+    public NjordRepositoryConnectorFactory(
+            Map<String, Provider<RepositoryConnectorFactory>> repositoryConnectorFactories) {
+        this.repositoryConnectorFactories = requireNonNull(repositoryConnectorFactories);
     }
 
     /**
@@ -59,6 +61,9 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                 Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
                 String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
                 if (url != null && url.startsWith(NAME + ":")) {
+                    RepositoryConnectorFactory basicRepositoryConnectorFactory = requireNonNull(
+                            repositoryConnectorFactories.get("basic").get(),
+                            "No basic repository connector factory found");
                     ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
                     return new NjordRepositoryConnector(
                             artifactStore,
