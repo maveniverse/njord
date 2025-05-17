@@ -51,7 +51,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                     .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
                     .build();
 
-            Session ns = NjordUtils.init(sc, sessionFactoryProvider.get()::create);
+            Session ns = NjordUtils.lazyInit(sc, sessionFactoryProvider.get()::create);
             if (ns.config().enabled()) {
                 logger.info("Njord {} session created", ns.config().version().orElse("UNKNOWN"));
             }
