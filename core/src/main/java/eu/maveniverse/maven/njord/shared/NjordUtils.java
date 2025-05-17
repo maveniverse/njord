@@ -45,10 +45,6 @@ public final class NjordUtils {
      */
     public static synchronized Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        Session ns = (Session) repositorySystemSession.getData().get(Session.class);
-        if (ns == null) {
-            return Optional.empty();
-        }
-        return Optional.of(ns);
+        return Optional.ofNullable((Session) repositorySystemSession.getData().get(Session.class));
     }
 }
