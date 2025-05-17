@@ -30,14 +30,12 @@ public final class NjordUtils {
             SessionConfig sessionConfig, Function<SessionConfig, Session> sessionFactory) {
         requireNonNull(sessionConfig, "remoteRepositories");
         requireNonNull(sessionFactory, "sessionFactory");
-        Optional<Session> nso = mayGetNjordSession(sessionConfig.session());
-        if (nso.isEmpty()) {
-            Session ns = sessionFactory.apply(sessionConfig);
-            sessionConfig.session().getData().set(Session.class, ns);
-            return ns;
-        } else {
-            return nso.orElseThrow();
+        Session session = (Session) sessionConfig.session().getData().get(Session.class);
+        if (session == null) {
+            session = sessionFactory.apply(sessionConfig);
+            sessionConfig.session().getData().set(Session.class, session);
         }
+        return session;
     }
 
     /**
