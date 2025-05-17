@@ -43,7 +43,7 @@ public final class NjordUtils {
     /**
      * Returns Njord session instance, if inited in this Repository Session.
      */
-    public static Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
+    public static synchronized Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
         Session ns = (Session) repositorySystemSession.getData().get(Session.class);
         if (ns == null) {
