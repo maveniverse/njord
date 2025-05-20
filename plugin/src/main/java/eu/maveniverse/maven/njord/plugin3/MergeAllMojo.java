@@ -17,6 +17,8 @@ import java.util.Optional;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * Merges all stores onto one store, dropping all merged stores.
@@ -34,9 +36,18 @@ public class MergeAllMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "failIfNothingDone", defaultValue = "true")
     private boolean failIfNothingDone;
 
+    /**
+     * Parameter that may explicitly set the merge result store "origin project artifact". If this parameter
+     * is not set (is left {@code null}), the first found origin project artifact will be used which is
+     * usually what user wants.
+     */
+    @Parameter(property = "originProjectGav")
+    private String originProjectGav;
+
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         ArtifactStoreTemplate template = null;
+        Artifact originProjectArtifact = originProjectGav != null ? new DefaultArtifact(originProjectGav) : null;
         HashSet<String> names = new HashSet<>();
         for (String name : ns.artifactStoreManager().listArtifactStoreNames()) {
             Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
@@ -47,6 +58,9 @@ public class MergeAllMojo extends NjordMojoSupport {
                         template = store.template();
                     } else if (!template.equals(store.template())) {
                         throw new MojoExecutionException("Conflicting templates used");
+                    }
+                    if (originProjectArtifact == null) {
+                        originProjectArtifact = store.originProjectArtifact().orElse(null);
                     }
                 }
             }
@@ -60,7 +74,7 @@ public class MergeAllMojo extends NjordMojoSupport {
         }
 
         String targetName;
-        try (ArtifactStore target = ns.artifactStoreManager().createArtifactStore(template)) {
+        try (ArtifactStore target = ns.artifactStoreManager().createArtifactStore(template, originProjectArtifact)) {
             logger.info("Created target store {}", target);
             targetName = target.name();
         }
