@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.eclipse.aether.artifact.Artifact;
 
 public interface ArtifactStoreManager {
     /**
@@ -42,9 +43,10 @@ public interface ArtifactStoreManager {
     Collection<ArtifactStoreTemplate> listTemplates();
 
     /**
-     * Creates store based on template.
+     * Creates store based on template. Optionally, the "origin project" may be given, or {@code null}.
      */
-    ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException;
+    ArtifactStore createArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
+            throws IOException;
 
     /**
      * Fully deletes store.

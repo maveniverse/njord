@@ -44,9 +44,12 @@ import java.util.Properties;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<SessionConfig>
         implements InternalArtifactStoreManager {
@@ -130,11 +133,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
-    public ArtifactStore createArtifactStore(ArtifactStoreTemplate template) throws IOException {
+    public ArtifactStore createArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
+            throws IOException {
         requireNonNull(template);
         checkClosed();
 
-        return createNewArtifactStore(template);
+        return createNewArtifactStore(template, originProjectArtifact);
     }
 
     @Override
@@ -237,7 +241,10 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             if (Files.exists(repositoryProperties)) {
                 Map<String, String> properties = loadStoreProperties(fs.getPath("/"));
                 ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
-                try (PathArtifactStore artifactStore = createNewArtifactStore(template)) {
+                Artifact originProjectArtifact = properties.containsKey("originProjectArtifact")
+                        ? new DefaultArtifact(properties.get("originProjectArtifact"))
+                        : null;
+                try (PathArtifactStore artifactStore = createNewArtifactStore(template, originProjectArtifact)) {
                     storeName = artifactStore.name();
                     storeBasedir = artifactStore.basedir();
                     FileUtils.copyRecursively(
@@ -285,6 +292,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                     Arrays.stream(properties.get("omitChecksumsForExtensions").split(","))
                             .filter(s -> !s.trim().isEmpty())
                             .collect(toList()),
+                    properties.containsKey("originProjectArtifact")
+                            ? new DefaultArtifact(properties.get("originProjectArtifact"))
+                            : null,
                     basedir);
         }
         return null;
@@ -298,7 +308,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             "aether.checksums.omitChecksumsForExtensions";
     private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 
-    private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template) throws IOException {
+    private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
+            throws IOException {
         String name = newArtifactStoreName(template.prefix());
         Path basedir = config.basedir().resolve(name);
         Files.createDirectories(basedir);
@@ -336,6 +347,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                         .map(ChecksumAlgorithmFactory::getName)
                         .collect(Collectors.joining(",")));
         properties.put("omitChecksumsForExtensions", String.join(",", omitChecksumsForExtensions));
+        if (originProjectArtifact != null) {
+            properties.put("originProjectArtifact", ArtifactIdUtils.toId(originProjectArtifact));
+        }
         saveStoreProperties(basedir, properties);
 
         return new PathArtifactStore(
@@ -346,6 +360,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 allowRedeploy,
                 checksumAlgorithmFactories,
                 omitChecksumsForExtensions,
+                originProjectArtifact,
                 basedir);
     }
 

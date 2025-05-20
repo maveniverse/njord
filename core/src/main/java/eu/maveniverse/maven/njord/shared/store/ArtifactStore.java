@@ -59,6 +59,11 @@ public interface ArtifactStore extends Closeable {
     List<String> omitChecksumsForExtensions();
 
     /**
+     * The origin project artifact, that was used to create this store instance, if applicable.
+     */
+    Optional<Artifact> originProjectArtifact();
+
+    /**
      * Index of artifacts in this store (except checksums), never {@code null}.
      */
     Collection<Artifact> artifacts();

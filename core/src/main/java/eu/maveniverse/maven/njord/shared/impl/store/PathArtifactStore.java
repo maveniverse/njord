@@ -52,6 +52,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     private final boolean allowRedeploy;
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
+    private final Artifact originProjectArtifact;
     private final Path basedir;
     private final DefaultLayout storeLayout;
 
@@ -63,6 +64,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             boolean allowRedeploy,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
             List<String> omitChecksumsForExtensions,
+            Artifact originProjectArtifact, // nullable
             Path basedir) {
         this.name = requireNonNull(name);
         this.template = requireNonNull(template);
@@ -71,6 +73,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         this.allowRedeploy = allowRedeploy;
         this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
         this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
+        this.originProjectArtifact = originProjectArtifact;
         this.basedir = requireNonNull(basedir);
         this.storeLayout = new DefaultLayout();
     }
@@ -113,6 +116,11 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     @Override
     public List<String> omitChecksumsForExtensions() {
         return omitChecksumsForExtensions;
+    }
+
+    @Override
+    public Optional<Artifact> originProjectArtifact() {
+        return Optional.ofNullable(originProjectArtifact);
     }
 
     @Override
@@ -284,14 +292,17 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
 
     @Override
     public String toString() {
+        String origin =
+                originProjectArtifact == null ? "" : " from " + ArtifactIdUtils.toId(originProjectArtifact) + " ";
         if (closed.get()) {
             return String.format(
-                    "%s (%s, %s, %s, closed)",
-                    name(), created(), repositoryMode().name(), template.name());
+                    "%s%s(%s, %s, %s, closed)",
+                    name(), origin, created(), repositoryMode().name(), template.name());
         } else {
             return String.format(
-                    "%s (%s, %s, %s, %s artifacts)",
+                    "%s%s(%s, %s, %s, %s artifacts)",
                     name(),
+                    origin,
                     created(),
                     repositoryMode().name(),
                     template.name(),

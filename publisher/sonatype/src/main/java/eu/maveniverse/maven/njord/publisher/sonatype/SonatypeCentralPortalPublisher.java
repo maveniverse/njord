@@ -16,7 +16,6 @@ import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -34,6 +33,7 @@ import java.util.Objects;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
@@ -79,11 +79,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 String bundleName = bundle.getFileName().toString();
                 if (publisherConfig.bundleName().isPresent()) {
                     bundleName = publisherConfig.bundleName().orElseThrow();
-                } else if (session.config().currentProject().isPresent()) {
-                    SessionConfig.CurrentProject cp =
-                            session.config().currentProject().orElseThrow();
-                    bundleName =
-                            cp.artifact().getArtifactId() + "-" + cp.artifact().getVersion();
+                } else if (artifactStore.originProjectArtifact().isPresent()) {
+                    Artifact originProjectArtifact =
+                            artifactStore.originProjectArtifact().orElseThrow();
+                    bundleName = originProjectArtifact.getArtifactId() + "-" + originProjectArtifact.getVersion();
                 }
 
                 // build auth token

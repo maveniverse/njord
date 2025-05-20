@@ -229,8 +229,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     private String createUsingTemplate(String templateName) throws IOException {
-        try (ArtifactStore artifactStore =
-                internalArtifactStoreManager.createArtifactStore(selectTemplate(templateName))) {
+        try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(
+                selectTemplate(templateName),
+                config.currentProject().isPresent()
+                        ? config.currentProject().orElseThrow().artifact()
+                        : null)) {
             return artifactStore.name();
         }
     }
