@@ -57,7 +57,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
                             repositorySystem,
                             sessionConfig.session(),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
-                            false)
+                            true)
                     .deploy(from);
         }
     }
@@ -107,7 +107,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
                             repositorySystem,
                             sessionConfig.session(),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
-                            false)
+                            true)
                     .deploy(from, toBeWritten);
         }
     }

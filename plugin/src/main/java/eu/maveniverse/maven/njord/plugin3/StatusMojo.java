@@ -19,7 +19,6 @@ import java.util.Optional;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.settings.Server;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -58,11 +57,12 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Release");
         logger.info("  Repository Id: {}", deploymentRelease.getId());
-        RemoteRepository releaseAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentRelease);
+        RemoteRepository releaseAuthSource =
+                ns.artifactPublisherRedirector().getPublishingRepository(deploymentRelease);
         if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
             logger.info("  Auth source Id: {}", releaseAuthSource.getId());
         }
-        if (hasSettingsAuth(releaseAuthSource.getId())) {
+        if (releaseAuthSource.getAuthentication() != null) {
             logger.info("  Repository Auth: Present");
         } else {
             logger.warn("  Repository Auth: Absent");
@@ -78,11 +78,12 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Snapshot");
         logger.info("  Repository Id: {}", deploymentSnapshot.getId());
-        RemoteRepository snapshotAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentSnapshot);
+        RemoteRepository snapshotAuthSource =
+                ns.artifactPublisherRedirector().getPublishingRepository(deploymentSnapshot);
         if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
             logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
         }
-        if (hasSettingsAuth(snapshotAuthSource.getId())) {
+        if (snapshotAuthSource.getAuthentication() != null) {
             logger.info("  Repository Auth: Present");
         } else {
             logger.warn("  Repository Auth: Absent");
@@ -131,14 +132,5 @@ public class StatusMojo extends PublisherSupportMojo {
         }
 
         logger.info("");
-    }
-
-    private boolean hasSettingsAuth(String serverId) {
-        Server server = mavenSession.getSettings().getServer(serverId);
-        return server != null
-                && server.getUsername() != null
-                && !server.getUsername().trim().isEmpty()
-                && server.getPassword() != null
-                && !server.getPassword().trim().isEmpty();
     }
 }

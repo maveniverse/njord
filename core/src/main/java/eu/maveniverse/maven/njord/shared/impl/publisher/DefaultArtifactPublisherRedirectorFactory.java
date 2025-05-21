@@ -7,17 +7,28 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher;
 
+import static java.util.Objects.requireNonNull;
+
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.eclipse.aether.RepositorySystem;
 
 @Singleton
 @Named
 public class DefaultArtifactPublisherRedirectorFactory implements ArtifactPublisherRedirectorFactory {
+    private final RepositorySystem repositorySystem;
+
+    @Inject
+    public DefaultArtifactPublisherRedirectorFactory(RepositorySystem repositorySystem) {
+        this.repositorySystem = requireNonNull(repositorySystem);
+    }
+
     @Override
     public ArtifactPublisherRedirector create(Session session) {
-        return new DefaultArtifactPublisherRedirector(session);
+        return new DefaultArtifactPublisherRedirector(session, repositorySystem);
     }
 }

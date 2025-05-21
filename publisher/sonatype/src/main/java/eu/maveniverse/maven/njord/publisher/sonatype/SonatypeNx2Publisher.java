@@ -14,7 +14,6 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.util.Objects;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -49,22 +48,13 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
-        // handle auth redirection, if needed
-        RemoteRepository authSource = repositorySystem.newDeploymentRepository(
-                session.config().session(),
-                session.artifactPublisherRedirector().getAuthRepositoryId(repository));
-        if (!Objects.equals(repository.getId(), authSource.getId())) {
-            repository = new RemoteRepository.Builder(repository)
-                    .setAuthentication(authSource.getAuthentication())
-                    .setProxy(authSource.getProxy())
-                    .build();
-        }
+        // handle auth redirection, if needed and
         // deploy as m-deploy-p would
         new ArtifactStoreDeployer(
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        repository,
+                        session.artifactPublisherRedirector().getPublishingRepository(repository),
                         true)
                 .deploy(artifactStore);
     }

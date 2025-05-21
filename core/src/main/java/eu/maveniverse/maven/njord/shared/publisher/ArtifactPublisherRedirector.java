@@ -30,6 +30,14 @@ public interface ArtifactPublisherRedirector {
     RemoteRepository getAuthRepositoryId(RemoteRepository repository);
 
     /**
+     * Returns the remote repository to use for publishing. Never returns {@code null}. The repository will have
+     * auth and any auth-redirection, if applicable, applied.
+     *
+     * @see #getAuthRepositoryId(RemoteRepository)
+     */
+    RemoteRepository getPublishingRepository(RemoteRepository repository);
+
+    /**
      * Returns the name of wanted/configured {@link eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher}.
      */
     Optional<String> getArtifactStorePublisherName();

@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * Helper class.
  */
-public class ArtifactStoreDeployer {
+public class ArtifactStoreDeployer extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
     private final RemoteRepository repository;
@@ -59,6 +60,11 @@ public class ArtifactStoreDeployer {
             deployRequest.setRepository(repository);
         } else {
             deployRequest.setRepository(repositorySystem.newDeploymentRepository(repositorySystemSession, repository));
+        }
+        if (!repositoryPrepared && deployRequest.getRepository().getAuthentication() == null) {
+            logger.warn(
+                    "Deployment repository '{}' has no authentication set",
+                    deployRequest.getRepository().getId());
         }
         deployRequest.setTrace(new RequestTrace(artifactStore));
         try {
