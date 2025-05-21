@@ -96,7 +96,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     }
 
     @Override
-    public RemoteRepository getPublishingRepository(RemoteRepository repository) {
+    public RemoteRepository getPublishingRepository(RemoteRepository repository, boolean expectAuth) {
         // handle auth redirection, if needed
         RemoteRepository authSource =
                 repositorySystem.newDeploymentRepository(session.config().session(), getAuthRepositoryId(repository));
@@ -105,8 +105,11 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                     .setAuthentication(authSource.getAuthentication())
                     .setProxy(authSource.getProxy())
                     .build();
+        } else {
+            repository = authSource;
         }
-        if (repository.getAuthentication() == null) {
+
+        if (expectAuth && repository.getAuthentication() == null) {
             logger.warn("Publishing repository '{}' has no authentication set", authSource.getId());
         }
         return repository;

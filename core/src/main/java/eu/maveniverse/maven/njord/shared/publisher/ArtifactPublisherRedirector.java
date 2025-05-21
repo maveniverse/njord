@@ -35,7 +35,7 @@ public interface ArtifactPublisherRedirector {
      *
      * @see #getAuthRepositoryId(RemoteRepository)
      */
-    RemoteRepository getPublishingRepository(RemoteRepository repository);
+    RemoteRepository getPublishingRepository(RemoteRepository repository, boolean expectAuth);
 
     /**
      * Returns the name of wanted/configured {@link eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher}.
