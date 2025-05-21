@@ -97,6 +97,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
     @Override
     public RemoteRepository getPublishingRepository(RemoteRepository repository, boolean expectAuth) {
+        requireNonNull(repository);
+
         // handle auth redirection, if needed
         RemoteRepository authSource =
                 repositorySystem.newDeploymentRepository(session.config().session(), getAuthRepositoryId(repository));
