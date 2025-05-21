@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Server;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -61,6 +62,11 @@ public class StatusMojo extends PublisherSupportMojo {
         if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
             logger.info("  Auth source Id: {}", releaseAuthSource.getId());
         }
+        if (hasSettingsAuth(releaseAuthSource.getId())) {
+            logger.info("  Repository Auth: Present");
+        } else {
+            logger.warn("  Repository Auth: Absent");
+        }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
         if (!Objects.equals(deploymentRelease.getUrl(), deploymentReleaseUrl)) {
             logger.info("  Effective URL: {}", deploymentReleaseUrl);
@@ -75,6 +81,11 @@ public class StatusMojo extends PublisherSupportMojo {
         RemoteRepository snapshotAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentSnapshot);
         if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
             logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
+        }
+        if (hasSettingsAuth(snapshotAuthSource.getId())) {
+            logger.info("  Repository Auth: Present");
+        } else {
+            logger.warn("  Repository Auth: Absent");
         }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
         if (!Objects.equals(deploymentSnapshot.getUrl(), deploymentSnapshotUrl)) {
@@ -120,5 +131,14 @@ public class StatusMojo extends PublisherSupportMojo {
         }
 
         logger.info("");
+    }
+
+    private boolean hasSettingsAuth(String serverId) {
+        Server server = mavenSession.getSettings().getServer(serverId);
+        return server != null
+                && server.getUsername() != null
+                && !server.getUsername().trim().isEmpty()
+                && server.getPassword() != null
+                && !server.getPassword().trim().isEmpty();
     }
 }
