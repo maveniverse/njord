@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>28</version>
+    <version>35</version>
   </parent>
 
   <groupId>eu.maveniverse.maven.njord</groupId>
@@ -74,7 +74,6 @@
     <version.maven>3.9.9</version.maven>
     <version.resolver>1.9.22</version.resolver>
     <version.slf4j>2.0.17</version.slf4j>
-    <version.testcontainers>1.20.6</version.testcontainers>
   </properties>
 
   <dependencyManagement>
