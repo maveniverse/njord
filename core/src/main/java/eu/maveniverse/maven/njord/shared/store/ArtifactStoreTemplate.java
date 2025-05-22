@@ -22,7 +22,7 @@ public interface ArtifactStoreTemplate {
     List<String> DEFAULT_CHECKSUM_ALGORITHMS = Collections.unmodifiableList(Arrays.asList("SHA-1", "MD5"));
 
     /**
-     * The default checksum algorithms.
+     * The strong checksum algorithms (SCA).
      */
     List<String> STRONG_CHECKSUM_ALGORITHMS =
             Collections.unmodifiableList(Arrays.asList("SHA-512", "SHA-256", "SHA-1", "MD5"));
