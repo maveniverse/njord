@@ -118,6 +118,10 @@
                   <pattern>org.apache.http</pattern>
                   <shadedPattern>eu.maveniverse.maven.njord.publisher.sonatype.shaded</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>org.apache.commons</pattern>
+                  <shadedPattern>eu.maveniverse.maven.njord.publisher.sonatype.shaded</shadedPattern>
+                </relocation>
               </relocations>
             </configuration>
           </execution>
