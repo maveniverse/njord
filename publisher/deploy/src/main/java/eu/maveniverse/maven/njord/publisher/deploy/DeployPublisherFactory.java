@@ -31,7 +31,10 @@ import org.eclipse.aether.repository.RepositoryPolicy;
  * <pre>
  *   $ mvn njord:publish -Dpublisher=deploy -DaltDeploymentRepository=myserver::myurl
  * </pre>
- * And it simply deploys to given repository "as Maven would do".
+ * And it simply deploys to given repository "as Maven would do". In this case auth redirection is <em>inhibited</em>,
+ * and Njord will use "myserver::url" as-is, even regarding authentication (again: as Maven would do). If auth
+ * redirection still needed, use {@code -DaltDeploymentRepositoryAuthRedirect=true} (defaults to false IF
+ * {@code DaltDeploymentRepository} is given).
  */
 @Singleton
 @Named(DeployPublisherFactory.NAME)
@@ -39,6 +42,7 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
     public static final String NAME = "deploy";
 
     private static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
+    private static final String PROP_ALT_DEPLOYMENT_REPOSITORY_AUTH_REDIRECT = "altDeploymentRepositoryAuthRedirect";
 
     private final RepositorySystem repositorySystem;
 
@@ -53,6 +57,7 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
 
         RemoteRepository releasesRepository = null;
         RemoteRepository snapshotsRepository = null;
+        boolean followAuthRedirection = true;
         if (session.config().effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
             String altDeploymentRepository =
                     session.config().effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
@@ -69,6 +74,11 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
             snapshotsRepository = new RemoteRepository.Builder(id, "default", url)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
+            followAuthRedirection = Boolean.parseBoolean(session.config()
+                    .effectiveProperties()
+                    .getOrDefault(
+                            PROP_ALT_DEPLOYMENT_REPOSITORY_AUTH_REDIRECT,
+                            "false")); // user specified explicitly what he wants here, but may override it
         } else if (session.config().currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
                     session.config().currentProject().orElseThrow();
@@ -77,6 +87,11 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
         }
 
         return new DeployPublisher(
-                session, repositorySystem, releasesRepository, snapshotsRepository, ArtifactStoreRequirements.NONE);
+                session,
+                repositorySystem,
+                releasesRepository,
+                snapshotsRepository,
+                ArtifactStoreRequirements.NONE,
+                followAuthRedirection);
     }
 }

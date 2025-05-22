@@ -71,41 +71,46 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     }
 
     @Override
-    public RemoteRepository getAuthRepositoryId(RemoteRepository repository) {
+    public RemoteRepository getAuthRepositoryId(RemoteRepository repository, boolean followAuthRedirection) {
         requireNonNull(repository);
 
         RemoteRepository authSource = repository;
-        LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
-        authSourcesVisited.add(authSource.getId());
-        Optional<Map<String, String>> config = session.config().serviceConfiguration(authSource.getId());
-        while (config.isPresent()) {
-            String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
-            if (authRedirect != null) {
-                logger.debug("Following auth redirect {} -> {}", authSource.getId(), authRedirect);
-                authSource = new RemoteRepository.Builder(
-                                authRedirect, authSource.getContentType(), authSource.getUrl())
-                        .build();
-                if (!authSourcesVisited.add(authSource.getId())) {
-                    throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
+        if (followAuthRedirection) {
+            LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
+            authSourcesVisited.add(authSource.getId());
+            Optional<Map<String, String>> config = session.config().serviceConfiguration(authSource.getId());
+            while (config.isPresent()) {
+                String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
+                if (authRedirect != null) {
+                    logger.debug("Following auth redirect {} -> {}", authSource.getId(), authRedirect);
+                    authSource = new RemoteRepository.Builder(
+                                    authRedirect, authSource.getContentType(), authSource.getUrl())
+                            .build();
+                    if (!authSourcesVisited.add(authSource.getId())) {
+                        throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
+                    }
+                    config = session.config().serviceConfiguration(authSource.getId());
+                } else {
+                    break;
                 }
-                config = session.config().serviceConfiguration(authSource.getId());
-            } else {
-                break;
             }
-        }
-        if (!Objects.equals(repository.getId(), authSource.getId())) {
-            logger.debug("Trail of AUTH for {}: {}", repository.getId(), String.join(" -> ", authSourcesVisited));
+            if (!Objects.equals(repository.getId(), authSource.getId())) {
+                logger.debug("Trail of AUTH for {}: {}", repository.getId(), String.join(" -> ", authSourcesVisited));
+            }
+        } else {
+            logger.debug("Auth redirection following inhibited");
         }
         return authSource;
     }
 
     @Override
-    public RemoteRepository getPublishingRepository(RemoteRepository repository, boolean expectAuth) {
+    public RemoteRepository getPublishingRepository(
+            RemoteRepository repository, boolean expectAuth, boolean followAuthRedirection) {
         requireNonNull(repository);
 
         // handle auth redirection, if needed
-        RemoteRepository authSource =
-                repositorySystem.newDeploymentRepository(session.config().session(), getAuthRepositoryId(repository));
+        RemoteRepository authSource = repositorySystem.newDeploymentRepository(
+                session.config().session(), getAuthRepositoryId(repository, followAuthRedirection));
         if (!Objects.equals(repository.getId(), authSource.getId())) {
             repository = new RemoteRepository.Builder(repository)
                     .setAuthentication(authSource.getAuthentication())
