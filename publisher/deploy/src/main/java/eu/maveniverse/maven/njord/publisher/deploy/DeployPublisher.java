@@ -49,7 +49,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
         RemoteRepository authSource = repositorySystem.newDeploymentRepository(
                 session.config().session(),
                 session.artifactPublisherRedirector().getAuthRepositoryId(repository));
-        if (!Objects.equals(repository.getId(), authSource.getId())) {
+        if (Objects.equals(repository.getId(), authSource.getId())) {
             repository = new RemoteRepository.Builder(repository)
                     .setAuthentication(authSource.getAuthentication())
                     .setProxy(repository.getProxy())
