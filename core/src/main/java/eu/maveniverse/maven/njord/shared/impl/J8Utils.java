@@ -19,11 +19,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * A bunch of Java 8 utils that in fact exists in higher Java versions.
+ */
 public final class J8Utils {
     private J8Utils() {}
 
+    /**
+     * Java 8: no <code>Optional.getOrElseThrow()</code> method.
+     */
     public static Supplier<IllegalStateException> OET = () -> new IllegalStateException("No value present");
 
+    /**
+     * Java 8: {@code Map.of("create", "true")}.
+     */
     public static Map<String, String> zipFsCreate(boolean create) {
         HashMap<String, String> map = new HashMap<>();
         map.put("create", Boolean.toString(create));
@@ -32,7 +41,11 @@ public final class J8Utils {
 
     private static final int DEFAULT_BUFFER_SIZE = 16384;
 
+    /**
+     * Java 8: copy of Java 11 <code>InputStream.transferTo(OutputStream)</code>.
+     */
     public static long transferTo(InputStream in, OutputStream out) throws IOException {
+        Objects.requireNonNull(in, "in");
         Objects.requireNonNull(out, "out");
         long transferred = 0;
         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -50,10 +63,16 @@ public final class J8Utils {
         return transferred;
     }
 
+    /**
+     * Java 8: Map.copyOf()
+     */
     public static <K, V> Map<K, V> copyOf(Map<K, V> map) {
         return Collections.unmodifiableMap(new HashMap<>(map));
     }
 
+    /**
+     * Java 8: List.copyOf()
+     */
     public static <E1, E2 extends E1> List<E1> copyOf(Collection<E2> list) {
         return Collections.unmodifiableList(new ArrayList<>(list));
     }

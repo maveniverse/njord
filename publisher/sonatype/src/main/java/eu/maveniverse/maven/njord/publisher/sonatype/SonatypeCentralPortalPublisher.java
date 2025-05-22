@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -89,7 +90,6 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 // build auth token
                 RemoteRepository authSource =
                         session.artifactPublisherRedirector().getAuthRepositoryId(repository, true);
-                String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         session.config().session(),
@@ -124,7 +124,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
 
                     HttpPost post = new HttpPost(repository.getUrl());
-                    post.setHeader(authKey, authValue);
+                    post.setHeader(HttpHeaders.AUTHORIZATION, authValue);
                     post.setEntity(builder.build());
                     try (CloseableHttpResponse response = httpClient.execute(post)) {
                         if (response.getStatusLine().getStatusCode() == 201) {
