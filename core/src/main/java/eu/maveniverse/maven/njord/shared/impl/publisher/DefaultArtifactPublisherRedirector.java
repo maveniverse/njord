@@ -81,6 +81,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         while (config.isPresent()) {
             String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
             if (authRedirect != null) {
+                logger.debug("Following auth redirect {} -> {}", authSource.getId(), authRedirect);
                 authSource = new RemoteRepository.Builder(
                                 authRedirect, authSource.getContentType(), authSource.getUrl())
                         .build();
@@ -91,6 +92,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             } else {
                 break;
             }
+        }
+        if (!Objects.equals(repository.getId(), authSource.getId())) {
+            logger.debug("Trail of AUTH for {}: {}", repository.getId(), String.join(" -> ", authSourcesVisited));
         }
         return authSource;
     }
