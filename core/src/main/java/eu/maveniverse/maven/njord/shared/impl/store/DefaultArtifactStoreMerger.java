@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -83,12 +84,12 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
 
                 // must be present in source; comes from it
                 contentOptional = source.artifactContent(sourceArtifact);
-                try (InputStream content = contentOptional.orElseThrow()) {
+                try (InputStream content = contentOptional.orElseThrow(J8Utils.OET)) {
                     sourceSha1 = checksumSha1(content);
                 }
                 // must be present in target; it told us so
                 contentOptional = target.artifactContent(sourceArtifact);
-                try (InputStream content = contentOptional.orElseThrow()) {
+                try (InputStream content = contentOptional.orElseThrow(J8Utils.OET)) {
                     targetSha1 = checksumSha1(content);
                 }
 

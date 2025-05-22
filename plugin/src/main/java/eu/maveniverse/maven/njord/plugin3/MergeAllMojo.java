@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -53,7 +54,7 @@ public class MergeAllMojo extends NjordMojoSupport {
             Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
             if (so.isPresent()) {
                 names.add(name);
-                try (ArtifactStore store = so.orElseThrow()) {
+                try (ArtifactStore store = so.orElseThrow(J8Utils.OET)) {
                     if (template == null) {
                         template = store.template();
                     } else if (!template.equals(store.template())) {
@@ -82,10 +83,10 @@ public class MergeAllMojo extends NjordMojoSupport {
         for (String name : names) {
             Optional<ArtifactStore> so = ns.artifactStoreManager().selectArtifactStore(name);
             if (so.isPresent()) {
-                try (ArtifactStore source = so.orElseThrow();
+                try (ArtifactStore source = so.orElseThrow(J8Utils.OET);
                         ArtifactStore target = ns.artifactStoreManager()
                                 .selectArtifactStore(targetName)
-                                .orElseThrow()) {
+                                .orElseThrow(J8Utils.OET)) {
                     merger.merge(source, target);
                 }
                 logger.info("Dropping {}", name);

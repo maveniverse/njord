@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
@@ -53,7 +54,7 @@ public class StatusMojo extends PublisherSupportMojo {
 
         logger.info("Project deployment:");
         if (ns.config().prefix().isPresent()) {
-            logger.info("  Store prefix: {}", ns.config().prefix().orElseThrow());
+            logger.info("  Store prefix: {}", ns.config().prefix().orElseThrow(J8Utils.OET));
         }
         logger.info("* Release");
         logger.info("  Repository Id: {}", deploymentRelease.getId());
@@ -108,7 +109,7 @@ public class StatusMojo extends PublisherSupportMojo {
             for (String storeName : storeNameCandidates) {
                 Optional<ArtifactStore> aso = ns.artifactStoreManager().selectArtifactStore(storeName);
                 if (aso.isPresent()) {
-                    try (ArtifactStore artifactStore = aso.orElseThrow()) {
+                    try (ArtifactStore artifactStore = aso.orElseThrow(J8Utils.OET)) {
                         logger.info("  {}", artifactStore);
                     }
                 }
@@ -118,14 +119,14 @@ public class StatusMojo extends PublisherSupportMojo {
         logger.info("");
 
         Optional<String> pno = getArtifactStorePublisherName(ns);
-        if (pno.isEmpty()) {
+        if (!pno.isPresent()) {
             logger.info("No configured publishers found");
         } else {
             logger.info("Project publishing:");
-            String publisherName = pno.orElseThrow();
+            String publisherName = pno.orElseThrow(J8Utils.OET);
             Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisherName);
             if (po.isPresent()) {
-                printPublisher(po.orElseThrow());
+                printPublisher(po.orElseThrow(J8Utils.OET));
             } else {
                 logger.warn("Unknown publisher set: {}", publisherName);
             }

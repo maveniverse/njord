@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
@@ -52,7 +53,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
             remoteRepositories.add(artifactStore.storeRemoteRepository());
             Optional<Model> mo = modelProvider.readEffectiveModel(session, artifact, remoteRepositories);
             if (mo.isPresent()) {
-                Model m = mo.orElseThrow();
+                Model m = mo.orElseThrow(J8Utils.OET);
                 if (!nullOrBlank(m.getName())) {
                     collector.addInfo("VALID project/name");
                 } else {

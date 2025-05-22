@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
@@ -38,7 +39,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         if (!url.startsWith(SessionConfig.NAME + ":")
                 && session.config().currentProject().isPresent()) {
             return getRepositoryUrl(
-                    repository, session.config().currentProject().orElseThrow().repositoryMode());
+                    repository,
+                    session.config().currentProject().orElseThrow(J8Utils.OET).repositoryMode());
         }
         return url;
     }
@@ -51,7 +53,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         String url = repository.getUrl();
         Optional<Map<String, String>> sco = session.config().serviceConfiguration(repository.getId());
         if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
-            Map<String, String> config = sco.orElseThrow();
+            Map<String, String> config = sco.orElseThrow(J8Utils.OET);
             String redirectUrl;
             switch (repositoryMode) {
                 case RELEASE:
@@ -80,7 +82,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             authSourcesVisited.add(authSource.getId());
             Optional<Map<String, String>> config = session.config().serviceConfiguration(authSource.getId());
             while (config.isPresent()) {
-                String authRedirect = config.orElseThrow().get(SessionConfig.CONFIG_AUTH_REDIRECT);
+                String authRedirect = config.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_AUTH_REDIRECT);
                 if (authRedirect != null) {
                     logger.debug("Following auth redirect {} -> {}", authSource.getId(), authRedirect);
                     authSource = new RemoteRepository.Builder(
@@ -134,14 +136,17 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         if (session.config().currentProject().isPresent()) {
             RemoteRepository distributionRepository = session.config()
                     .currentProject()
-                    .orElseThrow()
+                    .orElseThrow(J8Utils.OET)
                     .distributionManagementRepositories()
-                    .get(session.config().currentProject().orElseThrow().repositoryMode());
+                    .get(session.config()
+                            .currentProject()
+                            .orElseThrow(J8Utils.OET)
+                            .repositoryMode());
             if (distributionRepository != null) {
                 Optional<Map<String, String>> sco =
                         session.config().serviceConfiguration(distributionRepository.getId());
                 if (sco.isPresent()) {
-                    String publisher = sco.orElseThrow().get(SessionConfig.CONFIG_PUBLISHER);
+                    String publisher = sco.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_PUBLISHER);
                     if (publisher != null) {
                         return Optional.of(publisher);
                     }

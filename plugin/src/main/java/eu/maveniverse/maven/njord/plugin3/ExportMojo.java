@@ -9,9 +9,11 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -39,9 +41,9 @@ public class ExportMojo extends NjordMojoSupport {
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
-            Path targetPath = SessionConfig.getCanonicalPath(Path.of(path).toAbsolutePath());
+            Path targetPath = SessionConfig.getCanonicalPath(Paths.get(path).toAbsolutePath());
             logger.info("Exporting store {} to {}", store, targetPath);
-            Path bundle = ns.artifactStoreManager().exportTo(storeOptional.orElseThrow(), targetPath);
+            Path bundle = ns.artifactStoreManager().exportTo(storeOptional.orElseThrow(J8Utils.OET), targetPath);
             logger.info("Exported to " + bundle);
         } else {
             logger.warn("ArtifactStore with given name not found");

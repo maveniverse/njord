@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreManager;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -33,6 +34,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -81,7 +83,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                         .collect(Collectors.toList());
             }
         }
-        return List.of();
+        return Collections.emptyList();
     }
 
     @Override
@@ -99,7 +101,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 }
             }
         }
-        return List.copyOf(result);
+        return J8Utils.copyOf(result);
     }
 
     @Override
@@ -129,7 +131,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     public Collection<ArtifactStoreTemplate> listTemplates() {
         checkClosed();
 
-        return List.copyOf(templates.values());
+        return J8Utils.copyOf(templates.values());
     }
 
     @Override
@@ -210,7 +212,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             throw new IOException("Exporting to existing bundle ZIP not supported");
         }
         try (FileSystem fs =
-                FileSystems.newFileSystem(URI.create("jar:" + bundleFile.toUri()), Map.of("create", "true"), null)) {
+                FileSystems.newFileSystem(URI.create("jar:" + bundleFile.toUri()), J8Utils.zipFsCreate(true), null)) {
             Path root = fs.getPath("/");
             if (!Files.isDirectory(root)) {
                 throw new IOException("Directory does not exist");
@@ -236,7 +238,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         String storeName;
         Path storeBasedir;
         try (FileSystem fs =
-                FileSystems.newFileSystem(URI.create("jar:" + storeSource.toUri()), Map.of("create", "false"), null)) {
+                FileSystems.newFileSystem(URI.create("jar:" + storeSource.toUri()), J8Utils.zipFsCreate(false), null)) {
             Path repositoryProperties = metaRepositoryProperties(fs.getPath("/"));
             if (Files.exists(repositoryProperties)) {
                 Map<String, String> properties = loadStoreProperties(fs.getPath("/"));
@@ -320,13 +322,13 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = template.checksumAlgorithmFactories()
                         .isPresent()
                 ? checksumAlgorithmFactorySelector.selectList(
-                        template.checksumAlgorithmFactories().orElseThrow())
+                        template.checksumAlgorithmFactories().orElseThrow(J8Utils.OET))
                 : checksumAlgorithmFactorySelector.selectList(
                         ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 config.session(), DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
         List<String> omitChecksumsForExtensions =
                 template.omitChecksumsForExtensions().isPresent()
-                        ? template.omitChecksumsForExtensions().orElseThrow()
+                        ? template.omitChecksumsForExtensions().orElseThrow(J8Utils.OET)
                         : ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 config.session(),
                                 DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
@@ -374,8 +376,10 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 .sorted(Comparator.reverseOrder())) {
             Optional<Path> greatest = candidates.findFirst();
             if (greatest.isPresent()) {
-                num = Integer.parseInt(
-                        greatest.orElseThrow().getFileName().toString().substring(prefixDash.length()));
+                num = Integer.parseInt(greatest.orElseThrow(J8Utils.OET)
+                        .getFileName()
+                        .toString()
+                        .substring(prefixDash.length()));
             }
         }
         return formatArtifactStoreName(prefix, num + 1);

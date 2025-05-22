@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -66,7 +67,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
         try {
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                Session njordSession = ns.orElseThrow(() -> new IllegalStateException("Value unavailable"));
+                Session njordSession = ns.orElseThrow(J8Utils.OET);
                 if (njordSession.config().enabled()) {
                     if (session.getResult().hasExceptions()) {
                         int dropped = njordSession.dropSessionArtifactStores();

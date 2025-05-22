@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -81,7 +82,7 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
                             "false")); // user specified explicitly what he wants here, but may override it
         } else if (session.config().currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
-                    session.config().currentProject().orElseThrow();
+                    session.config().currentProject().orElseThrow(J8Utils.OET);
             releasesRepository = project.distributionManagementRepositories().get(RepositoryMode.RELEASE);
             snapshotsRepository = project.distributionManagementRepositories().get(RepositoryMode.SNAPSHOT);
         }

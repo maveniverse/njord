@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
@@ -80,9 +81,9 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                 } else {
                     for (SignatureValidator signatureValidator : typeSignatureValidator) {
                         try (InputStream artifactContent =
-                                        artifactStore.artifactContent(artifact).orElseThrow();
+                                        artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET);
                                 InputStream signatureContent =
-                                        artifactStore.artifactContent(signature).orElseThrow()) {
+                                        artifactStore.artifactContent(signature).orElseThrow(J8Utils.OET)) {
                             SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
                                     artifactStore,
                                     artifact,

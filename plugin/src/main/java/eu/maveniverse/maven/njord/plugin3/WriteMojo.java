@@ -9,10 +9,12 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -40,12 +42,13 @@ public class WriteMojo extends NjordMojoSupport {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
             Path targetDirectory =
-                    SessionConfig.getCanonicalPath(Path.of(directory).toAbsolutePath());
+                    SessionConfig.getCanonicalPath(Paths.get(directory).toAbsolutePath());
             if (Files.exists(targetDirectory)) {
                 throw new MojoExecutionException("Exporting to existing directory not supported");
             }
             logger.info("Writing store {} as directory to {}", store, directory);
-            Path result = ns.artifactStoreWriter().writeAsDirectory(storeOptional.orElseThrow(), targetDirectory);
+            Path result =
+                    ns.artifactStoreWriter().writeAsDirectory(storeOptional.orElseThrow(J8Utils.OET), targetDirectory);
             logger.info("Written to " + result);
         } else {
             logger.warn("ArtifactStore with given name not found");

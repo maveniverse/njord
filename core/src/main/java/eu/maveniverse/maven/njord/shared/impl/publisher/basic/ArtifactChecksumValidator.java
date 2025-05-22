@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -76,10 +77,10 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
             Optional<InputStream> co = artifactStore.artifactContent(checksumArtifact);
             if (co.isPresent()) {
                 String deployed;
-                try (InputStream in = co.orElseThrow()) {
+                try (InputStream in = co.orElseThrow(J8Utils.OET)) {
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    in.transferTo(bos);
-                    deployed = bos.toString(StandardCharsets.UTF_8);
+                    J8Utils.transferTo(in, bos);
+                    deployed = new String(bos.toByteArray(), StandardCharsets.UTF_8);
                 }
                 if (Objects.equals(calculated, deployed)) {
                     algOk.add(algorithmFactory.getName());

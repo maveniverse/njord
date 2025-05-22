@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -30,7 +31,7 @@ public class ImportMojo extends NjordMojoSupport {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
-        Path source = SessionConfig.getCanonicalPath(Path.of(file).toAbsolutePath());
+        Path source = SessionConfig.getCanonicalPath(Paths.get(file).toAbsolutePath());
         if (!Files.exists(source)) {
             throw new MojoExecutionException("Import file not found: " + file);
         }

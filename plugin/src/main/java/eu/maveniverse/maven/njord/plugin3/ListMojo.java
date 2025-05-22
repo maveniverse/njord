@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +27,7 @@ public class ListMojo extends NjordMojoSupport {
         for (String storeName : storeNames) {
             Optional<ArtifactStore> aso = ns.artifactStoreManager().selectArtifactStore(storeName);
             if (aso.isPresent()) {
-                try (ArtifactStore store = aso.orElseThrow()) {
+                try (ArtifactStore store = aso.orElseThrow(J8Utils.OET)) {
                     logger.info("- " + store);
                 }
             }

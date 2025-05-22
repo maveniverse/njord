@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
@@ -48,7 +49,7 @@ public class BitwiseArtifactStoreComparator extends ArtifactStoreComparatorSuppo
         Collection<Artifact> a2artifacts = a2.artifacts();
 
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories =
-                checksumAlgorithmFactorySelector.selectList(List.of(SHA1));
+                checksumAlgorithmFactorySelector.selectList(Collections.singletonList(SHA1));
 
         ComparisonContext context = comparisonContext.child("Bitwise comparison");
         for (Artifact artifact : extractIndex(a1)) {

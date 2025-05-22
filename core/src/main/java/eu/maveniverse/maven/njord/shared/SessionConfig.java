@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.maven.MavenUtils;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -278,8 +280,8 @@ public interface SessionConfig {
         requireNonNull(project);
         if (!"org.apache.maven:standalone-pom".equals(project.getGroupId() + ":" + project.getArtifactId())) {
             final Artifact artifact = RepositoryUtils.toArtifact(project.getArtifact());
-            final Map<String, String> properties = Map.copyOf(MavenUtils.toMap(project.getProperties()));
-            final List<RemoteRepository> remoteRepositories = List.copyOf(project.getRemoteProjectRepositories());
+            final Map<String, String> properties = J8Utils.copyOf(MavenUtils.toMap(project.getProperties()));
+            final List<RemoteRepository> remoteRepositories = J8Utils.copyOf(project.getRemoteProjectRepositories());
             final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
             if (project.getDistributionManagement() != null) {
                 DeploymentRepository dr = project.getDistributionManagement().getRepository();
@@ -299,7 +301,7 @@ public interface SessionConfig {
                                     .build());
                 }
             }
-            final Map<RepositoryMode, RemoteRepository> distributionManagementRepositories = Map.copyOf(dmr);
+            final Map<RepositoryMode, RemoteRepository> distributionManagementRepositories = J8Utils.copyOf(dmr);
             return new SessionConfig.CurrentProject() {
                 @Override
                 public Artifact artifact() {
@@ -337,7 +339,7 @@ public interface SessionConfig {
                 MavenUtils.discoverArtifactVersion(
                         SessionConfig.class.getClassLoader(), "eu.maveniverse.maven.njord", "core", null),
                 discoverBaseDirectory(),
-                Path.of("njord.properties"),
+                Paths.get("njord.properties"),
                 session.getSystemProperties(),
                 session.getUserProperties(),
                 session,
@@ -493,9 +495,9 @@ public interface SessionConfig {
                     }
                 }
 
-                this.njordProperties = Map.copyOf(MavenUtils.toMap(properties));
-                this.userProperties = Map.copyOf(requireNonNull(userProperties, "userProperties"));
-                this.systemProperties = Map.copyOf(requireNonNull(systemProperties, "systemProperties"));
+                this.njordProperties = J8Utils.copyOf(MavenUtils.toMap(properties));
+                this.userProperties = J8Utils.copyOf(requireNonNull(userProperties, "userProperties"));
+                this.systemProperties = J8Utils.copyOf(requireNonNull(systemProperties, "systemProperties"));
 
                 Map<String, String> ep = new HashMap<>(systemProperties);
                 ep.putAll(njordProperties);
@@ -503,15 +505,15 @@ public interface SessionConfig {
                     properties.putAll(currentProject.projectProperties());
                 }
                 properties.putAll(userProperties);
-                this.effectiveProperties = Map.copyOf(ep);
+                this.effectiveProperties = J8Utils.copyOf(ep);
 
                 this.session = requireNonNull(session);
-                this.remoteRepositories = List.copyOf(requireNonNull(remoteRepositories));
+                this.remoteRepositories = J8Utils.copyOf(requireNonNull(remoteRepositories));
                 ArrayList<RemoteRepository> arr = new ArrayList<>(remoteRepositories);
                 if (currentProject != null) {
                     arr.addAll(currentProject.remoteRepositories());
                 }
-                this.allRemoteRepositories = List.copyOf(arr);
+                this.allRemoteRepositories = J8Utils.copyOf(arr);
 
                 String autoPrefixString = effectiveProperties.get(CONFIG_AUTO_PREFIX);
                 if (autoPrefixString == null && currentProject != null) {
@@ -635,7 +637,7 @@ public interface SessionConfig {
         if (basedir == null) {
             return getCanonicalPath(discoverUserHomeDirectory().resolve(".njord"));
         }
-        return getCanonicalPath(Path.of(System.getProperty("user.dir")).resolve(basedir));
+        return getCanonicalPath(Paths.get(System.getProperty("user.dir")).resolve(basedir));
     }
 
     static Path discoverUserHomeDirectory() {
@@ -643,7 +645,7 @@ public interface SessionConfig {
         if (userHome == null) {
             throw new IllegalStateException("requires user.home Java System Property set");
         }
-        return getCanonicalPath(Path.of(userHome));
+        return getCanonicalPath(Paths.get(userHome));
     }
 
     static Path getCanonicalPath(Path path) {

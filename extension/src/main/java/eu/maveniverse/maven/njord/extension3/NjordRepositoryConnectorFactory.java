@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.util.Map;
 import java.util.Optional;
@@ -54,11 +55,8 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         boolean connectorSkip = ConfigUtils.getBoolean(session, false, NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP);
         if (!connectorSkip) {
             Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
-            if (nso.isPresent()
-                    && nso.orElseThrow(() -> new IllegalStateException("Value unavailable"))
-                            .config()
-                            .enabled()) {
-                Session ns = nso.orElseThrow(() -> new IllegalStateException("Value unavailable"));
+            if (nso.isPresent() && nso.orElseThrow(J8Utils.OET).config().enabled()) {
+                Session ns = nso.orElseThrow(J8Utils.OET);
                 String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
                 if (url != null && url.startsWith(NAME + ":")) {
                     RepositoryConnectorFactory basicRepositoryConnectorFactory = requireNonNull(

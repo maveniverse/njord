@@ -9,6 +9,8 @@ package eu.maveniverse.maven.njord.shared.store;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,17 +19,19 @@ public interface ArtifactStoreTemplate {
     /**
      * The default checksum algorithms.
      */
-    List<String> DEFAULT_CHECKSUM_ALGORITHMS = List.of("SHA-1", "MD5");
+    List<String> DEFAULT_CHECKSUM_ALGORITHMS = Collections.unmodifiableList(Arrays.asList("SHA-1", "MD5"));
 
     /**
      * The default checksum algorithms.
      */
-    List<String> STRONG_CHECKSUM_ALGORITHMS = List.of("SHA-512", "SHA-256", "SHA-1", "MD5");
+    List<String> STRONG_CHECKSUM_ALGORITHMS =
+            Collections.unmodifiableList(Arrays.asList("SHA-512", "SHA-256", "SHA-1", "MD5"));
 
     /**
      * The default extensions to omit checksums for.
      */
-    List<String> DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = List.of(".asc", ".sigstore", ".sigstore.json");
+    List<String> DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS =
+            Collections.unmodifiableList(Arrays.asList(".asc", ".sigstore", ".sigstore.json"));
 
     /**
      * Template name.

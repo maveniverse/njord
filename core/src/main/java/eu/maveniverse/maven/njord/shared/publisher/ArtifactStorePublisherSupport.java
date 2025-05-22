@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
@@ -96,7 +97,8 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
             throws IOException {
         Optional<ArtifactStoreValidator> vo = validatorFor(artifactStore);
         if (vo.isPresent()) {
-            ArtifactStoreValidator.ValidationResult vr = vo.orElseThrow().validate(artifactStore);
+            ArtifactStoreValidator.ValidationResult vr =
+                    vo.orElseThrow(J8Utils.OET).validate(artifactStore);
             return Optional.of(vr);
         } else {
             return Optional.empty();
