@@ -119,11 +119,13 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 try (CloseableHttpClient httpClient =
                         HttpClientBuilder.create().setUserAgent(userAgent).build()) {
-                    HttpPost post = new HttpPost(repository.getUrl());
-                    post.setHeader(authKey, authValue);
                     MultipartEntityBuilder builder = MultipartEntityBuilder.create();
                     builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
                     builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
+
+                    HttpPost post = new HttpPost(repository.getUrl());
+                    post.setHeader(authKey, authValue);
+                    post.setEntity(builder.build());
                     try (CloseableHttpResponse response = httpClient.execute(post)) {
                         if (response.getStatusLine().getStatusCode() == 201) {
                             deploymentId = EntityUtils.toString(response.getEntity());
