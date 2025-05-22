@@ -14,18 +14,20 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.util.Objects;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DeployPublisher extends ArtifactStorePublisherSupport {
+    private final boolean followAuthRedirection;
+
     public DeployPublisher(
             Session session,
             RepositorySystem repositorySystem,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
-            ArtifactStoreRequirements artifactStoreRequirements) {
+            ArtifactStoreRequirements artifactStoreRequirements,
+            boolean followAuthRedirection) {
         super(
                 session,
                 repositorySystem,
@@ -36,6 +38,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
+        this.followAuthRedirection = followAuthRedirection;
     }
 
     @Override
@@ -45,23 +48,15 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
-        // handle auth redirection, if needed
-        RemoteRepository authSource = repositorySystem.newDeploymentRepository(
-                session.config().session(),
-                session.artifactPublisherRedirector().getAuthRepositoryId(repository));
-        if (!Objects.equals(repository.getId(), authSource.getId())) {
-            repository = new RemoteRepository.Builder(repository)
-                    .setAuthentication(authSource.getAuthentication())
-                    .setProxy(repository.getProxy())
-                    .build();
-        }
+        // handle auth redirection, if needed and
         // just deploy as m-deploy-p would
         try (ArtifactStore store = artifactStore) {
             new ArtifactStoreDeployer(
                             repositorySystem,
                             new DefaultRepositorySystemSession(session.config().session())
                                     .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                            repository,
+                            session.artifactPublisherRedirector()
+                                    .getPublishingRepository(repository, true, followAuthRedirection),
                             true)
                     .deploy(store);
         }

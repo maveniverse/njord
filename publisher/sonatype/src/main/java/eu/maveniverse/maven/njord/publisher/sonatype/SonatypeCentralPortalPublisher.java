@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-import java.util.Objects;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -87,7 +86,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 // build auth token
                 RemoteRepository authSource =
-                        session.artifactPublisherRedirector().getAuthRepositoryId(repository);
+                        session.artifactPublisherRedirector().getAuthRepositoryId(repository, true);
                 String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
@@ -149,16 +148,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
             }
         } else { // snapshot
-            // handle auth redirection, if needed
-            RemoteRepository authSource = repositorySystem.newDeploymentRepository(
-                    session.config().session(),
-                    session.artifactPublisherRedirector().getAuthRepositoryId(repository));
-            if (!Objects.equals(repository.getId(), authSource.getId())) {
-                repository = new RemoteRepository.Builder(repository)
-                        .setAuthentication(authSource.getAuthentication())
-                        .setProxy(authSource.getProxy())
-                        .build();
-            }
+            // handle auth redirection, if needed and
             // just deploy to snapshots as m-deploy-p would
             try (ArtifactStore store = artifactStore) {
                 new ArtifactStoreDeployer(
@@ -166,7 +156,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 new DefaultRepositorySystemSession(
                                                 session.config().session())
                                         .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                                repository,
+                                session.artifactPublisherRedirector().getPublishingRepository(repository, true, true),
                                 true)
                         .deploy(store);
             }

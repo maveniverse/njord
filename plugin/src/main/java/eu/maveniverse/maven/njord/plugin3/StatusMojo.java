@@ -57,9 +57,15 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Release");
         logger.info("  Repository Id: {}", deploymentRelease.getId());
-        RemoteRepository releaseAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentRelease);
+        RemoteRepository releaseAuthSource =
+                ns.artifactPublisherRedirector().getPublishingRepository(deploymentRelease, false, true);
         if (!Objects.equals(releaseAuthSource.getId(), deploymentRelease.getId())) {
             logger.info("  Auth source Id: {}", releaseAuthSource.getId());
+        }
+        if (releaseAuthSource.getAuthentication() != null) {
+            logger.info("  Repository Auth: Present");
+        } else {
+            logger.warn("  Repository Auth: Absent");
         }
         logger.info("  POM URL: {}", deploymentRelease.getUrl());
         if (!Objects.equals(deploymentRelease.getUrl(), deploymentReleaseUrl)) {
@@ -72,9 +78,15 @@ public class StatusMojo extends PublisherSupportMojo {
         }
         logger.info("* Snapshot");
         logger.info("  Repository Id: {}", deploymentSnapshot.getId());
-        RemoteRepository snapshotAuthSource = ns.artifactPublisherRedirector().getAuthRepositoryId(deploymentSnapshot);
+        RemoteRepository snapshotAuthSource =
+                ns.artifactPublisherRedirector().getPublishingRepository(deploymentSnapshot, false, true);
         if (!Objects.equals(snapshotAuthSource.getId(), deploymentSnapshot.getId())) {
             logger.info("  Auth source Id: {}", snapshotAuthSource.getId());
+        }
+        if (snapshotAuthSource.getAuthentication() != null) {
+            logger.info("  Repository Auth: Present");
+        } else {
+            logger.warn("  Repository Auth: Absent");
         }
         logger.info("  POM URL: {}", deploymentSnapshot.getUrl());
         if (!Objects.equals(deploymentSnapshot.getUrl(), deploymentSnapshotUrl)) {
