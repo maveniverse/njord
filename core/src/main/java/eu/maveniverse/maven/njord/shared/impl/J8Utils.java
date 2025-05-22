@@ -31,7 +31,7 @@ public final class J8Utils {
     public static Supplier<IllegalStateException> OET = () -> new IllegalStateException("No value present");
 
     /**
-     * Java 8: {@code Map.of("create", "true")}.
+     * Java 8: <code>Map.of("create", "true")</code>.
      */
     public static Map<String, String> zipFsCreate(boolean create) {
         HashMap<String, String> map = new HashMap<>();
@@ -64,14 +64,14 @@ public final class J8Utils {
     }
 
     /**
-     * Java 8: Map.copyOf()
+     * Java 8: <code>Map.copyOf(Map)</code>
      */
     public static <K, V> Map<K, V> copyOf(Map<K, V> map) {
         return Collections.unmodifiableMap(new HashMap<>(map));
     }
 
     /**
-     * Java 8: List.copyOf()
+     * Java 8: <code>List.copyOf(Collection)</code>
      */
     public static <E1, E2 extends E1> List<E1> copyOf(Collection<E2> list) {
         return Collections.unmodifiableList(new ArrayList<>(list));
