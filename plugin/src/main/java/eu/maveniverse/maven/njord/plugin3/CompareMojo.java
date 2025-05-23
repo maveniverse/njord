@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import java.io.IOException;
@@ -48,20 +49,20 @@ public class CompareMojo extends NjordMojoSupport {
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         Optional<ArtifactStore> store1Optional = ns.artifactStoreManager().selectArtifactStore(store1);
-        if (store1Optional.isEmpty()) {
+        if (!store1Optional.isPresent()) {
             logger.warn("ArtifactStore with given name not found: {}", store1);
             return;
         }
         Optional<ArtifactStore> store2Optional = ns.artifactStoreManager().selectArtifactStore(store2);
-        if (store2Optional.isEmpty()) {
+        if (!store2Optional.isPresent()) {
             logger.warn("ArtifactStore with given name not found: {}", store2);
             return;
         }
         Optional<ArtifactStoreComparator> po = ns.selectArtifactStoreComparator(comparator);
         if (po.isPresent()) {
-            ArtifactStoreComparator p = po.orElseThrow();
-            try (ArtifactStore one = store1Optional.orElseThrow();
-                    ArtifactStore two = store2Optional.orElseThrow()) {
+            ArtifactStoreComparator p = po.orElseThrow(J8Utils.OET);
+            try (ArtifactStore one = store1Optional.orElseThrow(J8Utils.OET);
+                    ArtifactStore two = store2Optional.orElseThrow(J8Utils.OET)) {
                 ArtifactStoreComparator.ComparisonResult vr = p.compare(one, two);
                 if (details) {
                     logger.info("Comparison results for {} vs {}", store1, store2);

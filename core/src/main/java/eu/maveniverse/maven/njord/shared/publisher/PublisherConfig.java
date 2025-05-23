@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.util.Map;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -53,7 +54,7 @@ public class PublisherConfig {
         if (sessionConfig.currentProject().isPresent()) {
             RemoteRepository repository = sessionConfig
                     .currentProject()
-                    .orElseThrow()
+                    .orElseThrow(J8Utils.OET)
                     .distributionManagementRepositories()
                     .get(mode);
             if (repository != null) {

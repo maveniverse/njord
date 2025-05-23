@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.BulkValidatorFactory;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
@@ -128,22 +128,22 @@ public class DefaultArtifactStoreValidator implements ArtifactStoreValidator {
 
         @Override
         public Collection<String> info() {
-            return List.copyOf(info);
+            return J8Utils.copyOf(info);
         }
 
         @Override
         public Collection<String> warning() {
-            return List.copyOf(warnings);
+            return J8Utils.copyOf(warnings);
         }
 
         @Override
         public Collection<String> error() {
-            return List.copyOf(errors);
+            return J8Utils.copyOf(errors);
         }
 
         @Override
         public Collection<ValidationResult> children() {
-            return List.copyOf(children.values());
+            return J8Utils.copyOf(children.values());
         }
 
         @Override

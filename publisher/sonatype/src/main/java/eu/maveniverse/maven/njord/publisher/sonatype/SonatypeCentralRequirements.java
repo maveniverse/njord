@@ -29,6 +29,8 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.ValidatorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -51,14 +53,16 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
         requireNonNull(modelProvider);
 
         // checksums
-        this.mandatoryChecksumAlgorithms = checksumAlgorithmFactorySelector.selectList(List.of("SHA-1", "MD5"));
-        this.optionalChecksumAlgorithms = checksumAlgorithmFactorySelector.selectList(List.of("SHA-512", "SHA-256"));
+        this.mandatoryChecksumAlgorithms = checksumAlgorithmFactorySelector.selectList(Arrays.asList("SHA-1", "MD5"));
+        this.optionalChecksumAlgorithms =
+                checksumAlgorithmFactorySelector.selectList(Arrays.asList("SHA-512", "SHA-256"));
 
         // signatures
-        this.mandatorySignatureTypes = List.of(new GpgSignatureType());
-        this.optionalSignatureTypes = List.of(new SigstoreSignatureType());
-        List<SignatureValidator> mandatorySignatureValidators = List.of(new GpgSignatureValidator());
-        List<SignatureValidator> optionalSignatureValidators = List.of(new SigstoreSignatureValidator());
+        this.mandatorySignatureTypes = Collections.singletonList(new GpgSignatureType());
+        this.optionalSignatureTypes = Collections.singletonList(new SigstoreSignatureType());
+        List<SignatureValidator> mandatorySignatureValidators = Collections.singletonList(new GpgSignatureValidator());
+        List<SignatureValidator> optionalSignatureValidators =
+                Collections.singletonList(new SigstoreSignatureValidator());
 
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
@@ -84,8 +88,8 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
                 optionalSignatureTypes,
                 optionalSignatureValidators));
 
-        this.releaseValidator =
-                new DefaultArtifactStoreValidator(session, "central", "Central Requirements", List.of(), validators);
+        this.releaseValidator = new DefaultArtifactStoreValidator(
+                session, "central", "Central Requirements", Collections.emptyList(), validators);
         this.snapshotValidator = null;
     }
 

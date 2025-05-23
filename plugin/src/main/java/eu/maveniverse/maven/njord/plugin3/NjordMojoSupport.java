@@ -11,6 +11,7 @@ import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
@@ -38,10 +39,10 @@ public abstract class NjordMojoSupport extends MojoSupport {
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
         try {
             Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
-            if (njordSession.isEmpty()) {
+            if (!njordSession.isPresent()) {
                 doWithoutSession();
             } else {
-                Session ns = njordSession.orElseThrow();
+                Session ns = njordSession.orElseThrow(J8Utils.OET);
                 if (ns.config().enabled()) {
                     doWithSession(ns);
                 } else {
@@ -79,12 +80,12 @@ public abstract class NjordMojoSupport extends MojoSupport {
         logger.info(
                 "    Checksum Factories: {}",
                 template.checksumAlgorithmFactories().isPresent()
-                        ? template.checksumAlgorithmFactories().orElseThrow()
+                        ? template.checksumAlgorithmFactories().orElseThrow(J8Utils.OET)
                         : "Globally configured");
         logger.info(
                 "    Omit checksums for: {}",
                 template.omitChecksumsForExtensions().isPresent()
-                        ? template.omitChecksumsForExtensions().orElseThrow()
+                        ? template.omitChecksumsForExtensions().orElseThrow(J8Utils.OET)
                         : "Globally configured");
     }
 
@@ -96,31 +97,31 @@ public abstract class NjordMojoSupport extends MojoSupport {
             logger.info("  Checksums:");
             logger.info(
                     "    Mandatory: {}",
-                    artifactStoreRequirements.mandatoryChecksumAlgorithms().isEmpty()
+                    !artifactStoreRequirements.mandatoryChecksumAlgorithms().isPresent()
                             ? "No checksum requirements set"
-                            : artifactStoreRequirements.mandatoryChecksumAlgorithms().orElseThrow().stream()
+                            : artifactStoreRequirements.mandatoryChecksumAlgorithms().orElseThrow(J8Utils.OET).stream()
                                     .map(ChecksumAlgorithmFactory::getName)
                                     .collect(Collectors.joining(", ")));
             logger.info(
                     "    Supported: {}",
-                    artifactStoreRequirements.optionalChecksumAlgorithms().isEmpty()
+                    !artifactStoreRequirements.optionalChecksumAlgorithms().isPresent()
                             ? "No checksum requirements set"
-                            : artifactStoreRequirements.optionalChecksumAlgorithms().orElseThrow().stream()
+                            : artifactStoreRequirements.optionalChecksumAlgorithms().orElseThrow(J8Utils.OET).stream()
                                     .map(ChecksumAlgorithmFactory::getName)
                                     .collect(Collectors.joining(", ")));
             logger.info("  Signatures:");
             logger.info(
                     "    Mandatory: {}",
-                    artifactStoreRequirements.mandatorySignatureTypes().isEmpty()
+                    !artifactStoreRequirements.mandatorySignatureTypes().isPresent()
                             ? "No signature requirements set"
-                            : artifactStoreRequirements.mandatorySignatureTypes().orElseThrow().stream()
+                            : artifactStoreRequirements.mandatorySignatureTypes().orElseThrow(J8Utils.OET).stream()
                                     .map(SignatureType::name)
                                     .collect(Collectors.joining(", ")));
             logger.info(
                     "    Supported: {}",
-                    artifactStoreRequirements.optionalSignatureTypes().isEmpty()
+                    !artifactStoreRequirements.optionalSignatureTypes().isPresent()
                             ? "No signature requirements set"
-                            : artifactStoreRequirements.optionalSignatureTypes().orElseThrow().stream()
+                            : artifactStoreRequirements.optionalSignatureTypes().orElseThrow(J8Utils.OET).stream()
                                     .map(SignatureType::name)
                                     .collect(Collectors.joining(", ")));
             logger.info("  Published artifacts will be available from:");

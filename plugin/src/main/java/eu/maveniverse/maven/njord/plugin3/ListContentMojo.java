@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class ListContentMojo extends NjordMojoSupport {
     protected void doWithSession(Session ns) throws IOException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
-            try (ArtifactStore store = storeOptional.orElseThrow()) {
+            try (ArtifactStore store = storeOptional.orElseThrow(J8Utils.OET)) {
                 logger.info("List contents of ArtifactStore {}", store);
                 AtomicInteger counter = new AtomicInteger();
                 for (Artifact artifact : store.artifacts()) {

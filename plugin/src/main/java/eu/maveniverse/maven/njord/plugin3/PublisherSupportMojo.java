@@ -9,9 +9,11 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.apache.maven.plugin.MojoFailureException;
@@ -53,13 +55,13 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      */
     protected List<String> getArtifactStoreNameCandidates(Session ns) throws IOException {
         if (store == null && ns.config().prefix().isPresent()) {
-            String prefix = ns.config().prefix().orElseThrow();
+            String prefix = ns.config().prefix().orElseThrow(J8Utils.OET);
             return ns.artifactStoreManager().listArtifactStoreNamesForPrefix(prefix);
         }
         if (store != null) {
-            return List.of(store);
+            return Collections.singletonList(store);
         } else {
-            return List.of();
+            return Collections.emptyList();
         }
     }
 
@@ -84,16 +86,16 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
 
     protected ArtifactStore getArtifactStore(Session ns) throws IOException, MojoFailureException {
         Optional<String> storeName = getArtifactStoreName(ns);
-        if (storeName.isEmpty()) {
+        if (!storeName.isPresent()) {
             throw new MojoFailureException("ArtifactStore name was not specified nor could be found");
         }
-        String store = storeName.orElseThrow();
+        String store = storeName.orElseThrow(J8Utils.OET);
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
-        if (storeOptional.isEmpty()) {
+        if (!storeOptional.isPresent()) {
             logger.warn("ArtifactStore with given name not found: {}", store);
             throw new MojoFailureException("ArtifactStore with given name not found: " + store);
         }
-        return storeOptional.orElseThrow();
+        return storeOptional.orElseThrow(J8Utils.OET);
     }
 
     /**
@@ -114,14 +116,14 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
 
     protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {
         Optional<String> publisherName = getArtifactStorePublisherName(ns);
-        if (publisherName.isEmpty()) {
+        if (!publisherName.isPresent()) {
             throw new MojoFailureException("Publisher name was not specified nor could be discovered");
         }
-        String publisher = publisherName.orElseThrow();
+        String publisher = publisherName.orElseThrow(J8Utils.OET);
         Optional<ArtifactStorePublisher> po = ns.selectArtifactStorePublisher(publisher);
-        if (po.isEmpty()) {
+        if (!po.isPresent()) {
             throw new MojoFailureException("Publisher not found: " + publisher);
         }
-        return po.orElseThrow();
+        return po.orElseThrow(J8Utils.OET);
     }
 }

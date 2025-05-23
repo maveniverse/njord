@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,7 +34,7 @@ public class ImportAllMojo extends NjordMojoSupport {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
-        Path sourceDirectory = SessionConfig.getCanonicalPath(Path.of(dir).toAbsolutePath());
+        Path sourceDirectory = SessionConfig.getCanonicalPath(Paths.get(dir).toAbsolutePath());
         if (!Files.isDirectory(sourceDirectory)) {
             throw new MojoExecutionException("Import directory does not exist");
         }

@@ -138,7 +138,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                     // empty -> default IF project is available
                     if (config.currentProject().isPresent()) {
                         return internalArtifactStoreManager.defaultTemplate(
-                                config.currentProject().orElseThrow().repositoryMode());
+                                config.currentProject().orElseThrow(J8Utils.OET).repositoryMode());
                     } else {
                         throw new IllegalStateException(
                                 "No project present, cannot deduce repository mode: specify template explicitly as `njord:template:<TEMPLATE>`");
@@ -154,7 +154,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 // store:xxx
                 try (ArtifactStore artifactStore = internalArtifactStoreManager
                         .selectArtifactStore(uri.substring(6))
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown store"))) {
+                        .orElseThrow(J8Utils.OET)) {
                     return artifactStore.template();
                 }
             } else {
@@ -179,7 +179,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                         if (config.currentProject().isPresent()) {
                             artifactStoreName = createUsingTemplate(internalArtifactStoreManager
                                     .defaultTemplate(config.currentProject()
-                                            .orElseThrow()
+                                            .orElseThrow(J8Utils.OET)
                                             .repositoryMode())
                                     .name());
                         } else {
@@ -205,9 +205,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             }
         });
         try {
-            return internalArtifactStoreManager
-                    .selectArtifactStore(storeName)
-                    .orElseThrow(() -> new IllegalArgumentException("No such store: " + storeName));
+            return internalArtifactStoreManager.selectArtifactStore(storeName).orElseThrow(J8Utils.OET);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -222,7 +220,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         } else {
             ArtifactStoreTemplate template = templates.get(0);
             if (config.prefix().isPresent()) {
-                template = template.withPrefix(config.prefix().orElseThrow());
+                template = template.withPrefix(config.prefix().orElseThrow(J8Utils.OET));
             }
             return template;
         }
@@ -232,7 +230,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         try (ArtifactStore artifactStore = internalArtifactStoreManager.createArtifactStore(
                 selectTemplate(templateName),
                 config.currentProject().isPresent()
-                        ? config.currentProject().orElseThrow().artifact()
+                        ? config.currentProject().orElseThrow(J8Utils.OET).artifact()
                         : null)) {
             return artifactStore.name();
         }
@@ -251,16 +249,16 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         AtomicInteger result = new AtomicInteger(published);
         Optional<String> pno = artifactPublisherRedirector.getArtifactStorePublisherName();
         if (pno.isPresent()) {
-            String publisherName = pno.orElseThrow();
+            String publisherName = pno.orElseThrow(J8Utils.OET);
             Optional<ArtifactStorePublisher> po = selectArtifactStorePublisher(publisherName);
             if (po.isPresent()) {
-                ArtifactStorePublisher p = po.orElseThrow();
+                ArtifactStorePublisher p = po.orElseThrow(J8Utils.OET);
                 sessionBoundStore.values().forEach(n -> {
                     try {
                         logger.info("Publishing {} with {}", n, publisherName);
                         try (ArtifactStore as = internalArtifactStoreManager
                                 .selectArtifactStore(n)
-                                .orElseThrow()) {
+                                .orElseThrow(J8Utils.OET)) {
                             p.publish(as);
                             result.addAndGet(1);
                         }

@@ -9,13 +9,9 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
-import com.github.mizosoft.methanol.MediaType;
-import com.github.mizosoft.methanol.Methanol;
-import com.github.mizosoft.methanol.MoreBodyPublishers;
-import com.github.mizosoft.methanol.MultipartBodyPublisher;
-import com.github.mizosoft.methanol.MutableRequest;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -23,12 +19,19 @@ import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -77,17 +80,16 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 }
                 String bundleName = bundle.getFileName().toString();
                 if (publisherConfig.bundleName().isPresent()) {
-                    bundleName = publisherConfig.bundleName().orElseThrow();
+                    bundleName = publisherConfig.bundleName().orElseThrow(J8Utils.OET);
                 } else if (artifactStore.originProjectArtifact().isPresent()) {
                     Artifact originProjectArtifact =
-                            artifactStore.originProjectArtifact().orElseThrow();
+                            artifactStore.originProjectArtifact().orElseThrow(J8Utils.OET);
                     bundleName = originProjectArtifact.getArtifactId() + "-" + originProjectArtifact.getVersion();
                 }
 
                 // build auth token
                 RemoteRepository authSource =
                         session.artifactPublisherRedirector().getAuthRepositoryId(repository, true);
-                String authKey = "Authorization";
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
                         session.config().session(),
@@ -108,37 +110,30 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 // we need to use own HTTP client here
                 String deploymentId;
-                try {
-                    // use Maven UA
-                    String userAgent = ConfigUtils.getString(
-                            session.config().session(),
-                            ConfigurationProperties.DEFAULT_USER_AGENT,
-                            "aether.connector.userAgent",
-                            "aether.transport.http.userAgent");
+                // use Maven UA
+                String userAgent = ConfigUtils.getString(
+                        session.config().session(),
+                        ConfigurationProperties.DEFAULT_USER_AGENT,
+                        "aether.connector.userAgent",
+                        "aether.transport.http.userAgent");
 
-                    Methanol httpClient =
-                            Methanol.newBuilder().userAgent(userAgent).build();
-                    MultipartBodyPublisher multipartBodyPublisher = MultipartBodyPublisher.newBuilder()
-                            .formPart(
-                                    "bundle",
-                                    bundleName,
-                                    MoreBodyPublishers.ofMediaType(
-                                            HttpRequest.BodyPublishers.ofFile(bundle),
-                                            MediaType.APPLICATION_OCTET_STREAM))
-                            .build();
-                    HttpResponse<String> response = httpClient.send(
-                            MutableRequest.POST(repository.getUrl(), multipartBodyPublisher)
-                                    .header(authKey, authValue),
-                            HttpResponse.BodyHandlers.ofString());
-                    if (response.statusCode() == 201) {
-                        deploymentId = response.body();
-                    } else {
-                        throw new IOException(
-                                "Unexpected response code: " + response.statusCode() + " " + response.body());
+                try (CloseableHttpClient httpClient =
+                        HttpClientBuilder.create().setUserAgent(userAgent).build()) {
+                    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                    builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                    builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
+
+                    HttpPost post = new HttpPost(repository.getUrl());
+                    post.setHeader(HttpHeaders.AUTHORIZATION, authValue);
+                    post.setEntity(builder.build());
+                    try (CloseableHttpResponse response = httpClient.execute(post)) {
+                        if (response.getStatusLine().getStatusCode() == 201) {
+                            deploymentId = EntityUtils.toString(response.getEntity());
+                        } else {
+                            throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
+                                    + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));
+                        }
                     }
-                } catch (InterruptedException e) {
-                    logger.error(e.getMessage(), e);
-                    throw new IOException("Publishing interrupted", e);
                 }
 
                 logger.info("Deployment ID: {}", deploymentId);

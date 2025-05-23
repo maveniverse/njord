@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.impl.comparator;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
@@ -120,17 +121,17 @@ public abstract class ArtifactStoreComparatorSupport extends ComponentSupport im
 
         @Override
         public Collection<String> equalities() {
-            return List.copyOf(equalities);
+            return J8Utils.copyOf(equalities);
         }
 
         @Override
         public Collection<String> differences() {
-            return List.copyOf(differences);
+            return J8Utils.copyOf(differences);
         }
 
         @Override
         public Collection<ComparisonResult> children() {
-            return List.copyOf(children.values());
+            return J8Utils.copyOf(children.values());
         }
 
         @Override
