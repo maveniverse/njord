@@ -9,11 +9,21 @@ package eu.maveniverse.maven.njord.shared.store;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.function.Predicate;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public enum RepositoryMode {
     RELEASE,
     SNAPSHOT;
+
+    public Predicate<Artifact> predicate() {
+        if (this.equals(RELEASE)) {
+            return art -> !art.isSnapshot();
+        } else {
+            return Artifact::isSnapshot;
+        }
+    }
 
     public static RepositoryMode fromString(String mode) {
         requireNonNull(mode);

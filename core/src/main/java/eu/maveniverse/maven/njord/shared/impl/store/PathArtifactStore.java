@@ -235,22 +235,35 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         DirectoryLocker.INSTANCE.unlockDirectory(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         // check files (set + exists)
-        if (artifacts.stream().anyMatch(a -> a.getFile() == null || !a.getFile().isFile())) {
-            throw new IllegalArgumentException("Passed in artifacts must have set existing file");
+        List<Artifact> nfa = artifacts.stream()
+                .filter(a -> a.getFile() == null || !a.getFile().isFile())
+                .collect(Collectors.toList());
+        if (!nfa.isEmpty()) {
+            throw new IllegalArgumentException("PUT Artifacts missing backing file: " + nfa);
         }
-        if (metadata.stream().anyMatch(m -> m.getFile() == null || !m.getFile().isFile())) {
-            throw new IllegalArgumentException("Passed in metadata must have set existing file");
+        List<Metadata> nfm = metadata.stream()
+                .filter(m -> m.getFile() == null || !m.getFile().isFile())
+                .collect(Collectors.toList());
+        if (!nfm.isEmpty()) {
+            throw new IllegalArgumentException("PUT Metadata missing backing file: " + nfm);
         }
         // check RepositoryMode (snapshot vs release)
-        boolean expected = repositoryMode() != RepositoryMode.RELEASE;
-        if (artifacts.stream().anyMatch(a -> a.isSnapshot() != expected)) {
-            throw new IllegalArgumentException("Passed in artifacts repository policy mismatch");
+        List<Artifact> mismatch;
+        if (!(mismatch = artifacts.stream()
+                        .filter(repositoryMode().predicate().negate())
+                        .collect(Collectors.toList()))
+                .isEmpty()) {
+            throw new IllegalArgumentException(
+                    "PUT Artifacts repository policy mismatch (release vs snapshot): " + mismatch);
         }
         // check DeployMode (already exists)
+        List<Artifact> redeploys;
         if (!allowRedeploy()
-                && artifacts.stream()
-                        .anyMatch(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))) {
-            throw new IllegalArgumentException("Redeployment is forbidden (artifact already exists)");
+                && !(redeploys = artifacts.stream()
+                                .filter(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))
+                                .collect(Collectors.toList()))
+                        .isEmpty()) {
+            throw new IllegalArgumentException("Redeployment is forbidden (artifacts already exists): " + redeploys);
         }
 
         return new Operation() {
