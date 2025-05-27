@@ -55,20 +55,14 @@ public interface SessionConfig {
     String CONFIG_DRY_RUN = KEY_PREFIX + "dryRun";
 
     /**
-     * Configuration key in properties (system, user or project) for "auto prefix": if project is present, use its top
-     * level project artifact id as prefix. Defaults to {@code true}.
-     */
-    String CONFIG_AUTO_PREFIX = KEY_PREFIX + "autoPrefix";
-
-    /**
      * Configuration key in properties (system, user or project) for "auto publish": publish automatically all stores
      * created within session at the end of session. Defaults to {@code false}.
      */
     String CONFIG_AUTO_PUBLISH = KEY_PREFIX + "autoPublish";
 
     /**
-     * Configuration key in properties (system, user or project) for explicitly set prefix to use. If {@link #CONFIG_AUTO_PREFIX}
-     * is {@code true} and there is a project in context, prefix will be automatically set to top level project artifact id.
+     * Configuration key in properties (system, user or project) for explicitly set prefix to use.
+     * If there is a project in context, prefix will be automatically set to top level project artifact id.
      */
     String CONFIG_PREFIX = KEY_PREFIX + "prefix";
 
@@ -155,15 +149,6 @@ public interface SessionConfig {
     List<RemoteRepository> allRemoteRepositories();
 
     /**
-     * Whether to apply "auto prefix" (user provided one or derived from current project) or use "template prefix" for
-     * created store names. Defaults to {@code true}: when {@link #currentProject()} is available, store prefix is
-     * derived from the project, otherwise from template.
-     *
-     * @see #CONFIG_AUTO_PREFIX
-     */
-    boolean autoPrefix();
-
-    /**
      * Whether to automatically publish session created stores. Defaults to {@code false}.
      *
      * @see #CONFIG_AUTO_PUBLISH
@@ -171,11 +156,13 @@ public interface SessionConfig {
     boolean autoPublish();
 
     /**
-     * The prefix to override template prefix, if needed. If {@link #autoPrefix()} is {@code true}, this value is always
+     * The prefix to override template prefix, if needed. This value is always
      * present if there is present {@link #currentProject()}.
      * <p>
      * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
      * POM as project property.
+     *
+     * @see #CONFIG_PREFIX
      */
     Optional<String> prefix();
 
@@ -454,7 +441,6 @@ public interface SessionConfig {
             private final RepositorySystemSession session;
             private final List<RemoteRepository> remoteRepositories;
             private final List<RemoteRepository> allRemoteRepositories;
-            private final boolean autoPrefix;
             private final boolean autoPublish;
             private final String prefix;
             private final String publisher;
@@ -515,12 +501,6 @@ public interface SessionConfig {
                 }
                 this.allRemoteRepositories = J8Utils.copyOf(arr);
 
-                String autoPrefixString = effectiveProperties.get(CONFIG_AUTO_PREFIX);
-                if (autoPrefixString == null && currentProject != null) {
-                    autoPrefixString = currentProject.projectProperties().get(CONFIG_AUTO_PREFIX);
-                }
-                this.autoPrefix = autoPrefixString == null || Boolean.parseBoolean(autoPrefixString);
-
                 String autoPublishString = effectiveProperties.get(CONFIG_AUTO_PUBLISH);
                 if (autoPublishString == null && currentProject != null) {
                     autoPublishString = currentProject.projectProperties().get(CONFIG_AUTO_PUBLISH);
@@ -530,7 +510,7 @@ public interface SessionConfig {
                 String prefixString = effectiveProperties.get(CONFIG_PREFIX);
                 if (prefixString == null && currentProject != null) {
                     prefixString = currentProject.projectProperties().get(CONFIG_PREFIX);
-                    if (prefixString == null && autoPrefix) {
+                    if (prefixString == null) {
                         prefixString = currentProject.artifact().getArtifactId();
                     }
                 }
@@ -603,11 +583,6 @@ public interface SessionConfig {
             @Override
             public List<RemoteRepository> allRemoteRepositories() {
                 return allRemoteRepositories;
-            }
-
-            @Override
-            public boolean autoPrefix() {
-                return autoPrefix;
             }
 
             @Override
