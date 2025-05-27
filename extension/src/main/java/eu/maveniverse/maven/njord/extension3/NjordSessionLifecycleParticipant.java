@@ -85,7 +85,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                             logger.info("Auto publish: Published {} stores created in this session", published);
                             int dropped = njordSession.dropSessionArtifactStores();
                             if (dropped != 0) {
-                                logger.warn("Auto publish: Dropped {} auto published stores", dropped);
+                                logger.info("Auto publish: Dropped {} auto published stores", dropped);
                             }
                         } else {
                             logger.info("Auto publish: No stores created in this session");
