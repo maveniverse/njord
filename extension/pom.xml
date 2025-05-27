@@ -76,7 +76,8 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <scope>provided</scope>
+      <!-- To not crap out on older Maven -->
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
