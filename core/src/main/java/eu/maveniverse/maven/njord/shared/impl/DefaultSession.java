@@ -34,9 +34,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
@@ -48,9 +46,6 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final ArtifactPublisherRedirector artifactPublisherRedirector;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
-
-    private final CopyOnWriteArrayList<Supplier<Integer>> derivedPublishSessionArtifactStores;
-    private final CopyOnWriteArrayList<Supplier<Integer>> derivedDropSessionArtifactStores;
 
     public DefaultSession(
             SessionConfig sessionConfig,
@@ -71,23 +66,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 requireNonNull(artifactPublisherRedirectorFactory).create(this);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
-
-        this.derivedPublishSessionArtifactStores = new CopyOnWriteArrayList<>();
-        this.derivedDropSessionArtifactStores = new CopyOnWriteArrayList<>();
     }
 
     @Override
     public SessionConfig config() {
         return config;
-    }
-
-    @Override
-    public Session derive(SessionConfig config) {
-        requireNonNull(config);
-        DefaultSession result = defaultSessionFactory.create(config);
-        derivedPublishSessionArtifactStores.add(result::publishSessionArtifactStores);
-        derivedDropSessionArtifactStores.add(result::dropSessionArtifactStores);
-        return result;
     }
 
     @Override
@@ -237,36 +220,27 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
-    public int publishSessionArtifactStores() {
-        int published = 0;
-        for (Supplier<Integer> callable : derivedPublishSessionArtifactStores) {
-            published += callable.get();
-        }
+    public int publishSessionArtifactStores() throws IOException {
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         if (sessionBoundStore.isEmpty()) {
-            return published;
+            return 0;
         }
-        AtomicInteger result = new AtomicInteger(published);
+        AtomicInteger result = new AtomicInteger(0);
         Optional<String> pno = artifactPublisherRedirector.getArtifactStorePublisherName();
         if (pno.isPresent()) {
             String publisherName = pno.orElseThrow(J8Utils.OET);
             Optional<ArtifactStorePublisher> po = selectArtifactStorePublisher(publisherName);
             if (po.isPresent()) {
                 ArtifactStorePublisher p = po.orElseThrow(J8Utils.OET);
-                sessionBoundStore.values().forEach(n -> {
-                    try {
-                        logger.info("Publishing {} with {}", n, publisherName);
-                        try (ArtifactStore as = internalArtifactStoreManager
-                                .selectArtifactStore(n)
-                                .orElseThrow(J8Utils.OET)) {
-                            p.publish(as);
-                            result.addAndGet(1);
-                        }
-                        internalArtifactStoreManager.dropArtifactStore(n);
-                    } catch (IOException e) {
-                        logger.warn("Could not select ArtifactStore with name {}", n, e);
+                for (String storeName : sessionBoundStore.values()) {
+                    logger.info("Publishing {} with {}", storeName, publisherName);
+                    try (ArtifactStore as = internalArtifactStoreManager
+                            .selectArtifactStore(storeName)
+                            .orElseThrow(J8Utils.OET)) {
+                        p.publish(as);
+                        result.addAndGet(1);
                     }
-                });
+                }
             } else {
                 throw new IllegalArgumentException("Publisher not found: " + publisherName);
             }
@@ -278,21 +252,20 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     @Override
     public int dropSessionArtifactStores() {
-        int dropped = 0;
-        for (Supplier<Integer> callable : derivedDropSessionArtifactStores) {
-            dropped += callable.get();
-        }
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
-        AtomicInteger result = new AtomicInteger(dropped);
-        sessionBoundStore.values().forEach(n -> {
+        if (sessionBoundStore.isEmpty()) {
+            return 0;
+        }
+        AtomicInteger result = new AtomicInteger(0);
+        for (String storeName : sessionBoundStore.values()) {
             try {
-                if (internalArtifactStoreManager.dropArtifactStore(n)) {
+                if (internalArtifactStoreManager.dropArtifactStore(storeName)) {
                     result.addAndGet(1);
                 }
             } catch (IOException e) {
-                logger.warn("Could not select ArtifactStore with name {}", n, e);
+                logger.warn("Could not drop session bound ArtifactStore with name {}", storeName, e);
             }
-        });
+        }
         return result.get();
     }
 
