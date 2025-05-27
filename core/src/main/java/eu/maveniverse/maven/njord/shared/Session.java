@@ -18,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -26,11 +27,6 @@ public interface Session extends Closeable {
      * Returns this session configuration.
      */
     SessionConfig config();
-
-    /**
-     * Returns new session derived from (potentially modified) config. Nested sessions may be used for scoping.
-     */
-    Session derive(SessionConfig config);
 
     /**
      * Returns store manager.
@@ -96,15 +92,17 @@ public interface Session extends Closeable {
 
     /**
      * Publishes all session-bound artifact stores created in this session. Session publishes all own created
-     * and derived session created stores. Hence, top level session publishes all created stores in given
+     * stores. Hence, top level session publishes all created stores in given
      * Maven session. Returns the count of published stores.
      */
-    int publishSessionArtifactStores();
+    int publishSessionArtifactStores() throws IOException;
 
     /**
      * Drops all session-bound artifact stores created in this session. Session drops all own created
-     * and derived session created stores. Hence, top level session drops all created stores in given
+     * stores. Hence, top level session drops all created stores in given
      * Maven session. Returns the count of dropped stores.
+     * <p>
+     * Cleans up "best effort" and reports failures as warnings.
      */
     int dropSessionArtifactStores();
 }

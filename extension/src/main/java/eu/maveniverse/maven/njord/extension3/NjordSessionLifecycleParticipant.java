@@ -14,6 +14,7 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -82,6 +83,10 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                         int published = njordSession.publishSessionArtifactStores();
                         if (published != 0) {
                             logger.info("Auto publish: Published {} stores created in this session", published);
+                            int dropped = njordSession.dropSessionArtifactStores();
+                            if (dropped != 0) {
+                                logger.warn("Auto publish: Dropped {} auto published stores", dropped);
+                            }
                         } else {
                             logger.info("Auto publish: No stores created in this session");
                         }
@@ -90,7 +95,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                 }
                 njordSession.close();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new MavenExecutionException("Error closing Njord", e);
         }
     }
