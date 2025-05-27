@@ -58,7 +58,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             }
         } catch (Exception e) {
             if ("com.google.inject.ProvisionException".equals(e.getClass().getName())) {
-                logger.warn("Njord session creation failed"); // here runtime req will kick in
+                logger.error("Njord session creation failed", e); // here runtime req will kick in
             } else {
                 throw new MavenExecutionException("Error enabling Njord", e);
             }
