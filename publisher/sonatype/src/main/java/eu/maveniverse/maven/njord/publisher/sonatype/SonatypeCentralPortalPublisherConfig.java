@@ -24,9 +24,11 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryId</code> - the snapshot service server.id</li>
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryUrl</code> - the snapshot service URL</li>
  *     <li><code>njord.publisher.sonatype-cp.bundleName</code> (alias <code>njord.bundleName</code>) - the name to use for bundle</li>
+ *     <li><code>njord.publisher.sonatype-cp.publishingType</code> - the "publishing type": USER_MANAGED, AUTOMATIC</li>
  * </ul>
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
  * By default, value of <code>${project.artifactId}-${project.version}</code> is used IF current project is present.
+ * Also <a href="https://central.sonatype.com/api-doc">see API documentation.</a>
  */
 public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
@@ -35,6 +37,7 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
     public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots";
 
     private final String bundleName;
+    private final String publishingType;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(
@@ -50,10 +53,21 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
                 sessionConfig.effectiveProperties(),
                 null,
                 keyName(SonatypeCentralPortalPublisherFactory.NAME, "bundleName"),
-                SessionConfig.CONFIG_PREFIX + "bundleName");
+                SessionConfig.KEY_PREFIX + "bundleName");
+
+        // njord.publisher.sonatype-cp.publishingType
+        this.publishingType = ConfigUtils.getString(
+                sessionConfig.effectiveProperties(),
+                null,
+                keyName(SonatypeCentralPortalPublisherFactory.NAME, "publishingType"),
+                SessionConfig.KEY_PREFIX + "publishingType");
     }
 
     public Optional<String> bundleName() {
         return Optional.ofNullable(bundleName);
+    }
+
+    public Optional<String> publishingType() {
+        return Optional.ofNullable(publishingType);
     }
 }

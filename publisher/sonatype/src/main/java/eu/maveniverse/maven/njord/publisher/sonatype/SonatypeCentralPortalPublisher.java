@@ -19,6 +19,7 @@ import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ import java.util.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -123,7 +125,15 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
                     builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
 
-                    HttpPost post = new HttpPost(repository.getUrl());
+                    URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
+                    uriBuilder.addParameter("name", bundleName);
+                    if (publisherConfig.publishingType().isPresent()) {
+                        uriBuilder.addParameter(
+                                "publishingType",
+                                publisherConfig.publishingType().orElseThrow(J8Utils.OET));
+                    }
+
+                    HttpPost post = new HttpPost(uriBuilder.build());
                     post.setHeader(HttpHeaders.AUTHORIZATION, authValue);
                     post.setEntity(builder.build());
                     try (CloseableHttpResponse response = httpClient.execute(post)) {
@@ -134,6 +144,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                     + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));
                         }
                     }
+                } catch (URISyntaxException e) {
+                    throw new IOException(e.getMessage(), e);
                 }
 
                 logger.info("Deployment ID: {}", deploymentId);
