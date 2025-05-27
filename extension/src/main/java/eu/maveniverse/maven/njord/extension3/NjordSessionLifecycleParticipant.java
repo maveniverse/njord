@@ -73,19 +73,25 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
                 Session njordSession = ns.orElseThrow(J8Utils.OET);
-                if (njordSession.config().enabled()) {
+                if (njordSession.config().enabled() && njordSession.config().autoPublish()) {
                     if (session.getResult().hasExceptions()) {
-                        int dropped = njordSession.dropSessionArtifactStores();
-                        if (dropped != 0) {
-                            logger.warn("Session failed; dropped {} stores created in this session", dropped);
+                        if (njordSession.config().autoDrop()) {
+                            int dropped = njordSession.dropSessionArtifactStores();
+                            if (dropped != 0) {
+                                logger.warn(
+                                        "Auto publish: Session failed; dropped {} stores created in this session",
+                                        dropped);
+                            }
                         }
-                    } else if (njordSession.config().autoPublish()) {
+                    } else {
                         int published = njordSession.publishSessionArtifactStores();
                         if (published != 0) {
                             logger.info("Auto publish: Published {} stores created in this session", published);
-                            int dropped = njordSession.dropSessionArtifactStores();
-                            if (dropped != 0) {
-                                logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                            if (njordSession.config().autoDrop()) {
+                                int dropped = njordSession.dropSessionArtifactStores();
+                                if (dropped != 0) {
+                                    logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                                }
                             }
                         } else {
                             logger.info("Auto publish: No stores created in this session");

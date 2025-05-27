@@ -61,6 +61,11 @@ public interface SessionConfig {
     String CONFIG_AUTO_PUBLISH = KEY_PREFIX + "autoPublish";
 
     /**
+     * Configuration key in properties (system, user or project) for "auto drop". Defaults to {@code true}.
+     */
+    String CONFIG_AUTO_DROP = KEY_PREFIX + "autoDrop";
+
+    /**
      * Configuration key in properties (system, user or project) for explicitly set prefix to use.
      * If there is a project in context, prefix will be automatically set to top level project artifact id.
      */
@@ -154,6 +159,14 @@ public interface SessionConfig {
      * @see #CONFIG_AUTO_PUBLISH
      */
     boolean autoPublish();
+
+    /**
+     * Whether to automatically drop session created stores IF {@link #autoPublish()} is {@code true}.
+     * Defaults to {@code true}.
+     *
+     * @see #CONFIG_AUTO_DROP
+     */
+    boolean autoDrop();
 
     /**
      * The prefix to override template prefix, if needed. This value is always
@@ -442,6 +455,7 @@ public interface SessionConfig {
             private final List<RemoteRepository> remoteRepositories;
             private final List<RemoteRepository> allRemoteRepositories;
             private final boolean autoPublish;
+            private final boolean autoDrop;
             private final String prefix;
             private final String publisher;
             private final CurrentProject currentProject;
@@ -506,6 +520,12 @@ public interface SessionConfig {
                     autoPublishString = currentProject.projectProperties().get(CONFIG_AUTO_PUBLISH);
                 }
                 this.autoPublish = Boolean.parseBoolean(autoPublishString);
+
+                String autoDropString = effectiveProperties.get(CONFIG_AUTO_DROP);
+                if (autoDropString == null && currentProject != null) {
+                    autoDropString = currentProject.projectProperties().get(CONFIG_AUTO_DROP);
+                }
+                this.autoDrop = autoDropString == null || Boolean.parseBoolean(autoDropString);
 
                 String prefixString = effectiveProperties.get(CONFIG_PREFIX);
                 if (prefixString == null && currentProject != null) {
@@ -588,6 +608,10 @@ public interface SessionConfig {
             @Override
             public boolean autoPublish() {
                 return autoPublish;
+            }
+
+            public boolean autoDrop() {
+                return autoDrop;
             }
 
             @Override
