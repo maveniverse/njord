@@ -72,34 +72,39 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
         try {
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
-                Session njordSession = ns.orElseThrow(J8Utils.OET);
-                if (njordSession.config().enabled() && njordSession.config().autoPublish()) {
-                    if (session.getResult().hasExceptions()) {
-                        if (njordSession.config().autoDrop()) {
-                            int dropped = njordSession.dropSessionArtifactStores();
-                            if (dropped != 0) {
-                                logger.warn(
-                                        "Auto publish: Session failed; dropped {} stores created in this session",
-                                        dropped);
-                            }
-                        }
-                    } else {
-                        int published = njordSession.publishSessionArtifactStores();
-                        if (published != 0) {
-                            logger.info("Auto publish: Published {} stores created in this session", published);
+                try (Session njordSession = ns.orElseThrow(J8Utils.OET)) {
+                    if (njordSession.config().enabled() && njordSession.config().autoPublish()) {
+                        if (session.getResult().hasExceptions()) {
                             if (njordSession.config().autoDrop()) {
                                 int dropped = njordSession.dropSessionArtifactStores();
                                 if (dropped != 0) {
-                                    logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                                    logger.warn(
+                                            "Auto publish: Session failed; dropped {} stores created in this session",
+                                            dropped);
+                                } else {
+                                    logger.warn("Auto publish: Session failed; no stores created in this session");
                                 }
+                            } else {
+                                logger.warn(
+                                        "Auto publish: Session failed; stores created in this session, if any, are left behind");
                             }
                         } else {
-                            logger.info("Auto publish: No stores created in this session");
+                            int published = njordSession.publishSessionArtifactStores();
+                            if (published != 0) {
+                                logger.info("Auto publish: Published {} stores created in this session", published);
+                                if (njordSession.config().autoDrop()) {
+                                    int dropped = njordSession.dropSessionArtifactStores();
+                                    if (dropped != 0) {
+                                        logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                                    }
+                                }
+                            } else {
+                                logger.info("Auto publish: No stores created in this session");
+                            }
                         }
                     }
-                    logger.info("Njord session closed");
                 }
-                njordSession.close();
+                logger.info("Njord session closed");
             }
         } catch (IOException e) {
             throw new MavenExecutionException("Error closing Njord", e);
