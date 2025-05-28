@@ -26,8 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "export-all", threadSafe = true, requiresProject = false, aggregator = true)
 public class ExportAllMojo extends NjordMojoSupport {
     /**
-     * The path to export to. It may be a directory, then the file name will be same as store name, or some
-     * custom file name. In latter case is recommended to use same extension as Njord does (".ntb").
+     * The path to export to. It may be an existing or non-existing directory (will be created).
      */
     @Parameter(required = true, property = "path", defaultValue = ".")
     private String path;
