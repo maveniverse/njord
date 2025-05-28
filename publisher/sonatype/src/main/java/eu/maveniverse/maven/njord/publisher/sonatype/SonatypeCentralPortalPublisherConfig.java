@@ -110,26 +110,29 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
         // njord.publisher.sonatype-cp.waitForStatesWaitStates
         this.waitForStatesWaitStates = Collections.unmodifiableSet(
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        sessionConfig.effectiveProperties(),
-                        "pending,validating",
-                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesWaitStates"),
-                        SessionConfig.KEY_PREFIX + "waitForStatesWaitStates").toLowerCase(Locale.ENGLISH))));
+                                sessionConfig.effectiveProperties(),
+                                "pending,validating",
+                                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesWaitStates"),
+                                SessionConfig.KEY_PREFIX + "waitForStatesWaitStates")
+                        .toLowerCase(Locale.ENGLISH))));
 
         // njord.publisher.sonatype-cp.waitForStatesSuccessStates
         this.waitForStatesSuccessStates = Collections.unmodifiableSet(
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        sessionConfig.effectiveProperties(),
-                        "validated,published",
-                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSuccessStates"),
-                        SessionConfig.KEY_PREFIX + "waitForStatesSuccessStates").toLowerCase(Locale.ENGLISH))));
+                                sessionConfig.effectiveProperties(),
+                                "validated,published",
+                                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSuccessStates"),
+                                SessionConfig.KEY_PREFIX + "waitForStatesSuccessStates")
+                        .toLowerCase(Locale.ENGLISH))));
 
         // njord.publisher.sonatype-cp.waitForStatesFailureStates
         this.waitForStatesFailureStates = Collections.unmodifiableSet(
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        sessionConfig.effectiveProperties(),
-                        "failed",
-                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesFailureStates"),
-                        SessionConfig.KEY_PREFIX + "waitForStatesFailureStates").toLowerCase(Locale.ENGLISH))));
+                                sessionConfig.effectiveProperties(),
+                                "failed",
+                                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesFailureStates"),
+                                SessionConfig.KEY_PREFIX + "waitForStatesFailureStates")
+                        .toLowerCase(Locale.ENGLISH))));
     }
 
     public Optional<String> bundleName() {
