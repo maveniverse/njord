@@ -86,7 +86,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                                 }
                             } else {
                                 logger.warn(
-                                        "Auto publish: Session failed; stores created in this session, if any, are left behind");
+                                        "Auto publish: Session failed; stores created in this session, if any, are not dropped");
                             }
                         } else {
                             int published = njordSession.publishSessionArtifactStores();
@@ -97,6 +97,8 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                                     if (dropped != 0) {
                                         logger.info("Auto publish: Dropped {} auto published stores", dropped);
                                     }
+                                } else {
+                                    logger.info("Auto publish: The {} published stores are not dropped", published);
                                 }
                             } else {
                                 logger.info("Auto publish: No stores created in this session");
