@@ -129,7 +129,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     logger.info("Deployment ID: {}", deploymentId);
 
                     if (publisherConfig.waitForStates()) {
-                        logger.info("Waiting for states...");
+                        logger.info(
+                                "Waiting for states past {}... (timeout {})",
+                                publisherConfig.waitForStatesWaitStates(),
+                                publisherConfig.waitForStatesTimeout());
                         Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
                         try {
                             String deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
@@ -148,7 +151,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                             if (publisherConfig.waitForStatesFailureStates().contains(deploymentState)) {
                                 throw new PublishFailedException("Publishing of deployment " + deploymentId
-                                        + " failed; transitioned to failure state '" + deploymentState + "'");
+                                        + " failed; transitioned to failure state: " + deploymentState);
                             } else {
                                 logger.info("Publishing of deployment {} succeeded: {}", deploymentId, deploymentState);
                             }
@@ -192,7 +195,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         uriBuilder.addParameter("name", bundleName);
         if (publisherConfig.publishingType().isPresent()) {
             uriBuilder.addParameter(
-                    "publishingType", publisherConfig.publishingType().orElseThrow(J8Utils.OET));
+                    "publishingType",
+                    publisherConfig.publishingType().orElseThrow(J8Utils.OET).toUpperCase(Locale.ENGLISH));
         }
 
         HttpPost post = new HttpPost(uriBuilder.build());

@@ -39,7 +39,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
  * By default, value of <code>${project.artifactId}-${project.version}</code> is used IF current project is present.
  * Also <a href="https://central.sonatype.com/api-doc">see API documentation.</a>
- * Note: "states" should be lowercase strings.
+ * Note: publishingType, waitForStatesWaitStates and waitForStatesFailureStates are case-insensitive (are converted to required case).
  */
 public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
