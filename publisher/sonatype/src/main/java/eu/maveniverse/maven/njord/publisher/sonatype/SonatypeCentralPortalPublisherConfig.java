@@ -10,7 +10,12 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfig;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -24,11 +29,18 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryId</code> - the snapshot service server.id</li>
  *     <li><code>njord.publisher.sonatype-cp.snapshotRepositoryUrl</code> - the snapshot service URL</li>
  *     <li><code>njord.publisher.sonatype-cp.bundleName</code> (alias <code>njord.bundleName</code>) - the name to use for bundle</li>
- *     <li><code>njord.publisher.sonatype-cp.publishingType</code> - the "publishing type": USER_MANAGED, AUTOMATIC</li>
+ *     <li><code>njord.publisher.sonatype-cp.publishingType</code> (alias <code>njord.publishingType</code>) - the "publishing type": USER_MANAGED, AUTOMATIC</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStates</code> (alias <code>njord.waitForStates</code>) - should publisher wait for state transitions? (def: false)</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesTimeout</code> (alias <code>njord.waitForStatesTimeout</code>) - how long should publisher wait for validation in total? (def: PT15M)</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesSleep</code> (alias <code>njord.waitForStatesSleep</code>) - how long should publisher sleep between each state check (def: PT1S)</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesWaitStates</code> (alias <code>njord.waitForStatesWaitStates</code>) - the comma separated states that publisher should wait CP to transition from (def: "pending,validating")</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesSuccessStates</code> (alias <code>njord.waitForStatesWaitStates</code>) - the comma separated states that publisher should consider as success (def: "validated,published")</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesFailureStates</code> (alias <code>njord.waitForStatesFailureStates</code>) - the comma separated states that publisher should consider as failure (def: "failed")</li>
  * </ul>
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
  * By default, value of <code>${project.artifactId}-${project.version}</code> is used IF current project is present.
  * Also <a href="https://central.sonatype.com/api-doc">see API documentation.</a>
+ * Note: "states" should be lowercase strings.
  */
 public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
@@ -38,6 +50,12 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
 
     private final String bundleName;
     private final String publishingType;
+    private final boolean waitForStates;
+    private final Duration waitForStatesTimeout;
+    private final Duration waitForStatesSleep;
+    private final Set<String> waitForStatesWaitStates;
+    private final Set<String> waitForStatesSuccessStates;
+    private final Set<String> waitForStatesFailureStates;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(
@@ -61,6 +79,57 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
                 null,
                 keyName(SonatypeCentralPortalPublisherFactory.NAME, "publishingType"),
                 SessionConfig.KEY_PREFIX + "publishingType");
+
+        // njord.publisher.sonatype-cp.waitForStates
+        this.waitForStates = ConfigUtils.getBoolean(
+                sessionConfig.effectiveProperties(),
+                false,
+                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStates"),
+                SessionConfig.KEY_PREFIX + "waitForStates");
+
+        // njord.publisher.sonatype-cp.waitForStatesTimeout
+        this.waitForStatesTimeout = Duration.parse(ConfigUtils.getString(
+                sessionConfig.effectiveProperties(),
+                "PT15M",
+                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesTimeout"),
+                SessionConfig.KEY_PREFIX + "waitForStatesTimeout"));
+        if (this.waitForStatesTimeout.isNegative()) {
+            throw new IllegalArgumentException("waitForStatesTimeout cannot be negative");
+        }
+
+        // njord.publisher.sonatype-cp.waitForStatesSleep
+        this.waitForStatesSleep = Duration.parse(ConfigUtils.getString(
+                sessionConfig.effectiveProperties(),
+                "PT1S",
+                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSleep"),
+                SessionConfig.KEY_PREFIX + "waitForStatesSleep"));
+        if (this.waitForStatesSleep.isNegative()) {
+            throw new IllegalArgumentException("waitForStatesSleep cannot be negative");
+        }
+
+        // njord.publisher.sonatype-cp.waitForStatesWaitStates
+        this.waitForStatesWaitStates = Collections.unmodifiableSet(
+                new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        "pending,validating",
+                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesWaitStates"),
+                        SessionConfig.KEY_PREFIX + "waitForStatesWaitStates").toLowerCase(Locale.ENGLISH))));
+
+        // njord.publisher.sonatype-cp.waitForStatesSuccessStates
+        this.waitForStatesSuccessStates = Collections.unmodifiableSet(
+                new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        "validated,published",
+                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSuccessStates"),
+                        SessionConfig.KEY_PREFIX + "waitForStatesSuccessStates").toLowerCase(Locale.ENGLISH))));
+
+        // njord.publisher.sonatype-cp.waitForStatesFailureStates
+        this.waitForStatesFailureStates = Collections.unmodifiableSet(
+                new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        "failed",
+                        keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesFailureStates"),
+                        SessionConfig.KEY_PREFIX + "waitForStatesFailureStates").toLowerCase(Locale.ENGLISH))));
     }
 
     public Optional<String> bundleName() {
@@ -69,5 +138,29 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
 
     public Optional<String> publishingType() {
         return Optional.ofNullable(publishingType);
+    }
+
+    public boolean waitForStates() {
+        return waitForStates;
+    }
+
+    public Duration waitForStatesTimeout() {
+        return waitForStatesTimeout;
+    }
+
+    public Duration waitForStatesSleep() {
+        return waitForStatesSleep;
+    }
+
+    public Set<String> waitForStatesWaitStates() {
+        return waitForStatesWaitStates;
+    }
+
+    public Set<String> waitForStatesSuccessStates() {
+        return waitForStatesSuccessStates;
+    }
+
+    public Set<String> waitForStatesFailureStates() {
+        return waitForStatesFailureStates;
     }
 }
