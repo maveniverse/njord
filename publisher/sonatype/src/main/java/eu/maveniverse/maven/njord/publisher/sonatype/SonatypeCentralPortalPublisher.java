@@ -129,7 +129,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     logger.info("Deployment ID: {}", deploymentId);
 
                     if (publisherConfig.waitForStates()) {
-                        logger.info("Waiting for validation...");
+                        logger.info("Waiting for states...");
                         Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
                         try {
                             String deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
@@ -146,15 +146,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 logger.debug("deploymentState = {}", deploymentState);
                             }
 
-                            if (publisherConfig.waitForStatesSuccessStates().contains(deploymentState)) {
-                                logger.info("Publishing succeeded: {}", deploymentState);
-                            } else if (publisherConfig
-                                    .waitForStatesFailureStates()
-                                    .contains(deploymentState)) {
-                                logger.warn("Publishing failed: {}", deploymentState);
-                                throw new IOException("Publishing failed: " + deploymentState);
+                            if (publisherConfig.waitForStatesFailureStates().contains(deploymentState)) {
+                                throw new PublishFailedException("Publishing of deployment " + deploymentId
+                                        + " failed; transitioned to failure state '" + deploymentState + "'");
                             } else {
-                                logger.warn("Unknown non-wait state: {}", deploymentState);
+                                logger.info("Publishing of deployment {} succeeded: {}", deploymentId, deploymentState);
                             }
                         } catch (InterruptedException e) {
                             throw new IOException(e.getMessage(), e);

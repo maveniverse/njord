@@ -34,7 +34,6 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesTimeout</code> (alias <code>njord.waitForStatesTimeout</code>) - how long should publisher wait for validation in total? (def: PT15M)</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesSleep</code> (alias <code>njord.waitForStatesSleep</code>) - how long should publisher sleep between each state check (def: PT1S)</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesWaitStates</code> (alias <code>njord.waitForStatesWaitStates</code>) - the comma separated states that publisher should wait CP to transition from (def: "pending,validating")</li>
- *     <li><code>njord.publisher.sonatype-cp.waitForStatesSuccessStates</code> (alias <code>njord.waitForStatesWaitStates</code>) - the comma separated states that publisher should consider as success (def: "validated,published")</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesFailureStates</code> (alias <code>njord.waitForStatesFailureStates</code>) - the comma separated states that publisher should consider as failure (def: "failed")</li>
  * </ul>
  * The property <code>njord.publisher.sonatype-cp.bundleName</code> defines the bundle name that is shown on CP WebUI.
@@ -54,7 +53,6 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
     private final Duration waitForStatesTimeout;
     private final Duration waitForStatesSleep;
     private final Set<String> waitForStatesWaitStates;
-    private final Set<String> waitForStatesSuccessStates;
     private final Set<String> waitForStatesFailureStates;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
@@ -116,15 +114,6 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
                                 SessionConfig.KEY_PREFIX + "waitForStatesWaitStates")
                         .toLowerCase(Locale.ENGLISH))));
 
-        // njord.publisher.sonatype-cp.waitForStatesSuccessStates
-        this.waitForStatesSuccessStates = Collections.unmodifiableSet(
-                new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                sessionConfig.effectiveProperties(),
-                                "validated,published",
-                                keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSuccessStates"),
-                                SessionConfig.KEY_PREFIX + "waitForStatesSuccessStates")
-                        .toLowerCase(Locale.ENGLISH))));
-
         // njord.publisher.sonatype-cp.waitForStatesFailureStates
         this.waitForStatesFailureStates = Collections.unmodifiableSet(
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
@@ -157,10 +146,6 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
 
     public Set<String> waitForStatesWaitStates() {
         return waitForStatesWaitStates;
-    }
-
-    public Set<String> waitForStatesSuccessStates() {
-        return waitForStatesSuccessStates;
     }
 
     public Set<String> waitForStatesFailureStates() {

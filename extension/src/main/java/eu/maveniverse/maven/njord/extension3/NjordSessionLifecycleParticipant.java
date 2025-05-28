@@ -14,6 +14,7 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import java.io.IOException;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -89,19 +90,23 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                                         "Auto publish: Session failed; stores created in this session, if any, are not dropped");
                             }
                         } else {
-                            int published = njordSession.publishSessionArtifactStores();
-                            if (published != 0) {
-                                logger.info("Auto publish: Published {} stores created in this session", published);
-                                if (njordSession.config().autoDrop()) {
-                                    int dropped = njordSession.dropSessionArtifactStores();
-                                    if (dropped != 0) {
-                                        logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                            try {
+                                int published = njordSession.publishSessionArtifactStores();
+                                if (published != 0) {
+                                    logger.info("Auto publish: Published {} stores created in this session", published);
+                                    if (njordSession.config().autoDrop()) {
+                                        int dropped = njordSession.dropSessionArtifactStores();
+                                        if (dropped != 0) {
+                                            logger.info("Auto publish: Dropped {} auto published stores", dropped);
+                                        }
+                                    } else {
+                                        logger.info("Auto publish: The {} published stores are not dropped", published);
                                     }
                                 } else {
-                                    logger.info("Auto publish: The {} published stores are not dropped", published);
+                                    logger.info("Auto publish: No stores created in this session");
                                 }
-                            } else {
-                                logger.info("Auto publish: No stores created in this session");
+                            } catch (ArtifactStorePublisher.PublishFailedException e) {
+                                throw new MavenExecutionException(e.getMessage(), e);
                             }
                         }
                     }
