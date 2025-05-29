@@ -130,8 +130,9 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                     if (publisherConfig.waitForStates()) {
                         logger.info(
-                                "Waiting for states past {}... (timeout {})",
+                                "Waiting for states past {}... (poll {}; timeout {})",
                                 publisherConfig.waitForStatesWaitStates(),
+                                publisherConfig.waitForStatesSleep(),
                                 publisherConfig.waitForStatesTimeout());
                         Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
                         try {
