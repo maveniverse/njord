@@ -130,10 +130,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                     if (publisherConfig.waitForStates()) {
                         logger.info(
-                                "Waiting for states past {}... (poll {}; timeout {})",
+                                "Waiting for states past {}... (poll {}; timeout {}, failed states {})",
                                 publisherConfig.waitForStatesWaitStates(),
                                 publisherConfig.waitForStatesSleep(),
-                                publisherConfig.waitForStatesTimeout());
+                                publisherConfig.waitForStatesTimeout(),
+                                publisherConfig.waitForStatesFailureStates());
                         Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
                         try {
                             String deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
