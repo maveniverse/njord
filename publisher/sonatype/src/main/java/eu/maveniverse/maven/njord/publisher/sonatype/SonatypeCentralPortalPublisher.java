@@ -23,7 +23,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Locale;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -41,6 +43,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
+import org.json.JSONObject;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private final SonatypeCentralPortalPublisherConfig publisherConfig;
@@ -121,34 +124,46 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 try (CloseableHttpClient httpClient =
                         HttpClientBuilder.create().setUserAgent(userAgent).build()) {
-                    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-                    builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-                    builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
-
                     URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
-                    uriBuilder.addParameter("name", bundleName);
-                    if (publisherConfig.publishingType().isPresent()) {
-                        uriBuilder.addParameter(
-                                "publishingType",
-                                publisherConfig.publishingType().orElseThrow(J8Utils.OET));
-                    }
+                    deploymentId = upload(httpClient, uriBuilder, authValue, bundle, bundleName);
+                    logger.info("Deployment ID: {}", deploymentId);
 
-                    HttpPost post = new HttpPost(uriBuilder.build());
-                    post.setHeader(HttpHeaders.AUTHORIZATION, authValue);
-                    post.setEntity(builder.build());
-                    try (CloseableHttpResponse response = httpClient.execute(post)) {
-                        if (response.getStatusLine().getStatusCode() == 201) {
-                            deploymentId = EntityUtils.toString(response.getEntity());
-                        } else {
-                            throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
-                                    + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));
+                    if (publisherConfig.waitForStates()) {
+                        logger.info(
+                                "Waiting for states past {}... (poll {}; timeout {}, failed states {})",
+                                publisherConfig.waitForStatesWaitStates(),
+                                publisherConfig.waitForStatesSleep(),
+                                publisherConfig.waitForStatesTimeout(),
+                                publisherConfig.waitForStatesFailureStates());
+                        Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
+                        try {
+                            String deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
+                            logger.debug("deploymentState = {}", deploymentState);
+                            while (publisherConfig.waitForStatesWaitStates().contains(deploymentState)) {
+                                if (Instant.now().isAfter(waitingUntil)) {
+                                    throw new IOException(
+                                            "Timeout on waiting for validation for deployment " + deploymentId);
+                                }
+                                Thread.sleep(
+                                        publisherConfig.waitForStatesSleep().toMillis());
+
+                                deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
+                                logger.debug("deploymentState = {}", deploymentState);
+                            }
+
+                            if (publisherConfig.waitForStatesFailureStates().contains(deploymentState)) {
+                                throw new PublishFailedException("Publishing of deployment " + deploymentId
+                                        + " failed; transitioned to failure state: " + deploymentState);
+                            } else {
+                                logger.info("Publishing of deployment {} succeeded: {}", deploymentId, deploymentState);
+                            }
+                        } catch (InterruptedException e) {
+                            throw new IOException(e.getMessage(), e);
                         }
                     }
                 } catch (URISyntaxException e) {
                     throw new IOException(e.getMessage(), e);
                 }
-
-                logger.info("Deployment ID: {}", deploymentId);
             } finally {
                 if (Files.isDirectory(tmpDir)) {
                     FileUtils.deleteRecursively(tmpDir);
@@ -166,6 +181,59 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 session.artifactPublisherRedirector().getPublishingRepository(repository, true, true),
                                 true)
                         .deploy(store);
+            }
+        }
+    }
+
+    private String upload(
+            CloseableHttpClient httpClient,
+            URIBuilder uriBuilder,
+            String authorizationHeader,
+            Path bundle,
+            String bundleName)
+            throws IOException, URISyntaxException {
+        uriBuilder.clearParameters();
+        uriBuilder.setPath("/api/v1/publisher/upload");
+        uriBuilder.addParameter("name", bundleName);
+        if (publisherConfig.publishingType().isPresent()) {
+            uriBuilder.addParameter(
+                    "publishingType",
+                    publisherConfig.publishingType().orElseThrow(J8Utils.OET).toUpperCase(Locale.ENGLISH));
+        }
+
+        HttpPost post = new HttpPost(uriBuilder.build());
+        post.setHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addBinaryBody("bundle", bundle.toFile(), ContentType.DEFAULT_BINARY, bundleName);
+        post.setEntity(builder.build());
+        try (CloseableHttpResponse response = httpClient.execute(post)) {
+            if (response.getStatusLine().getStatusCode() == 201) {
+                return EntityUtils.toString(response.getEntity());
+            } else {
+                throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
+                        + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));
+            }
+        }
+    }
+
+    private String deploymentState(
+            CloseableHttpClient httpClient, URIBuilder uriBuilder, String authorizationHeader, String deploymentId)
+            throws IOException, URISyntaxException {
+        uriBuilder.clearParameters();
+        uriBuilder.setPath("/api/v1/publisher/status");
+        uriBuilder.addParameter("id", deploymentId);
+        HttpPost post = new HttpPost(uriBuilder.build());
+        post.setHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
+        post.setHeader(HttpHeaders.ACCEPT, "application/json");
+        try (CloseableHttpResponse response = httpClient.execute(post)) {
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return new JSONObject(EntityUtils.toString(response.getEntity()))
+                        .optString("deploymentState")
+                        .toLowerCase(Locale.ENGLISH);
+            } else {
+                throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
+                        + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));
             }
         }
     }

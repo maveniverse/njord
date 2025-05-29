@@ -57,4 +57,17 @@ public interface ArtifactStorePublisher {
      * Performs the publishing.
      */
     void publish(ArtifactStore artifactStore) throws IOException;
+
+    /**
+     * Special exception that signals that publishing failed as signaled by service.
+     */
+    class PublishFailedException extends IOException {
+        public PublishFailedException(String message) {
+            super(message);
+        }
+
+        public PublishFailedException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
 }

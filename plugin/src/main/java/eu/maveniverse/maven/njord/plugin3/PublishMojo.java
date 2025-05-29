@@ -31,7 +31,11 @@ public class PublishMojo extends PublisherSupportMojo {
         try (ArtifactStore from = getArtifactStore(ns)) {
             ArtifactStorePublisher publisher = getArtifactStorePublisher(ns);
             logger.info("Publishing {} with {}", from, publisher.name());
-            publisher.publish(from);
+            try {
+                publisher.publish(from);
+            } catch (ArtifactStorePublisher.PublishFailedException e) {
+                throw new MojoFailureException(e.getMessage(), e);
+            }
         }
         if (drop) {
             logger.info("Dropping {}", store);
