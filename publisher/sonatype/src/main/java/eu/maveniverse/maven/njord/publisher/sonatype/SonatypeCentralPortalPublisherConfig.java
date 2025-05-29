@@ -32,7 +32,7 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-cp.publishingType</code> (alias <code>njord.publishingType</code>) - the "publishing type": USER_MANAGED, AUTOMATIC</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStates</code> (alias <code>njord.waitForStates</code>) - should publisher wait for state transitions? (def: false)</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesTimeout</code> (alias <code>njord.waitForStatesTimeout</code>) - how long should publisher wait for validation in total? (def: PT15M)</li>
- *     <li><code>njord.publisher.sonatype-cp.waitForStatesSleep</code> (alias <code>njord.waitForStatesSleep</code>) - how long should publisher sleep between each state check (def: PT1S)</li>
+ *     <li><code>njord.publisher.sonatype-cp.waitForStatesSleep</code> (alias <code>njord.waitForStatesSleep</code>) - how long should publisher sleep between each state check (def: PT10S)</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesWaitStates</code> (alias <code>njord.waitForStatesWaitStates</code>) - the comma separated states that publisher should wait CP to transition from (def: "pending,validating")</li>
  *     <li><code>njord.publisher.sonatype-cp.waitForStatesFailureStates</code> (alias <code>njord.waitForStatesFailureStates</code>) - the comma separated states that publisher should consider as failure (def: "failed")</li>
  * </ul>
@@ -98,7 +98,7 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
         // njord.publisher.sonatype-cp.waitForStatesSleep
         this.waitForStatesSleep = Duration.parse(ConfigUtils.getString(
                 sessionConfig.effectiveProperties(),
-                "PT1S",
+                "PT10S",
                 keyName(SonatypeCentralPortalPublisherFactory.NAME, "waitForStatesSleep"),
                 SessionConfig.KEY_PREFIX + "waitForStatesSleep"));
         if (this.waitForStatesSleep.isNegative()) {
