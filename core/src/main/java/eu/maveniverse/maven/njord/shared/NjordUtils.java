@@ -28,7 +28,7 @@ public final class NjordUtils {
      */
     public static synchronized Session lazyInit(
             SessionConfig sessionConfig, Function<SessionConfig, Session> sessionFactory) {
-        requireNonNull(sessionConfig, "remoteRepositories");
+        requireNonNull(sessionConfig, "sessionConfig");
         requireNonNull(sessionFactory, "sessionFactory");
         Session session = (Session) sessionConfig.session().getData().get(Session.class);
         if (session == null) {
