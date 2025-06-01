@@ -53,10 +53,11 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                             RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
                     .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
                     .build();
-
-            Session ns = NjordUtils.lazyInit(sc, sessionFactoryProvider.get()::create);
-            if (ns.config().enabled()) {
-                logger.info("Njord {} session created", ns.config().version().orElse("UNKNOWN"));
+            if (sc.enabled()) {
+                NjordUtils.lazyInit(sc, sessionFactoryProvider.get()::create);
+                logger.info("Njord {} session created", sc.version());
+            } else {
+                logger.info("Njord {} disabled", sc.version());
             }
         } catch (Exception e) {
             if ("com.google.inject.ProvisionException".equals(e.getClass().getName())) {
@@ -74,7 +75,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
             if (ns.isPresent()) {
                 try (Session njordSession = ns.orElseThrow(J8Utils.OET)) {
-                    if (njordSession.config().enabled() && njordSession.config().autoPublish()) {
+                    if (njordSession.config().autoPublish()) {
                         if (session.getResult().hasExceptions()) {
                             if (njordSession.config().autoDrop()) {
                                 int dropped = njordSession.dropSessionArtifactStores();

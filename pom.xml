@@ -70,7 +70,7 @@
     <requireRuntimeMavenVersion.range>[3.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
-    <version.maveniverseShared>0.1.6</version.maveniverseShared>
+    <version.maveniverseShared>0.1.8</version.maveniverseShared>
     <version.maven>3.9.9</version.maven>
     <version.resolver>1.9.23</version.resolver>
     <version.slf4j>1.7.36</version.slf4j>
@@ -182,7 +182,7 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>5.12.2</version>
+        <version>5.13.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

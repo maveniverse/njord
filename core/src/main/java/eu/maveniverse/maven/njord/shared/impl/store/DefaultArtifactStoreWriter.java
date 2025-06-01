@@ -14,6 +14,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -33,7 +34,7 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
 
-        Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
+        Path targetDirectory = FileUtils.canonicalPath(outputDirectory);
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
@@ -46,7 +47,7 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         requireNonNull(artifactStore);
         requireNonNull(outputDirectory);
 
-        Path targetDirectory = SessionConfig.getCanonicalPath(outputDirectory);
+        Path targetDirectory = FileUtils.canonicalPath(outputDirectory);
         if (!Files.isDirectory(targetDirectory)) {
             Files.createDirectories(targetDirectory);
         }

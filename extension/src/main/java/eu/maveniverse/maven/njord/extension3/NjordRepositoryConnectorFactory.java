@@ -55,7 +55,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
         boolean connectorSkip = ConfigUtils.getBoolean(session, false, NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP);
         if (!connectorSkip) {
             Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
-            if (nso.isPresent() && nso.orElseThrow(J8Utils.OET).config().enabled()) {
+            if (nso.isPresent()) {
                 Session ns = nso.orElseThrow(J8Utils.OET);
                 String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
                 if (url != null && url.startsWith(NAME + ":")) {

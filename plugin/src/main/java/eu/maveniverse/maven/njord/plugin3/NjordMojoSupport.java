@@ -42,12 +42,7 @@ public abstract class NjordMojoSupport extends MojoSupport {
             if (!njordSession.isPresent()) {
                 doWithoutSession();
             } else {
-                Session ns = njordSession.orElseThrow(J8Utils.OET);
-                if (ns.config().enabled()) {
-                    doWithSession(ns);
-                } else {
-                    logger.info("Njord is disabled");
-                }
+                doWithSession(njordSession.orElseThrow(J8Utils.OET));
             }
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
@@ -58,15 +53,17 @@ public abstract class NjordMojoSupport extends MojoSupport {
 
     protected void doWithoutSession() throws IOException, MojoExecutionException, MojoFailureException {
         logger.warn("Njord extension is not installed; continuing with creating temporary session");
-        try (Session ns = NjordUtils.lazyInit(
-                SessionConfig.defaults(
-                                mavenSession.getRepositorySession(),
-                                RepositoryUtils.toRepos(
-                                        mavenSession.getRequest().getRemoteRepositories()))
-                        .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
-                        .build(),
-                sessionFactory::create)) {
-            doWithSession(ns);
+        SessionConfig sc = SessionConfig.defaults(
+                        mavenSession.getRepositorySession(),
+                        RepositoryUtils.toRepos(mavenSession.getRequest().getRemoteRepositories()))
+                .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
+                .build();
+        if (sc.enabled()) {
+            try (Session ns = NjordUtils.lazyInit(sc, sessionFactory::create)) {
+                doWithSession(ns);
+            }
+        } else {
+            throw new MojoExecutionException("Njord is disabled");
         }
     }
 

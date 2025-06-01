@@ -201,7 +201,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             throw new IllegalArgumentException("Unsupported store type: " + artifactStore.getClass());
         }
 
-        Path targetDirectory = SessionConfig.getCanonicalPath(file);
+        Path targetDirectory = FileUtils.canonicalPath(file);
         Path bundleFile = targetDirectory;
         if (Files.isDirectory(targetDirectory)) {
             bundleFile = targetDirectory.resolve(artifactStore.name() + ".ntb");
@@ -234,7 +234,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (!Files.isRegularFile(file)) {
             throw new IllegalArgumentException("File does not exist");
         }
-        Path storeSource = SessionConfig.getCanonicalPath(file);
+        Path storeSource = FileUtils.canonicalPath(file);
         String storeName;
         Path storeBasedir;
         try (FileSystem fs =

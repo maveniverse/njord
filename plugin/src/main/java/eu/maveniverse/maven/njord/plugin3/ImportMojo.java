@@ -8,8 +8,8 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +31,7 @@ public class ImportMojo extends NjordMojoSupport {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
-        Path source = SessionConfig.getCanonicalPath(Paths.get(file).toAbsolutePath());
+        Path source = FileUtils.canonicalPath(Paths.get(file).toAbsolutePath());
         if (!Files.exists(source)) {
             throw new MojoExecutionException("Import file not found: " + file);
         }
