@@ -8,9 +8,9 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,8 +42,7 @@ public class WriteBundleMojo extends NjordMojoSupport {
     protected void doWithSession(Session ns) throws IOException, MojoExecutionException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
         if (storeOptional.isPresent()) {
-            Path targetDirectory =
-                    SessionConfig.getCanonicalPath(Paths.get(directory).toAbsolutePath());
+            Path targetDirectory = FileUtils.canonicalPath(Paths.get(directory).toAbsolutePath());
             if (!Files.isDirectory(targetDirectory)) {
                 Files.createDirectories(targetDirectory);
             }
