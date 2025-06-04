@@ -9,13 +9,27 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Verifies checksum for every artifact.
  */
 public abstract class ValidatorSupport extends CloseableSupport implements Validator {
+    protected static final String POM = "pom";
+    protected static final String JAR = "jar";
+    protected static final String SOURCES = "sources";
+    protected static final String JAVADOC = "javadoc";
+
     private final String name;
 
     public ValidatorSupport(String name) {
@@ -25,5 +39,22 @@ public abstract class ValidatorSupport extends CloseableSupport implements Valid
     @Override
     public String name() {
         return name;
+    }
+
+    protected boolean mainPom(Artifact artifact) {
+        return artifact.getClassifier().isEmpty() && POM.equals(artifact.getExtension());
+    }
+
+    protected boolean mainJar(Artifact artifact) {
+        return artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension());
+    }
+
+    protected boolean jarContainsJavaClasses(Artifact artifact) throws IOException {
+        try (FileSystem fs = FileSystems.newFileSystem(
+                        URI.create("jar:" + artifact.getFile().toURI()), J8Utils.zipFsCreate(false), null);
+                Stream<Path> classFies = Files.find(fs.getPath("/"), Integer.MAX_VALUE, (p, attr) -> p.toString()
+                        .endsWith(".class"))) {
+            return classFies.findAny().isPresent();
+        }
     }
 }

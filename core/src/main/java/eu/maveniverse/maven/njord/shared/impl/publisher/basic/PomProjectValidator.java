@@ -29,12 +29,12 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  *  Verifies that any found POM name, description, project URL, SCM and license is filled in.
  */
-public class PomProjectValidatorFactory extends ValidatorSupport {
+public class PomProjectValidator extends ValidatorSupport {
     private final RepositorySystemSession session;
     private final List<RemoteRepository> remoteRepositories;
     private final ModelProvider modelProvider;
 
-    public PomProjectValidatorFactory(
+    public PomProjectValidator(
             String name,
             RepositorySystemSession session,
             List<RemoteRepository> repositories,
@@ -48,7 +48,7 @@ public class PomProjectValidatorFactory extends ValidatorSupport {
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && "pom".equals(artifact.getExtension())) {
+        if (mainPom(artifact)) {
             ArrayList<RemoteRepository> remoteRepositories = new ArrayList<>(this.remoteRepositories);
             remoteRepositories.add(artifactStore.storeRemoteRepository());
             Optional<Model> mo = modelProvider.readEffectiveModel(session, artifact, remoteRepositories);

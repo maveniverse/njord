@@ -14,10 +14,10 @@ import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArchiveValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArtifactChecksumValidator;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.JavadocJarValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomCoordinatesValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomProjectValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.SourceJarValidatorFactory;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.JavadocJarValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomCoordinatesValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomProjectValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.SourcesJarValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.ArtifactSignatureValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureType;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureValidator;
@@ -66,18 +66,18 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
 
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
-        validators.add((sc) -> new PomCoordinatesValidatorFactory(
+        validators.add((sc) -> new PomCoordinatesValidator(
                 "POM Coordinates",
                 session.config().session(),
                 session.config().allRemoteRepositories(),
                 modelProvider));
-        validators.add((sc) -> new PomProjectValidatorFactory(
+        validators.add((sc) -> new PomProjectValidator(
                 "POM Completeness",
                 session.config().session(),
                 session.config().allRemoteRepositories(),
                 modelProvider));
-        validators.add((sc) -> new JavadocJarValidatorFactory("Javadoc Jar"));
-        validators.add((sc) -> new SourceJarValidatorFactory("Source Jar"));
+        validators.add((sc) -> new JavadocJarValidator("Javadoc Jar"));
+        validators.add((sc) -> new SourcesJarValidator("Source Jar"));
         validators.add((sc) -> new ArchiveValidator("Archive"));
         validators.add((sc) -> new ArtifactChecksumValidator(
                 "Checksum Validation", mandatoryChecksumAlgorithms, optionalChecksumAlgorithms));

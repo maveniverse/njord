@@ -15,25 +15,23 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
- * Verifies presence of javadoc JAR for every main JAR artifact.
+ * Verifies presence of sources JAR for every main JAR artifact.
  */
-public class JavadocJarValidatorFactory extends ValidatorSupport {
-
-    private static final String JAR = "jar";
-    private static final String JAVADOC = "javadoc";
-
-    public JavadocJarValidatorFactory(String name) {
+public class SourcesJarValidator extends ValidatorSupport {
+    public SourcesJarValidator(String name) {
         super(name);
     }
 
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension())) {
-            if (artifactStore.artifactPresent(new SubArtifact(artifact, JAVADOC, JAR))) {
+        if (mainJar(artifact)) {
+            if (artifactStore.artifactPresent(new SubArtifact(artifact, SOURCES, JAR))) {
                 collector.addInfo("PRESENT");
             } else {
-                collector.addError("MISSING");
+                if (jarContainsJavaClasses(artifact)) {
+                    collector.addError("MISSING");
+                }
             }
         }
     }

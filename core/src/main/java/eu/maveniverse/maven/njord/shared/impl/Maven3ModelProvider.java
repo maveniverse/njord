@@ -54,8 +54,20 @@ public class Maven3ModelProvider implements ModelProvider {
         adr.setRepositories(remoteRepositories);
         adr.setRequestContext("njord");
         try {
-            repositorySystem.readArtifactDescriptor(ourSession, adr); // ignore result, is in ref
-            return Optional.ofNullable(modelRef.get());
+            ArtifactDescriptorResult res =
+                    repositorySystem.readArtifactDescriptor(ourSession, adr); // ignore result, is in ref
+            Model model = modelRef.get();
+            if (model != null) {
+                if (!res.getRelocations().isEmpty()) {
+                    // we are deploying: so we want the first POM coordinates
+                    // TODO: this in fact _VALIDATES_ your relocation
+                    Artifact prev = res.getRelocations().get(0);
+                    model.setGroupId(prev.getGroupId());
+                    model.setArtifactId(prev.getArtifactId());
+                    model.setVersion(prev.getBaseVersion());
+                }
+            }
+            return Optional.ofNullable(model);
         } catch (ArtifactDescriptorException e) {
             return Optional.empty();
         }

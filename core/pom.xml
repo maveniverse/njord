@@ -97,5 +97,25 @@
       <artifactId>maven-resolver-impl</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>eu.maveniverse.maven.mima</groupId>
+      <artifactId>context</artifactId>
+      <version>2.4.26</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.mima.runtime</groupId>
+      <artifactId>standalone-sisu</artifactId>
+      <version>2.4.26</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>6.0.0</version>
+      <classifier>classes</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
