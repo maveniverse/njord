@@ -36,7 +36,7 @@ public class PomCoordinatesValidatorTest extends ValidatorTestSupport {
                 subject.validate(store, artifact, validationContext);
             }
 
-            // into "present"
+            // info "valid"
             Assertions.assertEquals(0, validationContext.error().size());
             Assertions.assertEquals(1, validationContext.info().size());
         }

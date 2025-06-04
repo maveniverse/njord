@@ -28,7 +28,7 @@ public class JavadocJarValidatorTest extends ValidatorTestSupport {
             subject.validate(store, artifact, context);
         }
 
-        // into "present"
+        // info "present"
         Assertions.assertEquals(0, context.error().size());
         Assertions.assertEquals(1, context.info().size());
     }
