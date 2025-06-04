@@ -57,7 +57,14 @@ public class PomCoordinatesValidatorFactory extends ValidatorSupport {
                         && Objects.equals(artifact.getBaseVersion(), m.getVersion())) {
                     collector.addInfo("VALID");
                 } else {
-                    collector.addError("MISMATCH");
+                    collector.addError(String.format(
+                            "MISMATCH: %s:%s:%s != %s:%s:%s",
+                            artifact.getGroupId(),
+                            artifact.getArtifactId(),
+                            artifact.getBaseVersion(),
+                            m.getGroupId(),
+                            m.getArtifactId(),
+                            m.getVersion()));
                 }
             } else {
                 collector.addWarning("Could not get effective model");
