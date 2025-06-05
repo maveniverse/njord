@@ -27,14 +27,10 @@ import java.util.Properties;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DeploymentRepository;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.configuration.PlexusConfiguration;
-import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Session config holds all the session related data.
@@ -182,14 +178,6 @@ public interface SessionConfig {
     Optional<String> prefix();
 
     /**
-     * The publisher to use, if specified.
-     * <p>
-     * User may specify it in user properties, like in {@code .mvn/maven.config} or CLI, but also in top level
-     * POM as project property.
-     */
-    Optional<String> publisher();
-
-    /**
      * Shim for "current project". Provides needed information from project.
      */
     interface CurrentProject {
@@ -226,37 +214,6 @@ public interface SessionConfig {
      * this field with be empty.
      */
     Optional<CurrentProject> currentProject();
-
-    /**
-     * Returns the "service configuration" for given service ID.
-     */
-    default Optional<Map<String, String>> serviceConfiguration(String serviceId) {
-        requireNonNull(serviceId);
-        Object configuration = ConfigUtils.getObject(
-                session(),
-                null,
-                "aether.connector.wagon.config." + serviceId,
-                "aether.transport.wagon.config." + serviceId);
-        if (configuration != null) {
-            PlexusConfiguration config;
-            if (configuration instanceof PlexusConfiguration) {
-                config = (PlexusConfiguration) configuration;
-            } else if (configuration instanceof Xpp3Dom) {
-                config = new XmlPlexusConfiguration((Xpp3Dom) configuration);
-            } else {
-                throw new IllegalArgumentException("unexpected configuration type: "
-                        + configuration.getClass().getName());
-            }
-            HashMap<String, String> serviceConfiguration = new HashMap<>();
-            for (PlexusConfiguration child : config.getChildren()) {
-                if (child.getName().startsWith(KEY_PREFIX) && child.getValue() != null) {
-                    serviceConfiguration.put(child.getName(), child.getValue());
-                }
-            }
-            return Optional.of(serviceConfiguration);
-        }
-        return Optional.empty();
-    }
 
     /**
      * Returns this instance as builder.
@@ -459,7 +416,6 @@ public interface SessionConfig {
             private final boolean autoPublish;
             private final boolean autoDrop;
             private final String prefix;
-            private final String publisher;
             private final CurrentProject currentProject;
 
             private Impl(
@@ -536,7 +492,6 @@ public interface SessionConfig {
                     prefixString = currentProject.artifact().getArtifactId();
                 }
                 this.prefix = prefixString;
-                this.publisher = effectiveProperties.get(CONFIG_PUBLISHER);
             }
 
             @Override
@@ -611,11 +566,6 @@ public interface SessionConfig {
             @Override
             public Optional<String> prefix() {
                 return Optional.ofNullable(prefix);
-            }
-
-            @Override
-            public Optional<String> publisher() {
-                return Optional.ofNullable(publisher);
             }
 
             @Override

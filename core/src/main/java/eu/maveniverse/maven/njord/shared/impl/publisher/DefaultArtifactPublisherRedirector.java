@@ -15,12 +15,17 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.codehaus.plexus.configuration.PlexusConfiguration;
+import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.ConfigUtils;
 
 public class DefaultArtifactPublisherRedirector extends ComponentSupport implements ArtifactPublisherRedirector {
     private final Session session;
@@ -51,7 +56,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repositoryMode);
 
         String url = repository.getUrl();
-        Optional<Map<String, String>> sco = session.config().serviceConfiguration(repository.getId());
+        Optional<Map<String, String>> sco = serviceConfiguration(repository.getId());
         if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
             Map<String, String> config = sco.orElseThrow(J8Utils.OET);
             String redirectUrl;
@@ -80,7 +85,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         if (followAuthRedirection) {
             LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
             authSourcesVisited.add(authSource.getId());
-            Optional<Map<String, String>> config = session.config().serviceConfiguration(authSource.getId());
+            Optional<Map<String, String>> config = serviceConfiguration(authSource.getId());
             while (config.isPresent()) {
                 String authRedirect = config.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_AUTH_REDIRECT);
                 if (authRedirect != null) {
@@ -91,7 +96,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                     if (!authSourcesVisited.add(authSource.getId())) {
                         throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
                     }
-                    config = session.config().serviceConfiguration(authSource.getId());
+                    config = serviceConfiguration(authSource.getId());
                 } else {
                     break;
                 }
@@ -130,8 +135,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
     @Override
     public Optional<String> getArtifactStorePublisherName() {
-        if (session.config().publisher().isPresent()) {
-            return session.config().publisher();
+        if (session.config().effectiveProperties().containsKey(SessionConfig.CONFIG_PUBLISHER)) {
+            return Optional.of(session.config().effectiveProperties().get(SessionConfig.CONFIG_PUBLISHER));
         }
         if (session.config().currentProject().isPresent()) {
             RemoteRepository distributionRepository = session.config()
@@ -143,8 +148,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             .orElseThrow(J8Utils.OET)
                             .repositoryMode());
             if (distributionRepository != null) {
-                Optional<Map<String, String>> sco =
-                        session.config().serviceConfiguration(distributionRepository.getId());
+                Optional<Map<String, String>> sco = serviceConfiguration(distributionRepository.getId());
                 if (sco.isPresent()) {
                     String publisher = sco.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_PUBLISHER);
                     if (publisher != null) {
@@ -153,6 +157,37 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 }
                 return Optional.of(distributionRepository.getId());
             }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Returns the "service configuration" for given service ID.
+     */
+    private Optional<Map<String, String>> serviceConfiguration(String serviceId) {
+        requireNonNull(serviceId);
+        Object configuration = ConfigUtils.getObject(
+                session.config().session(),
+                null,
+                "aether.connector.wagon.config." + serviceId,
+                "aether.transport.wagon.config." + serviceId);
+        if (configuration != null) {
+            PlexusConfiguration config;
+            if (configuration instanceof PlexusConfiguration) {
+                config = (PlexusConfiguration) configuration;
+            } else if (configuration instanceof Xpp3Dom) {
+                config = new XmlPlexusConfiguration((Xpp3Dom) configuration);
+            } else {
+                throw new IllegalArgumentException("unexpected configuration type: "
+                        + configuration.getClass().getName());
+            }
+            HashMap<String, String> serviceConfiguration = new HashMap<>();
+            for (PlexusConfiguration child : config.getChildren()) {
+                if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
+                    serviceConfiguration.put(child.getName(), child.getValue());
+                }
+            }
+            return Optional.of(serviceConfiguration);
         }
         return Optional.empty();
     }
