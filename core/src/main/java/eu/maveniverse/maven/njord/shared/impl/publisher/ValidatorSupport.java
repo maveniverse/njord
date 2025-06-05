@@ -54,7 +54,7 @@ public abstract class ValidatorSupport extends CloseableSupport implements Valid
                         URI.create("jar:" + artifact.getFile().toURI()), J8Utils.zipFsCreate(false), null);
                 Stream<Path> classFiles = Files.find(fs.getPath("/"), Integer.MAX_VALUE, (p, attr) -> p.toString()
                         .endsWith(".class"))) {
-            return classFies.findAny().isPresent();
+            return classFiles.findAny().isPresent();
         }
     }
 }
