@@ -48,8 +48,8 @@ public class ValidateMojo extends PublisherSupportMojo {
                     dumpValidationResult("", vr, full);
                 }
                 if (!vr.isValid()) {
-                    logger.error("ArtifactStore {} failed validation", from);
-                    throw new MojoFailureException("ArtifactStore validation failed");
+                    logger.error("ArtifactStore {} failed validation with {} errors", from, vr.errorCount());
+                    throw new MojoFailureException("ArtifactStore " + from.name() + " failed validation");
                 } else {
                     int warnings = vr.warningCount();
                     if (warnings > 0) {
@@ -87,20 +87,11 @@ public class ValidateMojo extends PublisherSupportMojo {
                 }
             }
         } else {
-            if (vr.isValid()) {
-                if (!vr.children().isEmpty()) {
-                    logger.info("{} {} OK", prefix, vr.name());
-                }
-            } else {
-                logger.info("{} {}", prefix, vr.name());
+            if (!vr.isValid()) {
+                logger.error("{} {}", prefix, vr.name());
                 if (!vr.error().isEmpty()) {
                     for (String msg : vr.error()) {
                         logger.error("{}    {}", prefix, msg);
-                    }
-                }
-                if (!vr.warning().isEmpty()) {
-                    for (String msg : vr.warning()) {
-                        logger.warn("{}    {}", prefix, msg);
                     }
                 }
             }
