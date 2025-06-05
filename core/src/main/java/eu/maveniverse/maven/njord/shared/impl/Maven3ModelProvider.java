@@ -55,7 +55,7 @@ public class Maven3ModelProvider implements ModelProvider {
         adr.setRequestContext("njord");
         try {
             ArtifactDescriptorResult res =
-                    repositorySystem.readArtifactDescriptor(ourSession, adr); // ignore result, is in ref
+                    repositorySystem.readArtifactDescriptor(ourSession, adr);
             Model model = modelRef.get();
             if (model != null) {
                 if (!res.getRelocations().isEmpty()) {
