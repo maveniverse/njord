@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Verify
-    uses: maveniverse/parent/.github/workflows/ci.yml@release-38
+    uses: maveniverse/parent/.github/workflows/ci.yml@release-39
     with:
       maven-matrix: '[ "3.9.9" ]' # IT does the mvn matrix
       maven-test: './mvnw clean verify -e -B -V -P run-its -f it'
