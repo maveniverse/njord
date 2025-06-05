@@ -164,13 +164,13 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     /**
      * Returns the "service configuration" for given service ID.
      */
-    private Optional<Map<String, String>> serviceConfiguration(String serviceId) {
-        requireNonNull(serviceId);
+    private Optional<Map<String, String>> serviceConfiguration(String serverId) {
+        requireNonNull(serverId);
         Object configuration = ConfigUtils.getObject(
                 session.config().session(),
                 null,
-                "aether.connector.wagon.config." + serviceId,
-                "aether.transport.wagon.config." + serviceId);
+                "aether.connector.wagon.config." + serverId,
+                "aether.transport.wagon.config." + serverId);
         if (configuration != null) {
             PlexusConfiguration config;
             if (configuration instanceof PlexusConfiguration) {
