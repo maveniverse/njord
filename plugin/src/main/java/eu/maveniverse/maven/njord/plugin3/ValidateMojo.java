@@ -88,7 +88,7 @@ public class ValidateMojo extends PublisherSupportMojo {
             }
         } else {
             if (!vr.isValid()) {
-                logger.info("{} {}", prefix, vr.name());
+                logger.error("{} {}", prefix, vr.name());
                 if (!vr.error().isEmpty()) {
                     for (String msg : vr.error()) {
                         logger.error("{}    {}", prefix, msg);
