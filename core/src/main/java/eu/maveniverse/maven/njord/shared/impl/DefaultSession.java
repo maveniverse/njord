@@ -207,6 +207,12 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 } else if (uri.startsWith("store:")) {
                     // store:xxx
                     artifactStoreName = uri.substring(6);
+                    Optional<ArtifactStore> existingStore =
+                            internalArtifactStoreManager.selectArtifactStore(artifactStoreName);
+                    if (!existingStore.isPresent()) {
+                        throw new IllegalArgumentException("Non existing store: " + artifactStoreName);
+                    }
+                    existingStore.orElseThrow(J8Utils.OET).close();
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
                 }
