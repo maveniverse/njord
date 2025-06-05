@@ -52,7 +52,7 @@ public abstract class ValidatorSupport extends CloseableSupport implements Valid
     protected boolean jarContainsJavaClasses(Artifact artifact) throws IOException {
         try (FileSystem fs = FileSystems.newFileSystem(
                         URI.create("jar:" + artifact.getFile().toURI()), J8Utils.zipFsCreate(false), null);
-                Stream<Path> classFies = Files.find(fs.getPath("/"), Integer.MAX_VALUE, (p, attr) -> p.toString()
+                Stream<Path> classFiles = Files.find(fs.getPath("/"), Integer.MAX_VALUE, (p, attr) -> p.toString()
                         .endsWith(".class"))) {
             return classFies.findAny().isPresent();
         }
