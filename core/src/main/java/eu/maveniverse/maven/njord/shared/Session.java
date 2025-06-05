@@ -20,7 +20,11 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import org.apache.maven.model.Model;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.repository.RemoteRepository;
 
 public interface Session extends Closeable {
     /**
@@ -75,6 +79,13 @@ public interface Session extends Closeable {
                 .filter(p -> name.equals(p.name()))
                 .findFirst();
     }
+
+    /**
+     * Reads the effective model of given artifact. The artifact does not have to be POM artifact. The repositories
+     * must be given, and caller must ensure that provided list of repositories makes artifact model buildable,
+     * like parents are resolvable.
+     */
+    Optional<Model> readEffectiveModel(Artifact artifact, List<RemoteRepository> remoteRepositories);
 
     /**
      * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(String)} method for syntax).

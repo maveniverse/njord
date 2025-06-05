@@ -9,6 +9,9 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.mima.extensions.mmr.ModelRequest;
+import eu.maveniverse.maven.mima.extensions.mmr.ModelResponse;
+import eu.maveniverse.maven.mima.extensions.mmr.internal.MavenModelReaderImpl;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
@@ -36,29 +39,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.apache.maven.model.Model;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.repository.RemoteRepository;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
     private final String sessionBoundStoreKey;
-    private final DefaultSessionFactory defaultSessionFactory;
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
     private final ArtifactPublisherRedirector artifactPublisherRedirector;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final MavenModelReaderImpl mavenModelReader;
 
     public DefaultSession(
             SessionConfig sessionConfig,
-            DefaultSessionFactory defaultSessionFactory,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
-            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
+            MavenModelReaderImpl mavenModelReader) {
         super(sessionConfig);
         this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
-        this.defaultSessionFactory = requireNonNull(defaultSessionFactory);
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
@@ -66,6 +71,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 requireNonNull(artifactPublisherRedirectorFactory).create(this);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        this.mavenModelReader = requireNonNull(mavenModelReader);
     }
 
     @Override
@@ -114,7 +120,29 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
+    public Optional<Model> readEffectiveModel(Artifact artifact, List<RemoteRepository> remoteRepositories) {
+        requireNonNull(artifact);
+        requireNonNull(remoteRepositories);
+        checkClosed();
+        try {
+            ModelResponse response = mavenModelReader.readModel(
+                    config.session(),
+                    ModelRequest.builder()
+                            .setArtifact(artifact)
+                            .setRepositories(remoteRepositories)
+                            .setRequestContext("njord")
+                            .build());
+            return Optional.ofNullable(response.getEffectiveModel());
+        } catch (Exception e) {
+            logger.warn("Could not read effective model: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri) {
+        requireNonNull(uri);
+        checkClosed();
         try {
             if (!uri.contains(":")) {
                 if (uri.isEmpty()) {
@@ -151,7 +179,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
         requireNonNull(uri);
-
+        checkClosed();
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
             try {
@@ -221,6 +249,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     @Override
     public int publishSessionArtifactStores() throws IOException {
+        checkClosed();
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         if (sessionBoundStore.isEmpty()) {
             return 0;
@@ -252,6 +281,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     @Override
     public int dropSessionArtifactStores() {
+        checkClosed();
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
         if (sessionBoundStore.isEmpty()) {
             return 0;

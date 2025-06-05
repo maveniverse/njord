@@ -9,8 +9,17 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.mima.context.ContextOverrides;
+import eu.maveniverse.maven.mima.context.Context;
+import eu.maveniverse.maven.mima.extensions.mmr.MavenModelReader;
+import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.SessionFactory;
+import eu.maveniverse.maven.njord.shared.impl.DefaultSessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactPublisherRedirectorFactory;
+import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreWriterFactory;
+import eu.maveniverse.maven.njord.shared.impl.store.DefaultInternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -18,23 +27,72 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 public class ValidatorTestSupport {
+    protected final Map<String, ChecksumAlgorithmFactory> checksumAlgorithmFactories;
+    protected final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+
+    public ValidatorTestSupport() {
+        this.checksumAlgorithmFactories = new HashMap<>();
+        this.checksumAlgorithmFactories.put(Sha1ChecksumAlgorithmFactory.NAME, new Sha1ChecksumAlgorithmFactory());
+        this.checksumAlgorithmFactories.put(Md5ChecksumAlgorithmFactory.NAME, new Md5ChecksumAlgorithmFactory());
+        this.checksumAlgorithmFactorySelector =
+                new DefaultChecksumAlgorithmFactorySelector(this.checksumAlgorithmFactories);
+    }
+
+    protected Path basedir() throws IOException {
+        Path basedir = Paths.get("target/test-base/" + getClass().getSimpleName());
+        Files.createDirectories(basedir);
+        return basedir;
+    }
+
+    protected Path userHome() throws IOException {
+        Path dir = basedir().resolve("home");
+        Files.createDirectories(dir);
+        return dir;
+    }
+
+    protected Path cwd() throws IOException {
+        Path dir = basedir().resolve("cwd");
+        Files.createDirectories(dir);
+        return dir;
+    }
+
+    protected Session createSession(Context context, SessionConfig config) {
+        requireNonNull(config);
+        SessionFactory factory = new DefaultSessionFactory(
+                new DefaultInternalArtifactStoreManagerFactory(checksumAlgorithmFactorySelector),
+                new DefaultArtifactStoreWriterFactory(),
+                new DefaultArtifactStoreMergerFactory(context.repositorySystem(), checksumAlgorithmFactorySelector),
+                new DefaultArtifactPublisherRedirectorFactory(context.repositorySystem()),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                new MavenModelReader(context).getImpl());
+        return factory.create(config);
+    }
+
     public static class TestValidationContext implements ArtifactStoreValidator.ValidationResult, ValidationContext {
         private final String name;
         private final ArrayList<String> info = new ArrayList<>();
@@ -98,7 +156,11 @@ public class ValidatorTestSupport {
         }
     }
 
-    protected ArtifactStore artifactStoreContaining(Artifact... artifacts) {
+    protected RemoteRepository njordRemoteRepository() {
+        return new RemoteRepository.Builder("njord", "default", "njord:").build();
+    }
+
+    protected ArtifactStore artifactStore(RemoteRepository repository, Artifact... artifacts) {
         Instant now = Instant.now();
         List<Artifact> contents = Arrays.asList(artifacts);
         return new ArtifactStore() {
@@ -179,7 +241,7 @@ public class ValidatorTestSupport {
 
             @Override
             public RemoteRepository storeRemoteRepository() {
-                return ContextOverrides.CENTRAL;
+                return repository;
             }
 
             @Override

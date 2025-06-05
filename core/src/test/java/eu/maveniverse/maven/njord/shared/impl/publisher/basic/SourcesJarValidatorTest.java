@@ -18,8 +18,10 @@ import org.junit.jupiter.api.Test;
 public class SourcesJarValidatorTest extends ValidatorTestSupport {
     @Test
     void jarWithClassesHavingSources() throws IOException {
-        ArtifactStore store = artifactStoreContaining(
-                new DefaultArtifact("org.foo:bar:jar:1.0"), new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
+        ArtifactStore store = artifactStore(
+                njordRemoteRepository(),
+                new DefaultArtifact("org.foo:bar:jar:1.0"),
+                new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
         Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
                 .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
                         .toFile());
@@ -35,7 +37,7 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithClassesNotHavingSources() throws IOException {
-        ArtifactStore store = artifactStoreContaining(new DefaultArtifact("org.foo:bar:jar:1.0"));
+        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
         Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
                 .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
                         .toFile());
@@ -51,8 +53,10 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesHavingSources() throws IOException {
-        ArtifactStore store = artifactStoreContaining(
-                new DefaultArtifact("org.foo:bar:jar:1.0"), new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
+        ArtifactStore store = artifactStore(
+                njordRemoteRepository(),
+                new DefaultArtifact("org.foo:bar:jar:1.0"),
+                new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
         Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
                 .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
                         .toFile());
@@ -68,7 +72,7 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesNotHavingSources() throws IOException {
-        ArtifactStore store = artifactStoreContaining(new DefaultArtifact("org.foo:bar:jar:1.0"));
+        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
         Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
                 .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
                         .toFile());

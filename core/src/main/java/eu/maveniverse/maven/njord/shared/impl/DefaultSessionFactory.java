@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.impl;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.mima.extensions.mmr.internal.MavenModelReaderImpl;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
@@ -30,6 +31,7 @@ public class DefaultSessionFactory implements SessionFactory {
     private final ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final MavenModelReaderImpl mavenModelReader;
 
     @Inject
     public DefaultSessionFactory(
@@ -38,25 +40,27 @@ public class DefaultSessionFactory implements SessionFactory {
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
             ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
-            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories) {
+            Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
+            MavenModelReaderImpl mavenModelReader) {
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
         this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
         this.artifactPublisherRedirectorFactory = requireNonNull(artifactPublisherRedirectorFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        this.mavenModelReader = requireNonNull(mavenModelReader);
     }
 
     @Override
     public DefaultSession create(SessionConfig sessionConfig) {
         return new DefaultSession(
                 sessionConfig,
-                this,
                 internalArtifactStoreManagerFactory,
                 artifactStoreWriterFactory,
                 artifactStoreMergerFactory,
                 artifactPublisherRedirectorFactory,
                 artifactStorePublisherFactories,
-                artifactStoreComparatorFactories);
+                artifactStoreComparatorFactories,
+                mavenModelReader);
     }
 }

@@ -20,7 +20,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class PomCoordinatesValidatorTest extends ValidatorTestSupport {
+public class PomProjectValidatorTest extends ValidatorTestSupport {
     @Test
     void pomWithRelocation() throws IOException {
         Runtime runtime = Runtimes.INSTANCE.getRuntime();
@@ -34,13 +34,17 @@ public class PomCoordinatesValidatorTest extends ValidatorTestSupport {
             Artifact artifact = new DefaultArtifact(
                     "io.quarkus:quarkus-hibernate-search-orm-coordination-outbox-polling-deployment:pom:3.23.2");
             TestValidationContext validationContext = new TestValidationContext("test");
-            try (PomCoordinatesValidator subject = new PomCoordinatesValidator("test", session)) {
+            try (PomProjectValidator subject = new PomProjectValidator("test", session)) {
                 subject.validate(store, artifact, validationContext);
             }
-
-            // info "valid"
+            // info 5
+            // "VALID project/name"
+            // "VALID project/description"
+            // "VALID project/url"
+            // "VALID project/licenses"
+            // "VALID project/developers"
             Assertions.assertEquals(0, validationContext.error().size());
-            Assertions.assertEquals(1, validationContext.info().size());
+            Assertions.assertEquals(5, validationContext.info().size());
         }
     }
 }
