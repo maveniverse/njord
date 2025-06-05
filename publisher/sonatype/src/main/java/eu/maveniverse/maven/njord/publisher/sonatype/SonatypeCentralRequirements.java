@@ -10,14 +10,13 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.impl.ModelProvider;
 import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArchiveValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.basic.ArtifactChecksumValidator;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.JavadocJarValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomCoordinatesValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomProjectValidatorFactory;
-import eu.maveniverse.maven.njord.shared.impl.publisher.basic.SourceJarValidatorFactory;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.JavadocJarValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomCoordinatesValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.PomProjectValidator;
+import eu.maveniverse.maven.njord.shared.impl.publisher.basic.SourcesJarValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.ArtifactSignatureValidator;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureType;
 import eu.maveniverse.maven.njord.shared.impl.publisher.signature.GpgSignatureValidator;
@@ -45,12 +44,9 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
     private final ArtifactStoreValidator snapshotValidator;
 
     public SonatypeCentralRequirements(
-            Session session,
-            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
-            ModelProvider modelProvider) {
+            Session session, ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
         requireNonNull(session);
         requireNonNull(checksumAlgorithmFactorySelector);
-        requireNonNull(modelProvider);
 
         // checksums
         this.mandatoryChecksumAlgorithms = checksumAlgorithmFactorySelector.selectList(Arrays.asList("SHA-1", "MD5"));
@@ -66,18 +62,10 @@ public class SonatypeCentralRequirements implements ArtifactStoreRequirements {
 
         // rest
         ArrayList<ValidatorFactory> validators = new ArrayList<>();
-        validators.add((sc) -> new PomCoordinatesValidatorFactory(
-                "POM Coordinates",
-                session.config().session(),
-                session.config().allRemoteRepositories(),
-                modelProvider));
-        validators.add((sc) -> new PomProjectValidatorFactory(
-                "POM Completeness",
-                session.config().session(),
-                session.config().allRemoteRepositories(),
-                modelProvider));
-        validators.add((sc) -> new JavadocJarValidatorFactory("Javadoc Jar"));
-        validators.add((sc) -> new SourceJarValidatorFactory("Source Jar"));
+        validators.add((sc) -> new PomCoordinatesValidator("POM Coordinates", session));
+        validators.add((sc) -> new PomProjectValidator("POM Completeness", session));
+        validators.add((sc) -> new JavadocJarValidator("Javadoc Jar"));
+        validators.add((sc) -> new SourcesJarValidator("Source Jar"));
         validators.add((sc) -> new ArchiveValidator("Archive"));
         validators.add((sc) -> new ArtifactChecksumValidator(
                 "Checksum Validation", mandatoryChecksumAlgorithms, optionalChecksumAlgorithms));

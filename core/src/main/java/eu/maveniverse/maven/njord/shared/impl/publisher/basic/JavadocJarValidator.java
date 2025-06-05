@@ -7,32 +7,38 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
- * Verifies presence of source JAR for every main JAR artifact.
+ * Verifies presence of javadoc JAR for every main JAR artifact.
  */
-public class SourceJarValidatorFactory extends ValidatorSupport {
-    private static final String JAR = "jar";
-    private static final String SOURCES = "sources";
-
-    public SourceJarValidatorFactory(String name) {
+public class JavadocJarValidator extends ValidatorSupport {
+    public JavadocJarValidator(String name) {
         super(name);
     }
 
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension())) {
-            if (artifactStore.artifactPresent(new SubArtifact(artifact, SOURCES, JAR))) {
+        if (mainJar(artifact)) {
+            if (artifactStore.artifactPresent(javadocJar(artifact))) {
                 collector.addInfo("PRESENT");
             } else {
-                collector.addError("MISSING");
+                Artifact sourcesJar = sourcesJar(artifact);
+                if (artifactStore.artifactPresent(sourcesJar)) {
+                    if (jarContainsJavaSources(
+                            artifactStore.artifactContent(sourcesJar).orElseThrow(J8Utils.OET))) {
+                        collector.addError("MISSING");
+                    }
+                } else if (jarContainsJavaClasses(
+                        artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET))) {
+                    collector.addError("MISSING");
+                }
             }
         }
     }

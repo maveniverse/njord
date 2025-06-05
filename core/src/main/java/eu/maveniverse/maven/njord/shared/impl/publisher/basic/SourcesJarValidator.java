@@ -7,33 +7,32 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
- * Verifies presence of javadoc JAR for every main JAR artifact.
+ * Verifies presence of sources JAR for every main JAR artifact.
  */
-public class JavadocJarValidatorFactory extends ValidatorSupport {
-
-    private static final String JAR = "jar";
-    private static final String JAVADOC = "javadoc";
-
-    public JavadocJarValidatorFactory(String name) {
+public class SourcesJarValidator extends ValidatorSupport {
+    public SourcesJarValidator(String name) {
         super(name);
     }
 
     @Override
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
-        if (artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension())) {
-            if (artifactStore.artifactPresent(new SubArtifact(artifact, JAVADOC, JAR))) {
+        if (mainJar(artifact)) {
+            if (artifactStore.artifactPresent(sourcesJar(artifact))) {
                 collector.addInfo("PRESENT");
             } else {
-                collector.addError("MISSING");
+                if (jarContainsJavaClasses(
+                        artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET))) {
+                    collector.addError("MISSING");
+                }
             }
         }
     }
