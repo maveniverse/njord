@@ -162,7 +162,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     }
 
     /**
-     * Returns the "service configuration" for given service ID.
+     * Returns the "service configuration" for given server ID.
      */
     private Optional<Map<String, String>> serviceConfiguration(String serverId) {
         requireNonNull(serverId);
