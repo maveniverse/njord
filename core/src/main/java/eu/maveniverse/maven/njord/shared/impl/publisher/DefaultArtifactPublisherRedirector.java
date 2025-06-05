@@ -56,7 +56,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repositoryMode);
 
         String url = repository.getUrl();
-        Optional<Map<String, String>> sco = serviceConfiguration(repository.getId());
+        Optional<Map<String, String>> sco = configuration(repository.getId(), false);
         if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
             Map<String, String> config = sco.orElseThrow(J8Utils.OET);
             String redirectUrl;
@@ -82,30 +82,11 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
 
         RemoteRepository authSource = repository;
-        if (followAuthRedirection) {
-            LinkedHashSet<String> authSourcesVisited = new LinkedHashSet<>();
-            authSourcesVisited.add(authSource.getId());
-            Optional<Map<String, String>> config = serviceConfiguration(authSource.getId());
-            while (config.isPresent()) {
-                String authRedirect = config.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_AUTH_REDIRECT);
-                if (authRedirect != null) {
-                    logger.debug("Following auth redirect {} -> {}", authSource.getId(), authRedirect);
-                    authSource = new RemoteRepository.Builder(
-                                    authRedirect, authSource.getContentType(), authSource.getUrl())
-                            .build();
-                    if (!authSourcesVisited.add(authSource.getId())) {
-                        throw new IllegalStateException("Auth redirect forms a cycle: " + authSourcesVisited);
-                    }
-                    config = serviceConfiguration(authSource.getId());
-                } else {
-                    break;
-                }
-            }
-            if (!Objects.equals(repository.getId(), authSource.getId())) {
-                logger.debug("Trail of AUTH for {}: {}", repository.getId(), String.join(" -> ", authSourcesVisited));
-            }
-        } else {
-            logger.debug("Auth redirection following inhibited");
+        Optional<Map<String, String>> config = configuration(authSource.getId(), followAuthRedirection);
+        if (config.isPresent()) {
+            String serverId = config.orElseThrow(J8Utils.OET).get(SERVER_ID_KEY);
+            authSource =
+                    new RemoteRepository.Builder(serverId, authSource.getContentType(), authSource.getUrl()).build();
         }
         return authSource;
     }
@@ -148,7 +129,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             .orElseThrow(J8Utils.OET)
                             .repositoryMode());
             if (distributionRepository != null) {
-                Optional<Map<String, String>> sco = serviceConfiguration(distributionRepository.getId());
+                Optional<Map<String, String>> sco = configuration(distributionRepository.getId(), false);
                 if (sco.isPresent()) {
                     String publisher = sco.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_PUBLISHER);
                     if (publisher != null) {
@@ -162,9 +143,48 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     }
 
     /**
-     * Returns the "service configuration" for given server ID.
+     * Returns the Njord configuration for given server ID (under servers/server/serverId/config) and is able to
+     * follow redirections.
      */
-    private Optional<Map<String, String>> serviceConfiguration(String serverId) {
+    protected Optional<Map<String, String>> configuration(String serverId, boolean followAuthRedirection) {
+        requireNonNull(serverId);
+
+        String source = serverId;
+        Optional<Map<String, String>> config = configuration(source);
+        LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
+        sourcesVisited.add(source);
+        while (config.isPresent()) {
+            String redirect = config.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_SERVICE_REDIRECT);
+            if (redirect == null) {
+                redirect = followAuthRedirection
+                        ? config.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_AUTH_REDIRECT)
+                        : null;
+            }
+            if (redirect != null) {
+                logger.debug("Following service redirect {} -> {}", source, redirect);
+                if (!sourcesVisited.add(redirect)) {
+                    throw new IllegalStateException("Auth redirect forms a cycle: " + redirect);
+                }
+                source = redirect;
+                config = configuration(source);
+            } else {
+                break;
+            }
+        }
+        if (!Objects.equals(serverId, source)) {
+            logger.debug("Trail of service redirects for {}: {}", serverId, String.join(" -> ", sourcesVisited));
+        }
+        return config;
+    }
+
+    private static final String SERVER_ID_KEY = "_serverId";
+
+    /**
+     * Returns the Njord configuration for given server ID (under servers/server/serverId/config).
+     * The map (if present) always contains mapping with key {@link #SERVER_ID_KEY} that contains server ID that
+     * configuration originates from.
+     */
+    protected Optional<Map<String, String>> configuration(String serverId) {
         requireNonNull(serverId);
         Object configuration = ConfigUtils.getObject(
                 session.config().session(),
@@ -181,7 +201,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 throw new IllegalArgumentException("unexpected configuration type: "
                         + configuration.getClass().getName());
             }
-            HashMap<String, String> serviceConfiguration = new HashMap<>();
+            HashMap<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
+            serviceConfiguration.put(SERVER_ID_KEY, serverId);
             for (PlexusConfiguration child : config.getChildren()) {
                 if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
                     serviceConfiguration.put(child.getName(), child.getValue());
