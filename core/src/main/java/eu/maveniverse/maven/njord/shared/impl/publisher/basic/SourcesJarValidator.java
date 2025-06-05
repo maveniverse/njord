@@ -7,12 +7,12 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
  * Verifies presence of sources JAR for every main JAR artifact.
@@ -26,10 +26,11 @@ public class SourcesJarValidator extends ValidatorSupport {
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         if (mainJar(artifact)) {
-            if (artifactStore.artifactPresent(new SubArtifact(artifact, SOURCES, JAR))) {
+            if (artifactStore.artifactPresent(sourcesJar(artifact))) {
                 collector.addInfo("PRESENT");
             } else {
-                if (jarContainsJavaClasses(artifact)) {
+                if (jarContainsJavaClasses(
+                        artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET))) {
                     collector.addError("MISSING");
                 }
             }

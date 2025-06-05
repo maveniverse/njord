@@ -9,17 +9,14 @@ package eu.maveniverse.maven.njord.shared.impl.publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.spi.Validator;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.stream.Stream;
+import java.io.InputStream;
+import java.util.jar.JarInputStream;
+import java.util.zip.ZipEntry;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
  * Verifies checksum for every artifact.
@@ -49,12 +46,37 @@ public abstract class ValidatorSupport extends CloseableSupport implements Valid
         return artifact.getClassifier().isEmpty() && JAR.equals(artifact.getExtension());
     }
 
-    protected boolean jarContainsJavaClasses(Artifact artifact) throws IOException {
-        try (FileSystem fs = FileSystems.newFileSystem(
-                        URI.create("jar:" + artifact.getFile().toURI()), J8Utils.zipFsCreate(false), null);
-                Stream<Path> classFiles = Files.find(fs.getPath("/"), Integer.MAX_VALUE, (p, attr) -> p.toString()
-                        .endsWith(".class"))) {
-            return classFiles.findAny().isPresent();
+    protected Artifact sourcesJar(Artifact artifact) {
+        return new SubArtifact(artifact, SOURCES, JAR);
+    }
+
+    protected Artifact javadocJar(Artifact artifact) {
+        return new SubArtifact(artifact, JAVADOC, JAR);
+    }
+
+    protected boolean jarContainsJavaClasses(InputStream jarContent) throws IOException {
+        try (JarInputStream jarInputStream = new JarInputStream(jarContent)) {
+            ZipEntry zipEntry = jarInputStream.getNextEntry();
+            while (zipEntry != null) {
+                if (zipEntry.getName().endsWith(".class")) {
+                    return true;
+                }
+                zipEntry = jarInputStream.getNextEntry();
+            }
         }
+        return false;
+    }
+
+    protected boolean jarContainsJavaSources(InputStream jarContent) throws IOException {
+        try (JarInputStream jarInputStream = new JarInputStream(jarContent)) {
+            ZipEntry zipEntry = jarInputStream.getNextEntry();
+            while (zipEntry != null) {
+                if (zipEntry.getName().endsWith(".java")) {
+                    return true;
+                }
+                zipEntry = jarInputStream.getNextEntry();
+            }
+        }
+        return false;
     }
 }

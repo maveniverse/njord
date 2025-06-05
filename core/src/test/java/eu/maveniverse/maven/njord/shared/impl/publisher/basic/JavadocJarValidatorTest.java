@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.basic;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.jupiter.api.Assertions;
@@ -18,16 +17,12 @@ import org.junit.jupiter.api.Test;
 public class JavadocJarValidatorTest extends ValidatorTestSupport {
     @Test
     void jarWithClassesHavingJavadoc() throws IOException {
-        ArtifactStore store = artifactStore(
-                njordRemoteRepository(),
-                new DefaultArtifact("org.foo:bar:jar:1.0"),
-                new DefaultArtifact("org.foo:bar:jar:javadoc:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        Artifact javadoc = new DefaultArtifact("org.foo:bar:jar:javadoc:1.0");
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, javadoc);
         TestValidationContext context = new TestValidationContext("test");
         try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // info "present"
@@ -37,13 +32,11 @@ public class JavadocJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithClassesNotHavingJavadoc() throws IOException {
-        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar);
         TestValidationContext context = new TestValidationContext("test");
         try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // error "missing"
@@ -53,16 +46,12 @@ public class JavadocJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesHavingJavadoc() throws IOException {
-        ArtifactStore store = artifactStore(
-                njordRemoteRepository(),
-                new DefaultArtifact("org.foo:bar:jar:1.0"),
-                new DefaultArtifact("org.foo:bar:jar:javadoc:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        Artifact javadoc = new DefaultArtifact("org.foo:bar:jar:javadoc:1.0");
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, javadoc);
         TestValidationContext context = new TestValidationContext("test");
         try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // info "present"
@@ -72,13 +61,73 @@ public class JavadocJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesNotHavingJavadoc() throws IOException {
-        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar);
         TestValidationContext context = new TestValidationContext("test");
         try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
+        }
+
+        // nothing
+        Assertions.assertEquals(0, context.error().size());
+        Assertions.assertEquals(0, context.info().size());
+    }
+
+    @Test
+    void jarWithClassesHavingJavadocWithJavaSource() throws IOException {
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        Artifact source = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withSources.toFile());
+        Artifact javadoc = new DefaultArtifact("org.foo:bar:jar:javadoc:1.0");
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, source, javadoc);
+        TestValidationContext context = new TestValidationContext("test");
+        try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
+            subject.validate(store, jar, context);
+        }
+
+        // info "present"
+        Assertions.assertEquals(0, context.error().size());
+        Assertions.assertEquals(1, context.info().size());
+    }
+
+    @Test
+    void jarWithClassesNotHavingJavadocWithoutJavaSource() throws IOException {
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        Artifact source = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withoutSources.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, source);
+        TestValidationContext context = new TestValidationContext("test");
+        try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
+            subject.validate(store, jar, context);
+        }
+
+        // nothing
+        Assertions.assertEquals(0, context.error().size());
+        Assertions.assertEquals(0, context.info().size());
+    }
+
+    @Test
+    void jarWithoutClassesHavingJavadocWithJavaSource() throws IOException {
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        Artifact source = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withSources.toFile());
+        Artifact javadoc = new DefaultArtifact("org.foo:bar:jar:javadoc:1.0");
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, source, javadoc);
+        TestValidationContext context = new TestValidationContext("test");
+        try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
+            subject.validate(store, jar, context);
+        }
+
+        // info "present"
+        Assertions.assertEquals(0, context.error().size());
+        Assertions.assertEquals(1, context.info().size());
+    }
+
+    @Test
+    void jarWithoutClassesNotHavingJavadocWithoutJavaSource() throws IOException {
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        Artifact source = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withoutSources.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, source);
+        TestValidationContext context = new TestValidationContext("test");
+        try (JavadocJarValidator subject = new JavadocJarValidator("test")) {
+            subject.validate(store, jar, context);
         }
 
         // nothing

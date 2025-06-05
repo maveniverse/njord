@@ -16,18 +16,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SourcesJarValidatorTest extends ValidatorTestSupport {
+
     @Test
     void jarWithClassesHavingSources() throws IOException {
-        ArtifactStore store = artifactStore(
-                njordRemoteRepository(),
-                new DefaultArtifact("org.foo:bar:jar:1.0"),
-                new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        Artifact sources = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withSources.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, sources);
         ValidatorTestSupport.TestValidationContext context = new ValidatorTestSupport.TestValidationContext("test");
         try (SourcesJarValidator subject = new SourcesJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // info "present"
@@ -37,13 +34,11 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithClassesNotHavingSources() throws IOException {
-        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withClasses.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar);
         ValidatorTestSupport.TestValidationContext context = new ValidatorTestSupport.TestValidationContext("test");
         try (SourcesJarValidator subject = new SourcesJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // error "missing"
@@ -53,10 +48,9 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesHavingSources() throws IOException {
-        ArtifactStore store = artifactStore(
-                njordRemoteRepository(),
-                new DefaultArtifact("org.foo:bar:jar:1.0"),
-                new DefaultArtifact("org.foo:bar:jar:sources:1.0"));
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        Artifact sources = new DefaultArtifact("org.foo:bar:jar:sources:1.0").setFile(withSources.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar, sources);
         Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
                 .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
                         .toFile());
@@ -72,13 +66,11 @@ public class SourcesJarValidatorTest extends ValidatorTestSupport {
 
     @Test
     void jarWithoutClassesNotHavingSources() throws IOException {
-        ArtifactStore store = artifactStore(njordRemoteRepository(), new DefaultArtifact("org.foo:bar:jar:1.0"));
-        Artifact artifact = new DefaultArtifact("org.foo:bar:jar:1.0")
-                .setFile(Paths.get("src/test/binaries/validators/withoutClasses.jar")
-                        .toFile());
+        Artifact jar = new DefaultArtifact("org.foo:bar:jar:1.0").setFile(withoutClasses.toFile());
+        ArtifactStore store = artifactStore(njordRemoteRepository(), jar);
         ValidatorTestSupport.TestValidationContext context = new ValidatorTestSupport.TestValidationContext("test");
         try (SourcesJarValidator subject = new SourcesJarValidator("test")) {
-            subject.validate(store, artifact, context);
+            subject.validate(store, jar, context);
         }
 
         // nothing

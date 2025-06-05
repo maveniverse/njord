@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
@@ -49,8 +50,14 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 public class ValidatorTestSupport {
+    protected final Path withClasses = Paths.get("src/test/binaries/validators/withClasses.jar");
+    protected final Path withoutClasses = Paths.get("src/test/binaries/validators/withoutClasses.jar");
+    protected final Path withSources = Paths.get("src/test/binaries/validators/withSources.jar");
+    protected final Path withoutSources = Paths.get("src/test/binaries/validators/withoutSources.jar");
+
     protected final Map<String, ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     protected final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
@@ -162,7 +169,8 @@ public class ValidatorTestSupport {
 
     protected ArtifactStore artifactStore(RemoteRepository repository, Artifact... artifacts) {
         Instant now = Instant.now();
-        List<Artifact> contents = Arrays.asList(artifacts);
+        Map<String, Artifact> contents =
+                Arrays.stream(artifacts).collect(Collectors.toMap(ArtifactIdUtils::toId, a -> a));
         return new ArtifactStore() {
             @Override
             public String name() {
@@ -216,7 +224,7 @@ public class ValidatorTestSupport {
 
             @Override
             public boolean artifactPresent(Artifact artifact) throws IOException {
-                return contents.contains(artifact);
+                return contents.containsKey(ArtifactIdUtils.toId(artifact));
             }
 
             @Override
@@ -226,6 +234,10 @@ public class ValidatorTestSupport {
 
             @Override
             public Optional<InputStream> artifactContent(Artifact artifact) throws IOException {
+                Artifact c = contents.get(ArtifactIdUtils.toId(artifact));
+                if (c != null) {
+                    return Optional.of(Files.newInputStream(c.getFile().toPath()));
+                }
                 return Optional.empty();
             }
 
