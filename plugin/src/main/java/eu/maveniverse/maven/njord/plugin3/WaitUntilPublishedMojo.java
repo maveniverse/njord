@@ -66,7 +66,7 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
             }
             if (pto.isPresent()) {
                 // TODO: parameterize this
-                Duration waitTimeout = Duration.parse("PT1H");
+                Duration waitTimeout = Duration.parse("PT1M");
                 Duration waitSleep = Duration.parse("PT5S");
 
                 Instant waitingUntil = Instant.now().plus(waitTimeout);
