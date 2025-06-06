@@ -34,8 +34,8 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
- * A mojo that waits for all the store contents become available from publishing source. In other words, waits
- * for artifacts become "published".
+ * A mojo that waits for all the store contents become available on publishing target from publishing source.
+ * In other words, waits for all artifacts to become "published".
  */
 @Mojo(name = "wait-until-published", threadSafe = true, requiresProject = false, aggregator = true)
 public class WaitUntilPublishedMojo extends PublisherSupportMojo {
