@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0">
+
+  <servers>
+    <server>
+      <id>sonatype-central-portal</id>
+      <username>token1</username>
+      <password>token2</password>
+      <configuration>
+        <njord.publisher>sonatype-cp</njord.publisher>
+        <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
+      </configuration>
+    </server>
+    <server>
+      <id>some-project-releases</id>
+      <configuration>
+        <njord.serviceRedirect>sonatype-central-portal</njord.serviceRedirect>
+      </configuration>
+    </server>
+    <server>
+      <id>just-auth-redirect</id>
+      <configuration>
+        <njord.authRedirect>sonatype-central-portal</njord.authRedirect>
+        <njord.publisher>sonatype-cp</njord.publisher>
+        <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
+      </configuration>
+    </server>
+    <server>
+      <id>unconfigured</id>
+    </server>
+  </servers>
+</settings>
