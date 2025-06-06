@@ -37,8 +37,8 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     protected String store;
 
     /**
-     * The name of the publisher to publish to. If not given, Njord will try to figure it out: it will look in
-     * user properties, project properties (if available) and user Settings server configuration.
+     * The name of the publisher or service/server ID to publish to. If not given, Njord will try to figure it out:
+     * it will look in user properties, project properties (if available) and user Settings server configuration.
      * <p>
      * This "heuristic" will work only if there is current project. While invoking mojo is possible outside a
      * project as well (validate and publish mojos does not require project), in such cases this parameter is
