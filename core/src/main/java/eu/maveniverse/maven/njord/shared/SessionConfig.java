@@ -92,8 +92,9 @@ public interface SessionConfig {
     String CONFIG_AUTH_REDIRECT = KEY_PREFIX + "authRedirect";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for server redirect. If this
-     * key is present, Njord will take service config from redirected server entry instead.
+     * Configuration key in {@code settings/servers/server/configuration} for service redirect. If this
+     * key is present, all other keys are ignored and Njord will take service config from redirected server entry
+     * instead.
      */
     String CONFIG_SERVICE_REDIRECT = KEY_PREFIX + "serviceRedirect";
 

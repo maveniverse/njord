@@ -89,7 +89,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  *       </configuration>
  *     </server>
  * }</pre>
- * And that is it: no copy pasta needed: if you cannot change the project distribution management, just redirect it
+ * And that is it, no copy pasta needed: if you cannot change the project distribution management, just redirect it
  * to proper service entry in your own <code>settings.xml</code>.
  *
  * @see eu.maveniverse.maven.njord.shared.SessionConfig#CONFIG_SERVICE_REDIRECT
