@@ -74,6 +74,7 @@
     <version.maven>3.9.10</version.maven>
     <version.resolver>1.9.23</version.resolver>
     <version.mima>2.4.29</version.mima>
+    <version.indexer>7.1.6</version.indexer>
     <version.slf4j>1.7.36</version.slf4j>
   </properties>
 
@@ -180,6 +181,19 @@
         <version>${version.maven-plugin-tools}</version>
       </dependency>
 
+      <!-- Search API -->
+      <dependency>
+        <groupId>org.apache.maven.indexer</groupId>
+        <artifactId>search-api</artifactId>
+        <version>${version.indexer}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.indexer</groupId>
+        <artifactId>search-backend-remoterepository</artifactId>
+        <version>${version.indexer}</version>
+      </dependency>
+
+      <!-- MIMA -->
       <dependency>
         <groupId>eu.maveniverse.maven.mima</groupId>
         <artifactId>context</artifactId>
