@@ -94,12 +94,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 // build auth token
                 RemoteRepository authSource =
-                        session.artifactPublisherRedirector().getAuthRepositoryId(repository, true);
+                        session.artifactPublisherRedirector().getAuthRepositoryId(repository);
                 String authValue = null;
-                try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(
-                        session.config().session(),
-                        repositorySystem.newDeploymentRepository(
-                                session.config().session(), authSource))) {
+                try (AuthenticationContext repoAuthContext =
+                        AuthenticationContext.forRepository(session.config().session(), authSource)) {
                     if (repoAuthContext != null) {
                         String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                         String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
@@ -178,7 +176,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 new DefaultRepositorySystemSession(
                                                 session.config().session())
                                         .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                                session.artifactPublisherRedirector().getPublishingRepository(repository, true, true),
+                                session.artifactPublisherRedirector().getPublishingRepository(repository, true),
                                 true)
                         .deploy(store);
             }

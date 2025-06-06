@@ -97,33 +97,64 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 public interface ArtifactPublisherRedirector {
     /**
-     * Tells, based on Njord config, what is the real URL used for given remote repository. Never returns {@code null},
+     * Tells, based on server config, what is the Njord URL to be used for given remote repository. Never returns {@code null},
      * and without any configuration just returns passed in repository URL.
+     *
+     * @param repository The remote repository we ask config for, never {@code null}.
      */
     String getRepositoryUrl(RemoteRepository repository);
 
     /**
-     * Tells, based on Njord config, what is the real URL used for given remote repository. Never returns {@code null},
+     * Tells, based on server config, what is the Njord URL to be used for given remote repository. Never returns {@code null},
      * and without any configuration just returns passed in repository URL.
+     *
+     * @param repository The remote repository we ask config for, never {@code null}.
+     * @param repositoryMode The repository mode we ask URL for, never {@code null}.
      */
     String getRepositoryUrl(RemoteRepository repository, RepositoryMode repositoryMode);
 
     /**
      * Returns the remote repository to source auth from for the passed in remote repository. Never returns {@code null}.
+     * The repository will have auth applied, if applicable.
+     *
+     * @param repository The remote repository we ask Auth for, never {@code null}.
      */
-    RemoteRepository getAuthRepositoryId(RemoteRepository repository, boolean followAuthRedirection);
+    RemoteRepository getAuthRepositoryId(RemoteRepository repository);
 
     /**
      * Returns the remote repository to use for publishing. Never returns {@code null}. The repository will have
-     * auth and any auth-redirection, if applicable, applied.
+     * auth applied, if applicable. The auth may come from elsewhere, see {@link #getAuthRepositoryId(RemoteRepository)}.
      *
-     * @see #getAuthRepositoryId(RemoteRepository, boolean)
+     * @param repository The remote repository we ask Auth for, never {@code null}.
+     * @param expectAuth Whether a warning should be logged if no auth found (is most probably configuration error).
      */
-    RemoteRepository getPublishingRepository(
-            RemoteRepository repository, boolean expectAuth, boolean followAuthRedirection);
+    RemoteRepository getPublishingRepository(RemoteRepository repository, boolean expectAuth);
 
     /**
      * Returns the name of wanted/configured {@link eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher}.
+     * This method returns present string optional ONLY if string found in configuration is name of existing publisher.
+     * If there was a string discovered, but string is not a name of existing publisher, this method throws. Otherwise,
+     * empty optional is returned. The decision is made based on
+     * {@link eu.maveniverse.maven.njord.shared.SessionConfig#CONFIG_PUBLISHER} property sourced from properties
+     * (system, user or project), and finally, if project present, the distribution management of it.
+     *
+     * @throws IllegalStateException If string was found (given or found in config) but name does not correspond to
+     *         known publisher.
      */
     Optional<String> getArtifactStorePublisherName();
+
+    /**
+     * Returns the name of wanted/configured {@link eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher}
+     * based on passed in name. This method returns present string optional ONLY if passed in name is name of existing
+     * publisher, or, is a server ID that has publisher configured. If there was a string discovered, but string is
+     * not a name of existing publisher, this method throws.
+     *
+     * @param name A "name" that may be {@code null}. If not null, it is observed as "user input" and will be used
+     *             as basis for looking up publisher name. Value may be a publisher name, or a settings server ID that has
+     *             Njord config with {@link eu.maveniverse.maven.njord.shared.SessionConfig#CONFIG_PUBLISHER}. If
+     *             name is {@code null}, call is passed to {@link #getArtifactStorePublisherName()} method.
+     * @throws IllegalStateException If string was found (given or found in config) but name does not correspond to
+     *         known publisher.
+     */
+    Optional<String> getArtifactStorePublisherName(String name);
 }

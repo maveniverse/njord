@@ -54,7 +54,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        session.artifactPublisherRedirector().getPublishingRepository(repository, true, true),
+                        session.artifactPublisherRedirector().getPublishingRepository(repository, true),
                         true)
                 .deploy(artifactStore);
     }

@@ -43,7 +43,6 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
     public static final String NAME = "deploy";
 
     private static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
-    private static final String PROP_ALT_DEPLOYMENT_REPOSITORY_AUTH_REDIRECT = "altDeploymentRepositoryAuthRedirect";
 
     private final RepositorySystem repositorySystem;
 
@@ -58,7 +57,6 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
 
         RemoteRepository releasesRepository = null;
         RemoteRepository snapshotsRepository = null;
-        boolean followAuthRedirection = true;
         if (session.config().effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
             String altDeploymentRepository =
                     session.config().effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
@@ -75,11 +73,6 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
             snapshotsRepository = new RemoteRepository.Builder(id, "default", url)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
-            followAuthRedirection = Boolean.parseBoolean(session.config()
-                    .effectiveProperties()
-                    .getOrDefault(
-                            PROP_ALT_DEPLOYMENT_REPOSITORY_AUTH_REDIRECT,
-                            "false")); // user specified explicitly what he wants here, but may override it
         } else if (session.config().currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
                     session.config().currentProject().orElseThrow(J8Utils.OET);
@@ -88,11 +81,6 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
         }
 
         return new DeployPublisher(
-                session,
-                repositorySystem,
-                releasesRepository,
-                snapshotsRepository,
-                ArtifactStoreRequirements.NONE,
-                followAuthRedirection);
+                session, repositorySystem, releasesRepository, snapshotsRepository, ArtifactStoreRequirements.NONE);
     }
 }
