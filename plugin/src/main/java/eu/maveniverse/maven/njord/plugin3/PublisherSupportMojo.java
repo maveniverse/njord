@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.plugin3;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
@@ -36,8 +37,8 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     protected String store;
 
     /**
-     * The name of the publisher to publish to. If not given, Njord will try to figure it out: it will look in
-     * user properties, project properties (if available) and user Settings server configuration.
+     * The name of the publisher or service/server ID to publish to. If not given, Njord will try to figure it out:
+     * it will look in user properties, project properties (if available) and user Settings server configuration.
      * <p>
      * This "heuristic" will work only if there is current project. While invoking mojo is possible outside a
      * project as well (validate and publish mojos does not require project), in such cases this parameter is
@@ -99,19 +100,10 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
     }
 
     /**
-     * Returns publisher name, if possible.
-     * <ul>
-     *     <li>if {@code publisher} parameter is set, is returned</li>
-     *     <li>if {@link SessionConfig#publisher()} is present (so is set in user or project properties, if project is available), is returned</li>
-     *     <li>if there is project available, distribution management repository ID is checked is it publisher name, if yes, is returned</li>
-     *     <li>if there is configuration in settings for distribution management repository ID server, it is checked and if configuration exists, is returned</li>
-     * </ul>
+     * Returns publisher name, if possible. Uses {@link ArtifactPublisherRedirector#getArtifactStorePublisherName(String)}.
      */
     protected Optional<String> getArtifactStorePublisherName(Session ns) {
-        if (publisher != null) {
-            return Optional.of(publisher);
-        }
-        return ns.artifactPublisherRedirector().getArtifactStorePublisherName();
+        return ns.artifactPublisherRedirector().getArtifactStorePublisherName(publisher);
     }
 
     protected ArtifactStorePublisher getArtifactStorePublisher(Session ns) throws MojoFailureException {

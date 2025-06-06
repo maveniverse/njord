@@ -19,15 +19,12 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DeployPublisher extends ArtifactStorePublisherSupport {
-    private final boolean followAuthRedirection;
-
     public DeployPublisher(
             Session session,
             RepositorySystem repositorySystem,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
-            ArtifactStoreRequirements artifactStoreRequirements,
-            boolean followAuthRedirection) {
+            ArtifactStoreRequirements artifactStoreRequirements) {
         super(
                 session,
                 repositorySystem,
@@ -38,7 +35,6 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
-        this.followAuthRedirection = followAuthRedirection;
     }
 
     @Override
@@ -55,8 +51,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                             repositorySystem,
                             new DefaultRepositorySystemSession(session.config().session())
                                     .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                            session.artifactPublisherRedirector()
-                                    .getPublishingRepository(repository, true, followAuthRedirection),
+                            session.artifactPublisherRedirector().getPublishingRepository(repository, true),
                             true)
                     .deploy(store);
         }
