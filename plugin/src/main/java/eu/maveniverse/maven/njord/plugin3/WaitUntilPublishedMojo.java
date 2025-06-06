@@ -93,8 +93,8 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
                             boolean exists = d.getException() == null;
                             if (exists) {
                                 toCheck.decrementAndGet();
+                                artifacts.put(d.getArtifact(), exists);
                             }
-                            artifacts.put(d.getArtifact(), exists);
                         });
 
                         if (toCheck.get() == 0) {
