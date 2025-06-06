@@ -13,27 +13,25 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
-import java.util.Collection;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.search.api.MAVEN;
-import org.apache.maven.search.api.SearchBackend;
-import org.apache.maven.search.api.SearchRequest;
-import org.apache.maven.search.api.SearchResponse;
-import org.apache.maven.search.api.request.Query;
-import org.apache.maven.search.backend.remoterepository.RemoteRepositorySearchBackend;
-import org.apache.maven.search.backend.remoterepository.RemoteRepositorySearchBackendFactory;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.repository.RemoteRepository;
-
-import static org.apache.maven.search.api.request.BooleanQuery.and;
-import static org.apache.maven.search.api.request.FieldQuery.fieldQuery;
+import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
  * A mojo that waits for all the store contents become available from publishing source. In other words, waits
@@ -48,6 +46,9 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
      */
     @Parameter(required = true, property = "drop", defaultValue = "true")
     private boolean drop;
+
+    @Component
+    private RepositoryConnectorProvider repositoryConnectorProvider;
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
@@ -66,31 +67,54 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
                     throw new IllegalArgumentException("Unknown repository mode: " + mode);
             }
             if (pto.isPresent()) {
-                // TODO: ensure it is Central or Nx2 (two supported ones)
-                // TODO: total wait time
-                // TODO: poll time
+                // TODO: parameterize this
+                Duration waitTimeout = Duration.parse("PT1H");
+                Duration waitSleep = Duration.parse("PT1M");
+
+                Instant waitingUntil = Instant.now().plus(waitTimeout);
                 Map<Artifact, Boolean> artifacts =
                         from.artifacts().stream().collect(Collectors.toMap(a -> a, a -> Boolean.FALSE));
                 AtomicInteger toCheck = new AtomicInteger(artifacts.size());
                 RemoteRepository publishingTarget = pto.orElseThrow(J8Utils.OET);
-                logger.info(
-                        "Waiting for {} artifacts to become available from {}",
-                        artifacts.size(),
-                        publishingTarget);
-                try (RemoteRepositorySearchBackend rrb =
-                        RemoteRepositorySearchBackendFactory.createDefaultMavenCentral()) {
+                logger.info("Waiting for {} artifacts to become available from {}", artifacts.size(), publishingTarget);
+                try (RepositoryConnector repositoryConnector = repositoryConnectorProvider.newRepositoryConnector(
+                        mavenSession.getRepositorySession(), publishingTarget)) {
+                    logger.debug("toCheck = {}", toCheck.get());
                     while (toCheck.get() > 0) {
-                        for (Map.Entry<Artifact, Boolean> e : artifacts.entrySet()) {
-                            if (!e.getValue()) {
-                                if (available(rrb, e.getKey())) {
-                                    toCheck.decrementAndGet();
-                                    e.setValue(Boolean.TRUE);
-                                }
+                        List<ArtifactDownload> artifactDownloads = new ArrayList<>();
+                        artifacts.forEach((key, value) -> {
+                            if (!value) {
+                                ArtifactDownload artifactDownload = new ArtifactDownload(key, "njord", null, null);
+                                artifactDownload.setRepositories(Collections.singletonList(publishingTarget));
+                                artifactDownload.setExistenceCheck(true);
+                                artifactDownloads.add(artifactDownload);
                             }
-                        }
-                    }
-                }
+                        });
+                        repositoryConnector.get(artifactDownloads, null);
+                        artifactDownloads.forEach(d -> {
+                            boolean exists = d.getException() == null;
+                            if (exists) {
+                                toCheck.decrementAndGet();
+                            }
+                            artifacts.put(d.getArtifact(), exists);
+                        });
 
+                        if (toCheck.get() == 0) {
+                            break;
+                        }
+
+                        if (Instant.now().isAfter(waitingUntil)) {
+                            throw new IOException("Timeout on waiting for waiting for publishing " + from.name()
+                                    + " to " + publishingTarget);
+                        }
+                        Thread.sleep(waitSleep.toMillis());
+                    }
+                } catch (NoRepositoryConnectorException e) {
+                    logger.info("No connector for publishing target exists; bailing out");
+                    throw new MojoFailureException("No publishing target exists");
+                } catch (InterruptedException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
             } else {
                 logger.info("No publishing target exists; bailing out");
                 throw new MojoFailureException("No publishing target exists");
@@ -100,28 +124,5 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
             logger.info("Dropping {}", store);
             ns.artifactStoreManager().dropArtifactStore(store);
         }
-    }
-
-    /**
-     * Returns {@code true} if artifact is available on remote repository that backend points at.
-     */
-    private boolean available(SearchBackend backend, Artifact artifact) throws IOException {
-        Query query = toRrQuery(artifact);
-        SearchRequest searchRequest = new SearchRequest(query);
-        SearchResponse searchResponse = backend.search(searchRequest);
-        return searchResponse.getTotalHits() == 1;
-    }
-
-    /**
-     * Creates query for "existence check".
-     */
-    private Query toRrQuery(Artifact artifact) {
-        Query result = fieldQuery(MAVEN.GROUP_ID, artifact.getGroupId());
-        result = and(result, fieldQuery(MAVEN.ARTIFACT_ID, artifact.getArtifactId()));
-        result = and(result, fieldQuery(MAVEN.VERSION, artifact.getVersion()));
-        if (artifact.getClassifier() != null && !artifact.getClassifier().isEmpty()) {
-            result = and(result, fieldQuery(MAVEN.CLASSIFIER, artifact.getClassifier()));
-        }
-        return and(result, fieldQuery(MAVEN.FILE_EXTENSION, artifact.getExtension()));
     }
 }
