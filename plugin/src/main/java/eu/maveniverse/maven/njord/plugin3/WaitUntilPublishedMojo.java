@@ -67,18 +67,19 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
             if (pto.isPresent()) {
                 // TODO: parameterize this
                 Duration waitTimeout = Duration.parse("PT1H");
-                Duration waitSleep = Duration.parse("PT1M");
+                Duration waitSleep = Duration.parse("PT5S");
 
                 Instant waitingUntil = Instant.now().plus(waitTimeout);
                 Map<Artifact, Boolean> artifacts =
-                        from.artifacts().stream().collect(Collectors.toMap(a -> a, a -> Boolean.FALSE));
+                        from.artifacts().stream().collect(Collectors.toMap(a -> a, a -> false));
                 AtomicInteger toCheck = new AtomicInteger(artifacts.size());
                 RemoteRepository publishingTarget = pto.orElseThrow(J8Utils.OET);
                 logger.info("Waiting for {} artifacts to become available from {}", artifacts.size(), publishingTarget);
                 try (RepositoryConnector repositoryConnector = repositoryConnectorProvider.newRepositoryConnector(
                         mavenSession.getRepositorySession(), publishingTarget)) {
-                    logger.debug("toCheck = {}", toCheck.get());
                     while (toCheck.get() > 0) {
+                        logger.info(
+                                "Checking reachability of {} artifacts (out of {}).", toCheck.get(), artifacts.size());
                         List<ArtifactDownload> artifactDownloads = new ArrayList<>();
                         artifacts.forEach((key, value) -> {
                             if (!value) {
@@ -93,7 +94,7 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
                             boolean exists = d.getException() == null;
                             if (exists) {
                                 toCheck.decrementAndGet();
-                                artifacts.put(d.getArtifact(), exists);
+                                artifacts.put(d.getArtifact(), true);
                             }
                         });
 
@@ -102,6 +103,14 @@ public class WaitUntilPublishedMojo extends PublisherSupportMojo {
                         }
 
                         if (Instant.now().isAfter(waitingUntil)) {
+                            artifactDownloads.forEach(d -> {
+                                if (d.getException() != null) {
+                                    logger.warn(
+                                            "Artifact {} failed for {}",
+                                            d.getArtifact(),
+                                            d.getException().getMessage());
+                                }
+                            });
                             throw new IOException("Timeout on waiting for waiting for publishing " + from.name()
                                     + " to " + publishingTarget);
                         }
