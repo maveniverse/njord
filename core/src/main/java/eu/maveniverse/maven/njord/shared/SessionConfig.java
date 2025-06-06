@@ -95,7 +95,7 @@ public interface SessionConfig {
      * Configuration key in {@code settings/servers/server/configuration} for server redirect. If this
      * key is present, Njord will take service config from redirected server entry instead.
      */
-    String CONFIG_SERVICE_REDIRECT = KEY_PREFIX + "serverRedirect";
+    String CONFIG_SERVICE_REDIRECT = KEY_PREFIX + "serviceRedirect";
 
     /**
      * Is Njord enabled? If this method returns {@code false}, Njord will step aside (like it was not loaded).

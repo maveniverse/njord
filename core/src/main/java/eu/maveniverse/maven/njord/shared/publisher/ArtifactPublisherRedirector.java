@@ -85,7 +85,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  *     <server>
  *       <id>the-project-releases</id>
  *       <configuration>
- *         <njord.redirectService>sonatype-central-portal</njord.redirectService>
+ *         <njord.serviceRedirect>sonatype-central-portal</njord.serviceRedirect>
  *       </configuration>
  *     </server>
  * }</pre>
