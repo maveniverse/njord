@@ -34,17 +34,14 @@ With Njord you can have benefits:
 
 ## Setting it up
 
-With Maven 3 install Njord project-wide `.mvn/extensions.xml`, or with Maven 4+ install it user-wide `~/.m2/extensions.xml` like this:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<extensions>
-    <extension>
-        <groupId>eu.maveniverse.maven.njord</groupId>
-        <artifactId>extension</artifactId>
-        <version>${currentVersion}</version>
-    </extension>
-</extensions>
-```
+Maveniverse Njord is a suite of Maven (core or build; works both ways) extension and a Maven Plugin. You should keep
+the versions of extension and plugin aligned. Simplest way to achieve this is to:
+* create a property like `version.njord` in your parent POM carrying Njord version.
+* adding a build/pluginManagement section with Njord plugin and version property.
+* adding a build/extensions section wirh Njord extension and version property.
+
+Depending on your needs, Njord can be defined in parent POMs but can also be "sideloaded" as user or project extension,
+maybe even only when you are about to publish (so not all the time).
 
 It is recommended (but not mandatory) to add this stanza to your `settings.xml` as well if you don't have it already 
 (to not type whole G of plugin):
@@ -58,20 +55,24 @@ Next, set up authentication for service or even more services you plan to use. D
 server, for example `sonatype-cp` publisher needs following stanza in your `settings.xml`:
 
 ```xml
-    <server>
-      <id>sonatype-cp</id>
-      <username>USER_TOKEN_PT1</username>
-      <password>USER_TOKEN_PT2</password>
-    </server>
+      <server>
+        <id>sonatype-central-portal</id>
+        <username>$TOKEN1</username>
+        <password>$TOKEN2</password>
+        <configuration>
+          <njord.publisher>sonatype-cp</njord.publisher>
+          <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
+        </configuration>
+      </server>
 ```
 
-Supported publishers and corresponding `server.id`s are:
+Supported publishers are:
 
 | Publisher (publisher ID)                                       | server.id               | What is needed                                                                                                                               |
 |----------------------------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Sonatype Central Portal (`sonatype-cp`)                        | `sonatype-cp`           | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/).                 |
-| Sonatype OSS on https://oss.sonatype.org/ (`sonatype-oss`)     | `sonatype-oss`          | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-token/) and using OSS instance. |
-| Sonatype S01 on https://s01.oss.sonatype.org/ (`sonatype-s01`) | `sonatype-s01`          | As above but using s01 instance.                                                                                                             |
+| Sonatype Central Portal (`sonatype-cp`)                        | -                       | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/).                 |
+| Sonatype OSS on https://oss.sonatype.org/ (`sonatype-oss`)     | -                       | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-token/) and using OSS instance. |
+| Sonatype S01 on https://s01.oss.sonatype.org/ (`sonatype-s01`) | -                       | As above but using s01 instance.                                                                                                             |
 | Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                                             |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
@@ -80,53 +81,7 @@ or project properties, or from `server` indirection (in `settings.xml` you can a
 configurations that will be obeyed to "redirect" to other server, useful when you does not want to or cannot change
 the distributionManagement server IDs.
 
-If the project POM cannot be changed (`project/distributionManagement/repository`) or you don't want to change it, 
-you need one more thing: set up server indirection. Assuming your POM contains this:
-
-```xml
-  <distributionManagement>
-    <repository>
-      <id>project-releases</id>
-      <name>Some Release Repository</name>
-      <url>https://some.service/deploy</url>
-    </repository>
-    <snapshotRepository>
-      <id>project-snapshots</id>
-      <name>Some Snapshots Repository</name>
-      <url>https://some.service/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-```
-
-Then you need to set up indirection for servers `project-releases` and `project-snapshots` in your `settings.xml`, like this:
-
-```xml
-    <server>
-      <id>project-releases</id>
-      <configuration>
-        <!-- Using Sonatype Central Portal publisher -->
-        <njord.publisher>sonatype-cp</njord.publisher>
-        <!-- Releases are staged locally (if omitted, would go directly to URL as per POM) -->
-        <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
-      </configuration>
-    </server>
-    <server>
-      <id>project-snapshots</id>
-      <configuration>
-         <!-- Using Sonatype Central Portal publisher -->
-         <njord.publisher>sonatype-cp</njord.publisher>
-         <!-- Snapshots are staged locally (if omitted, would go directly to URL as per POM) -->
-         <njord.snapshotUrl>njord:template:snapshot-sca</njord.snapshotUrl>
-      </configuration>
-    </server>
-```
-
-This provides Njord following information:
-* indirection of publishing `project-release` -> `sonatype-cp` and `project-snapshots` -> `sonatype-cp` (for snapshot support Central Portal must have snapshot support enabled)
-* templates for local staging of releases and snapshots
-* any indirection may be omitted, then Maven will use distribution repositories from POM. Same for URL, if omitted, URL from POM will be used.
-
-That's all! No project change needed at all. 
+See [project site](https://maveniverse.eu/docs/njord/) for more.
 
 ## Using it
 
