@@ -48,7 +48,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 @Mojo(name = "check-artifacts-availability", threadSafe = true, requiresProject = false, aggregator = true)
 public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     /**
-     * Whether source store should be dropped after successful operation.
+     * If using {@link ArtifactStore} as artifact source, whether source store should be dropped after successful operation.
      */
     @Parameter(required = true, property = "drop", defaultValue = "true")
     private boolean drop;
@@ -76,7 +76,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
      * will use this list instead to go for {@link ArtifactStore}. The comma separated list should contain
      * artifacts in form of {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}.
      */
-    @Parameter(property = "artifactList")
+    @Parameter(property = "artifacts")
     private String artifacts;
 
     /**
@@ -126,10 +126,10 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
                     throw new MojoFailureException("No publishing target exists");
                 }
             }
-        }
-        if (drop) {
-            logger.info("Dropping {}", store);
-            ns.artifactStoreManager().dropArtifactStore(store);
+            if (drop) {
+                logger.info("Dropping {}", store);
+                ns.artifactStoreManager().dropArtifactStore(store);
+            }
         }
     }
 
