@@ -45,6 +45,11 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
  * By default, the mojo will use {@link ArtifactStore} as "artifacts source" and
  * {@link ArtifactStorePublisher#targetReleaseRepository()} or {@link ArtifactStorePublisher#targetSnapshotRepository()}
  * as source of remote repository, but user can configure list of artifacts and remote repository directly as well.
+ * <p>
+ * This Mojo is useful in complex workflows/scenarios, where something (fx a build) should happen after publishing done.
+ * While some services do provide status of (non-atomic) publishing, this mojo checks the "real thing": when it
+ * succeeds, the artifacts can be resolved 100% by builds from given remote repository. Hence, this mojo
+ * can work with all publishers available out there, and even with in-house MRMs solutions as well.
  */
 @Mojo(name = "check-artifacts-availability", threadSafe = true, requiresProject = false, aggregator = true)
 public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
