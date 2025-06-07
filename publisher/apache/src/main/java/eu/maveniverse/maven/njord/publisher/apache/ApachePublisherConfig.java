@@ -30,7 +30,8 @@ public final class ApachePublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_URL =
             "https://repository.apache.org/service/local/staging/deploy/maven2/";
     public static final String SNAPSHOT_REPOSITORY_ID = "apache.snapshots.https";
-    public static final String SNAPSHOT_REPOSITORY_URL = "https://repository.apache.org/content/repositories/snapshots/";
+    public static final String SNAPSHOT_REPOSITORY_URL =
+            "https://repository.apache.org/content/repositories/snapshots/";
 
     public ApachePublisherConfig(SessionConfig sessionConfig) {
         super(
