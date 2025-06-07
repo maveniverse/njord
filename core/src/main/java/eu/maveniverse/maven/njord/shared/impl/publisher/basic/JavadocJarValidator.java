@@ -30,12 +30,15 @@ public class JavadocJarValidator extends ValidatorSupport {
                 collector.addInfo("PRESENT");
             } else {
                 Artifact sourcesJar = sourcesJar(artifact);
-                if (artifactStore.artifactPresent(sourcesJar)) {
-                    if (jarContainsJavaSources(
-                            artifactStore.artifactContent(sourcesJar).orElseThrow(J8Utils.OET))) {
-                        collector.addError("MISSING");
-                    }
-                } else if (jarContainsJavaClasses(
+                if (artifactStore.artifactPresent(sourcesJar)
+                        && !jarContainsJavaSources(
+                                artifactStore.artifactContent(sourcesJar).orElseThrow(J8Utils.OET))) {
+                    // if the source jar doesn't contain any .java file, we won't have a javadoc jar
+                    // note that there cases where we have .java files in the sources jar but no javadoc jar,
+                    // such as for archetypes
+                    return;
+                }
+                if (jarContainsJavaClasses(
                         artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET))) {
                     collector.addError("MISSING");
                 }
