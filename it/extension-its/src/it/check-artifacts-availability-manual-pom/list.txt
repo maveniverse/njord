@@ -1,0 +1,3 @@
+# list of artifacts to check
+junit:junit:jar:4.13.2
+junit:junit:pom:4.13.2

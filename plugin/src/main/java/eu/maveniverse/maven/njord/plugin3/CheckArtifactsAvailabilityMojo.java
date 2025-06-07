@@ -13,6 +13,10 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -89,6 +93,10 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
      * The comma separated list of artifacts to check availability for. If this parameter is set, the mojo
      * will use this list instead to go for {@link ArtifactStore}. The comma separated list should contain
      * artifacts in form of {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}.
+     * <p>
+     * Parameter may point to an existing text file as well, which contains on each line an artifact string
+     * in format above. The file may contain empty lines and lines starting with {@code #} (comments) that
+     * are ignored.
      */
     @Parameter(property = "artifacts")
     private String artifacts;
@@ -107,8 +115,24 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         if (artifacts != null) {
+            try {
+                Path artifactsFile = Paths.get(artifacts);
+                if (Files.exists(artifactsFile) && !Files.isDirectory(artifactsFile)) {
+                    logger.debug("Mojo parameter artifacts points to an existing file; loading it up");
+                    this.artifacts = Files.readAllLines(artifactsFile).stream()
+                            .map(String::trim)
+                            .filter(l -> !l.isEmpty())
+                            .filter(line -> !line.startsWith("#"))
+                            .collect(Collectors.joining(","));
+                }
+            } catch (InvalidPathException e) {
+                // ignore
+            }
+            logger.debug("Artifacts list: {}", this.artifacts);
             HashSet<Boolean> snaps = new HashSet<>();
-            List<Artifact> artifacts = Arrays.stream(this.artifacts.split(","))
+            List<Artifact> artifacts = Arrays.stream(this.artifacts.split("[,\\s]"))
+                    .map(String::trim)
+                    .filter(l -> !l.isEmpty())
                     .map(DefaultArtifact::new)
                     .peek(a -> snaps.add(a.isSnapshot()))
                     .collect(Collectors.toList());
