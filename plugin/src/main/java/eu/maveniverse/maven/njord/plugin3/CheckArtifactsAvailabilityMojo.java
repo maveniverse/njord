@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -94,10 +95,10 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         if (artifacts != null) {
             HashSet<Boolean> snaps = new HashSet<>();
-            Map<Artifact, Boolean> artifacts = Arrays.stream(this.artifacts.split(","))
+            List<Artifact> artifacts = Arrays.stream(this.artifacts.split(","))
                     .map(DefaultArtifact::new)
                     .peek(a -> snaps.add(a.isSnapshot()))
-                    .collect(Collectors.toMap(a -> a, a -> false));
+                    .collect(Collectors.toList());
             if (snaps.size() != 1) {
                 throw new IllegalArgumentException(
                         "Provided artifactList parameter must be uniform re snapshot (must be all release or all snapshot)");
@@ -118,9 +119,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
             try (ArtifactStore from = getArtifactStore(ns)) {
                 Optional<RemoteRepository> pto = getRemoteRepository(ns, from.repositoryMode());
                 if (pto.isPresent()) {
-                    Map<Artifact, Boolean> artifacts =
-                            from.artifacts().stream().collect(Collectors.toMap(a -> a, a -> false));
-                    checkAvailability(artifacts, pto.orElseThrow(J8Utils.OET));
+                    checkAvailability(from.artifacts(), pto.orElseThrow(J8Utils.OET));
                 } else {
                     logger.info("No publishing target exists; bailing out");
                     throw new MojoFailureException("No publishing target exists");
@@ -133,6 +132,10 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
         }
     }
 
+    /**
+     * Creates (potentially auth and proxy) equipped {@link RemoteRepository} if able to. If user set
+     * {@link #remoteRepository} parameter, it wins over {@link ArtifactStorePublisher}.
+     */
     protected Optional<RemoteRepository> getRemoteRepository(Session ns, RepositoryMode mode)
             throws MojoFailureException {
         Optional<RemoteRepository> result;
@@ -173,19 +176,25 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
         return result;
     }
 
-    protected void checkAvailability(Map<Artifact, Boolean> artifacts, RemoteRepository target)
+    /**
+     * Uses Resolver to perform "existence checks" for given artifacts in given remote repository target. Based on
+     * parameters it may do "one pass" or "wait/poll".
+     */
+    protected void checkAvailability(Collection<Artifact> artifacts, RemoteRepository target)
             throws IOException, MojoFailureException {
         Duration waitTimeout = Duration.parse(this.waitTimeout);
         Duration waitSleep = Duration.parse(this.waitSleep);
+        Map<Artifact, Boolean> artifactsMap = artifacts.stream().collect(Collectors.toMap(a -> a, a -> false));
+
         Instant waitingUntil = Instant.now().plus(waitTimeout);
-        AtomicInteger toCheck = new AtomicInteger(artifacts.size());
-        logger.info("Waiting for {} artifacts to become available from {}", artifacts.size(), target.getUrl());
+        AtomicInteger toCheck = new AtomicInteger(artifactsMap.size());
+        logger.info("Waiting for {} artifacts to become available from {}", artifactsMap.size(), target.getUrl());
         try (RepositoryConnector repositoryConnector =
                 repositoryConnectorProvider.newRepositoryConnector(mavenSession.getRepositorySession(), target)) {
             while (toCheck.get() > 0) {
-                logger.info("Checking availability of {} artifacts (out of {}).", toCheck.get(), artifacts.size());
+                logger.info("Checking availability of {} artifacts (out of {}).", toCheck.get(), artifactsMap.size());
                 List<ArtifactDownload> artifactDownloads = new ArrayList<>();
-                artifacts.forEach((key, value) -> {
+                artifactsMap.forEach((key, value) -> {
                     if (!value) {
                         ArtifactDownload artifactDownload = new ArtifactDownload(key, "njord", null, null);
                         artifactDownload.setRepositories(Collections.singletonList(target));
@@ -197,12 +206,12 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
                 artifactDownloads.forEach(d -> {
                     if (d.getException() == null) {
                         toCheck.decrementAndGet();
-                        artifacts.put(d.getArtifact(), true);
+                        artifactsMap.put(d.getArtifact(), true);
                     }
                 });
 
                 if (toCheck.get() == 0) {
-                    logger.info("All {} artifacts are available.", artifacts.size());
+                    logger.info("All {} artifacts are available.", artifactsMap.size());
                     break;
                 }
 
