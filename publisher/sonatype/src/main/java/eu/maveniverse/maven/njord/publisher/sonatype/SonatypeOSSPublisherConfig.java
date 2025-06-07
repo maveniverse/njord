@@ -25,9 +25,9 @@ import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
  */
 public final class SonatypeOSSPublisherConfig extends PublisherConfig {
     public static final String RELEASE_REPOSITORY_ID = "sonatype-oss";
-    public static final String RELEASE_REPOSITORY_URL = "https://oss.sonatype.org/service/local/staging/deploy/maven2";
+    public static final String RELEASE_REPOSITORY_URL = "https://oss.sonatype.org/service/local/staging/deploy/maven2/";
     public static final String SNAPSHOT_REPOSITORY_ID = "sonatype-oss";
-    public static final String SNAPSHOT_REPOSITORY_URL = "https://oss.sonatype.org/content/repositories/snapshots";
+    public static final String SNAPSHOT_REPOSITORY_URL = "https://oss.sonatype.org/content/repositories/snapshots/";
 
     public SonatypeOSSPublisherConfig(SessionConfig sessionConfig) {
         super(

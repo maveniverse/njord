@@ -45,7 +45,7 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
     public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
     public static final String RELEASE_REPOSITORY_URL = "https://central.sonatype.com/api/v1/publisher/upload";
     public static final String SNAPSHOT_REPOSITORY_ID = "sonatype-cp";
-    public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots";
+    public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots/";
 
     private final String bundleName;
     private final String publishingType;
