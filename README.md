@@ -1,4 +1,4 @@
-# Njörðr
+# Njord (Njörðr)
 
 [![Maven Central](https://img.shields.io/maven-central/v/eu.maveniverse.maven.njord/extension.svg?label=Maven%20Central)](https://search.maven.org/artifact/eu.maveniverse.maven.njord/extension)
 
