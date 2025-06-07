@@ -72,6 +72,14 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     private String waitTimeout;
 
     /**
+     * If mojo set to {@link #wait}, the delay duration before the first check happens (as {@link Duration} string).
+     * The {@link #waitTimeout} <em>does not include this delay</em>, so "worst case" total execution time of this
+     * mojo when set to wait is {@code waitDelay + waitTimeout}.
+     */
+    @Parameter(required = true, property = "waitDelay", defaultValue = "PT10M")
+    private String waitDelay;
+
+    /**
      * If mojo set to {@link #wait}, the sleep duration between checks (as {@link Duration} string).
      */
     @Parameter(required = true, property = "waitSleep", defaultValue = "PT1M")
@@ -188,23 +196,26 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     protected void checkAvailability(Collection<Artifact> artifacts, RemoteRepository target)
             throws IOException, MojoFailureException {
         Duration waitTimeout = Duration.parse(this.waitTimeout);
+        Duration waitDelay = Duration.parse(this.waitDelay);
         Duration waitSleep = Duration.parse(this.waitSleep);
         Map<Artifact, Boolean> artifactsMap = artifacts.stream().collect(Collectors.toMap(a -> a, a -> false));
 
-        Instant waitingUntil = Instant.now().plus(waitTimeout);
-        AtomicInteger toCheck = new AtomicInteger(artifactsMap.size());
-        if (wait) {
-            logger.info(
-                    "Waiting for {} artifacts to become available from {} (poll {}; timeout {})",
-                    artifactsMap.size(),
-                    target.getUrl(),
-                    waitSleep,
-                    waitTimeout);
-        } else {
-            logger.info("Checking for {} artifacts availability from {}", artifactsMap.size(), target.getUrl());
-        }
         try (RepositoryConnector repositoryConnector =
                 repositoryConnectorProvider.newRepositoryConnector(mavenSession.getRepositorySession(), target)) {
+            if (wait) {
+                logger.info(
+                        "Waiting for {} artifacts to become available from {} (poll {}; delay {}; timeout {})",
+                        artifactsMap.size(),
+                        target.getUrl(),
+                        waitSleep,
+                        waitDelay,
+                        waitTimeout);
+                Thread.sleep(waitDelay.toMillis());
+            } else {
+                logger.info("Checking for {} artifacts availability from {}", artifactsMap.size(), target.getUrl());
+            }
+            Instant waitingUntil = Instant.now().plus(waitTimeout);
+            AtomicInteger toCheck = new AtomicInteger(artifactsMap.size());
             while (toCheck.get() > 0) {
                 logger.info("Checking availability of {} artifacts (out of {}).", toCheck.get(), artifactsMap.size());
                 List<ArtifactDownload> artifactDownloads = new ArrayList<>();
