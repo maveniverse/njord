@@ -188,7 +188,16 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
 
         Instant waitingUntil = Instant.now().plus(waitTimeout);
         AtomicInteger toCheck = new AtomicInteger(artifactsMap.size());
-        logger.info("Waiting for {} artifacts to become available from {}", artifactsMap.size(), target.getUrl());
+        if (wait) {
+            logger.info(
+                    "Waiting for {} artifacts to become available from {} (poll {}; timeout {})",
+                    artifactsMap.size(),
+                    target.getUrl(),
+                    waitSleep,
+                    waitTimeout);
+        } else {
+            logger.info("Checking for {} artifacts availability from {}", artifactsMap.size(), target.getUrl());
+        }
         try (RepositoryConnector repositoryConnector =
                 repositoryConnectorProvider.newRepositoryConnector(mavenSession.getRepositorySession(), target)) {
             while (toCheck.get() > 0) {
