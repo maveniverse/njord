@@ -119,7 +119,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
                 Path artifactsFile = Paths.get(artifacts);
                 if (Files.exists(artifactsFile) && !Files.isDirectory(artifactsFile)) {
                     logger.debug("Mojo parameter artifacts points to an existing file; loading it up");
-                    artifacts = Files.readAllLines(artifactsFile).stream()
+                    this.artifacts = Files.readAllLines(artifactsFile).stream()
                             .map(String::trim)
                             .filter(l -> !l.isEmpty())
                             .filter(line -> !line.startsWith("#"))
@@ -128,8 +128,11 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
             } catch (InvalidPathException e) {
                 // ignore
             }
+            logger.debug("Artifacts list: {}", this.artifacts);
             HashSet<Boolean> snaps = new HashSet<>();
-            List<Artifact> artifacts = Arrays.stream(this.artifacts.split(","))
+            List<Artifact> artifacts = Arrays.stream(this.artifacts.split("[,\\s]"))
+                    .map(String::trim)
+                    .filter(l -> !l.isEmpty())
                     .map(DefaultArtifact::new)
                     .peek(a -> snaps.add(a.isSnapshot()))
                     .collect(Collectors.toList());
