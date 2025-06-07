@@ -25,12 +25,16 @@ import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
     protected MavenSession mavenSession;
+
+    @Inject
+    protected RepositorySystem repositorySystem;
 
     @Inject
     private SessionFactory sessionFactory;

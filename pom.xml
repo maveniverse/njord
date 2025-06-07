@@ -180,6 +180,7 @@
         <version>${version.maven-plugin-tools}</version>
       </dependency>
 
+      <!-- MIMA -->
       <dependency>
         <groupId>eu.maveniverse.maven.mima</groupId>
         <artifactId>context</artifactId>
