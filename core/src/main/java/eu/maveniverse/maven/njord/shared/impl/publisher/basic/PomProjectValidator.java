@@ -41,7 +41,7 @@ public class PomProjectValidator extends ValidatorSupport {
         if (mainPom(artifact)) {
             ArrayList<RemoteRepository> remoteRepositories =
                     new ArrayList<>(session.config().allRemoteRepositories());
-            remoteRepositories.add(artifactStore.storeRemoteRepository());
+            remoteRepositories.add(0, artifactStore.storeRemoteRepository());
             Optional<Model> mo = session.readEffectiveModel(artifact, remoteRepositories);
             if (mo.isPresent()) {
                 Model m = mo.orElseThrow(J8Utils.OET);
