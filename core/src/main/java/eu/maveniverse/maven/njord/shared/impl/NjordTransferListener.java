@@ -8,10 +8,13 @@
 package eu.maveniverse.maven.njord.shared.impl;
 
 import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Njord specific transfer listener: it is silent (as logs to DEBUG) but user can still make output visible
@@ -42,15 +45,16 @@ public class NjordTransferListener extends AbstractTransferListener {
         String action = (event.getRequestType() == TransferEvent.RequestType.PUT ? "upload" : "download");
         String direction = event.getRequestType() == TransferEvent.RequestType.PUT ? "to" : "from";
         TransferResource resource = event.getResource();
-        if (logger.isDebugEnabled()) {
-            logger.warn(
-                    "Failed {} {} {}: {}{}",
+        // if we are called here without exception = bug in resolver/maven
+        Exception exception = requireNonNull(event.getException());
+        if (exception instanceof ArtifactNotFoundException) {
+            logger.debug(
+                    "Failed {} {} {}: {}{}; not found",
                     action,
                     direction,
                     resource.getRepositoryId(),
                     resource.getRepositoryUrl(),
-                    resource.getResourceName(),
-                    event.getException());
+                    resource.getResourceName());
         } else {
             logger.warn(
                     "Failed {} {} {}: {}{}; {}",
@@ -59,7 +63,10 @@ public class NjordTransferListener extends AbstractTransferListener {
                     resource.getRepositoryId(),
                     resource.getRepositoryUrl(),
                     resource.getResourceName(),
-                    event.getException().getMessage());
+                    exception.getMessage());
+            if (logger.isDebugEnabled()) {
+                logger.warn("Failure:", exception);
+            }
         }
     }
 }
