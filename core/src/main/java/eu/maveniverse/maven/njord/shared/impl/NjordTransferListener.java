@@ -7,14 +7,14 @@
  */
 package eu.maveniverse.maven.njord.shared.impl;
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Njord specific transfer listener: it is silent (as logs to DEBUG) but user can still make output visible
