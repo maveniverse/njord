@@ -43,10 +43,6 @@ import org.apache.maven.model.Model;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.transfer.AbstractTransferListener;
-import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transfer.TransferResource;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
     private final String sessionBoundStoreKey;
@@ -130,38 +126,10 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         requireNonNull(remoteRepositories);
         checkClosed();
 
-        TransferListener transferListener = new AbstractTransferListener() {
-            @Override
-            public void transferSucceeded(TransferEvent event) {
-                String action = (event.getRequestType() == TransferEvent.RequestType.PUT ? "Uploaded" : "Downloaded");
-                String direction = event.getRequestType() == TransferEvent.RequestType.PUT ? "to" : "from";
-                TransferResource resource = event.getResource();
-                logger.debug(
-                        "{} {} {}: {}{}",
-                        action,
-                        direction,
-                        resource.getRepositoryId(),
-                        resource.getRepositoryUrl(),
-                        resource.getResourceName());
-            }
-
-            @Override
-            public void transferFailed(TransferEvent event) {
-                String action = (event.getRequestType() == TransferEvent.RequestType.PUT ? "upload" : "download");
-                String direction = event.getRequestType() == TransferEvent.RequestType.PUT ? "to" : "from";
-                TransferResource resource = event.getResource();
-                logger.warn(
-                        "Failed {} {} {}: {}{}",
-                        action,
-                        direction,
-                        resource.getRepositoryId(),
-                        resource.getRepositoryUrl(),
-                        resource.getResourceName());
-            }
-        };
         try {
             ModelResponse response = mavenModelReader.readModel(
-                    new DefaultRepositorySystemSession(config.session()).setTransferListener(transferListener),
+                    new DefaultRepositorySystemSession(config.session())
+                            .setTransferListener(new NjordTransferListener()),
                     ModelRequest.builder()
                             .setArtifact(artifact)
                             .setRepositories(remoteRepositories)
