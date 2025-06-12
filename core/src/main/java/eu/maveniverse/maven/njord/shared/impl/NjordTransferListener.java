@@ -47,7 +47,7 @@ public class NjordTransferListener extends AbstractTransferListener {
         TransferResource resource = event.getResource();
         // if we are called here without exception = bug in resolver/maven
         Exception exception = requireNonNull(event.getException());
-        if (exception instanceof ArtifactNotFoundException) {
+        if (event.getRequestType() != TransferEvent.RequestType.PUT && exception instanceof ArtifactNotFoundException) {
             logger.debug(
                     "Failed {} {} {}: {}{}; not found",
                     action,
