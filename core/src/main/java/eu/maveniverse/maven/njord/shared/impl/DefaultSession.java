@@ -73,6 +73,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
         this.mavenModelReader = requireNonNull(mavenModelReader);
+
+        logger.info("Njord {} session created", sessionConfig.version());
     }
 
     @Override

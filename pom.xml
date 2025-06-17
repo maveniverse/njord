@@ -37,7 +37,7 @@
   <modules>
     <module>core</module>
     <module>publisher</module>
-    <module>extension</module>
+    <module>extension3</module>
     <module>plugin</module>
     <module>it</module>
   </modules>
