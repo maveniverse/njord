@@ -63,7 +63,8 @@ public abstract class NjordMojoSupport extends MojoSupport {
                 .currentProject(SessionConfig.fromMavenProject(mavenSession.getTopLevelProject()))
                 .build();
         if (sc.enabled()) {
-            try (Session ns = NjordUtils.lazyInit(sc, sessionFactory::create)) {
+            try (Session ns =
+                    NjordUtils.lazyInit(mavenSession.getRepositorySession(), () -> sessionFactory.create(sc))) {
                 doWithSession(ns);
             }
         } else {

@@ -10,7 +10,7 @@ package eu.maveniverse.maven.njord.shared;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import org.eclipse.aether.RepositorySystemSession;
 
 public final class NjordUtils {
@@ -26,16 +26,15 @@ public final class NjordUtils {
      * Performs a "lazy init" of Njord, does not fail if config and session already exists within this Resolver session.
      * Returns the existing or newly created {@link Session} instance, never {@code null}.
      */
-    public static synchronized Session lazyInit(
-            SessionConfig sessionConfig, Function<SessionConfig, Session> sessionFactory) {
-        requireNonNull(sessionConfig, "sessionConfig");
+    public static synchronized Session lazyInit(RepositorySystemSession session, Supplier<Session> sessionFactory) {
+        requireNonNull(session, "session");
         requireNonNull(sessionFactory, "sessionFactory");
-        Session session = (Session) sessionConfig.session().getData().get(Session.class);
-        if (session == null) {
-            session = sessionFactory.apply(sessionConfig);
-            sessionConfig.session().getData().set(Session.class, session);
+        Session s = (Session) session.getData().get(Session.class.getName());
+        if (s == null) {
+            s = sessionFactory.get();
+            session.getData().set(Session.class.getName(), s);
         }
-        return session;
+        return s;
     }
 
     /**
@@ -43,6 +42,6 @@ public final class NjordUtils {
      */
     public static synchronized Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        return Optional.ofNullable((Session) repositorySystemSession.getData().get(Session.class));
+        return Optional.ofNullable((Session) repositorySystemSession.getData().get(Session.class.getName()));
     }
 }

@@ -54,7 +54,9 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                     .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
                     .build();
             if (sc.enabled()) {
-                NjordUtils.lazyInit(sc, sessionFactoryProvider.get()::create);
+                NjordUtils.lazyInit(
+                        session.getRepositorySession(),
+                        () -> sessionFactoryProvider.get().create(sc));
             } else {
                 logger.info("Njord {} disabled", sc.version());
             }
