@@ -79,21 +79,13 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>eu.maveniverse.maven.plugins</groupId>
-                <artifactId>njord</artifactId>
+        <extensions>
+            <extension>
+                <groupId>eu.maveniverse.maven.njord</groupId>
+                <artifactId>extension3</artifactId>
                 <version>@project.version@</version>
-                <extensions>true</extensions>
-                <dependencies>
-                    <dependency>
-                        <groupId>eu.maveniverse.maven.njord</groupId>
-                        <artifactId>extension3</artifactId>
-                        <version>@project.version@</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-        </plugins>
+            </extension>
+        </extensions>
     </build>
 
     <profiles>
