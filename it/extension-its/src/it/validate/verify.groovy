@@ -13,6 +13,10 @@ File secondLog = new File( basedir, 'second.log' )
 assert secondLog.exists()
 var second = secondLog.text
 
+File thirdLog = new File( basedir, 'third.log' )
+assert thirdLog.exists()
+var third = thirdLog.text
+
 // Lets make strict assertion
 // Also, consider Maven 3 vs 4 diff: they resolve differently; do not assert counts
 
@@ -22,5 +26,8 @@ assert first.contains('[INFO] Using alternate deployment repository id::njord:re
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains('[ERROR] ArtifactStore validate-00001')
-assert second.contains(' failed validation')
+
+// third run:
+assert third.contains("[INFO] Njord ${projectVersion} session created")
+assert third.contains('[ERROR] ArtifactStore validate-00001')
+assert third.contains(' failed validation')

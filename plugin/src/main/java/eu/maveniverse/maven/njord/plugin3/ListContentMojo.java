@@ -10,7 +10,11 @@ package eu.maveniverse.maven.njord.plugin3;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -29,6 +33,15 @@ public class ListContentMojo extends NjordMojoSupport {
     @Parameter(required = true, property = "store")
     private String store;
 
+    /**
+     * Optional; file to write GAVs (each on new line). Useful for automations where the list of artifacts
+     * is needed.
+     *
+     * @since 0.8.0
+     */
+    @Parameter(property = "file")
+    private String file;
+
     @Override
     protected void doWithSession(Session ns) throws IOException {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(store);
@@ -36,8 +49,15 @@ public class ListContentMojo extends NjordMojoSupport {
             try (ArtifactStore store = storeOptional.orElseThrow(J8Utils.OET)) {
                 logger.info("List contents of ArtifactStore {}", store);
                 AtomicInteger counter = new AtomicInteger();
-                for (Artifact artifact : store.artifacts()) {
-                    logger.info("{}. {}", counter.incrementAndGet(), ArtifactIdUtils.toId(artifact));
+                try (BufferedWriter writer =
+                        file != null ? Files.newBufferedWriter(Paths.get(file), StandardCharsets.UTF_8) : null) {
+                    for (Artifact artifact : store.artifacts()) {
+                        logger.info("{}. {}", counter.incrementAndGet(), ArtifactIdUtils.toId(artifact));
+                        if (writer != null) {
+                            writer.write(ArtifactIdUtils.toId(artifact));
+                            writer.newLine();
+                        }
+                    }
                 }
             }
         } else {
