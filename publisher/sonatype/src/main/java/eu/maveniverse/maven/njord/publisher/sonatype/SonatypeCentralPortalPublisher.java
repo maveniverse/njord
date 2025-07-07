@@ -27,12 +27,17 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Locale;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -41,6 +46,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.AuthenticationContext;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 import org.json.JSONObject;
@@ -113,15 +119,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 // we need to use own HTTP client here
                 String deploymentId;
-                // use Maven UA
-                String userAgent = ConfigUtils.getString(
-                        session.config().session(),
-                        ConfigurationProperties.DEFAULT_USER_AGENT,
-                        "aether.connector.userAgent",
-                        "aether.transport.http.userAgent");
-
-                try (CloseableHttpClient httpClient =
-                        HttpClientBuilder.create().setUserAgent(userAgent).build()) {
+                try (CloseableHttpClient httpClient = createHttpClient(repository)) {
                     URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
                     deploymentId = upload(httpClient, uriBuilder, authValue, bundle, bundleName);
                     logger.info("Deployment ID: {}", deploymentId);
@@ -181,6 +179,47 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                         .deploy(store);
             }
         }
+    }
+
+    private CloseableHttpClient createHttpClient(RemoteRepository repository) {
+        repository = repositorySystem.newDeploymentRepository(session.config().session(), repository);
+
+        HttpHost proxy = null;
+        CredentialsProvider proxyCredentialsProvider = null;
+
+        Proxy repositoryProxy = repository.getProxy();
+        if (repositoryProxy != null) {
+            proxy = new HttpHost(repositoryProxy.getHost(), repositoryProxy.getPort());
+            if (repositoryProxy.getAuthentication() != null) {
+                try (AuthenticationContext context =
+                        AuthenticationContext.forProxy(session.config().session(), repository)) {
+                    if (context != null) {
+                        String username = context.get(AuthenticationContext.USERNAME);
+                        String password = context.get(AuthenticationContext.PASSWORD);
+                        proxyCredentialsProvider = new BasicCredentialsProvider();
+                        proxyCredentialsProvider.setCredentials(
+                                new AuthScope(proxy.getHostName(), proxy.getPort()),
+                                new UsernamePasswordCredentials(username, password));
+                    }
+                }
+            }
+        }
+
+        // use Maven UA
+        final String userAgent = ConfigUtils.getString(
+                session.config().session(),
+                ConfigurationProperties.DEFAULT_USER_AGENT,
+                "aether.connector.userAgent",
+                "aether.transport.http.userAgent");
+
+        HttpClientBuilder builder = HttpClientBuilder.create().setUserAgent(userAgent);
+        if (proxy != null) {
+            builder.setProxy(proxy);
+            if (proxyCredentialsProvider != null) {
+                builder.setDefaultCredentialsProvider(proxyCredentialsProvider);
+            }
+        }
+        return builder.build();
     }
 
     private String upload(
