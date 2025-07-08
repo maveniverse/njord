@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -172,6 +173,9 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     /**
      * Creates (potentially auth and proxy) equipped {@link RemoteRepository} if able to. If user set
      * {@link #remoteRepository} parameter, it wins over {@link ArtifactStorePublisher}.
+     * <p>
+     * The returned repository has not set any policy, this method just sets {@code id} and {@code url}. So to say,
+     * this method return "raw" or "bare" repositories.
      */
     protected Optional<RemoteRepository> getRemoteRepository(Session ns, RepositoryMode mode)
             throws MojoFailureException {
@@ -189,19 +193,13 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
                     throw new IllegalArgumentException("Unknown repository mode: " + mode);
             }
         } else {
-            String[] split = remoteRepository.split("::");
-            if (split.length != 2) {
-                throw new IllegalArgumentException(
-                        "Invalid alt deployment repository syntax (supported is id::url): " + remoteRepository);
-            }
-            String id = split[0];
-            String url = split[1];
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(remoteRepository);
             if (mode == RepositoryMode.SNAPSHOT) {
-                result = Optional.of(new RemoteRepository.Builder(id, "default", url)
+                result = Optional.of(new RemoteRepository.Builder(bare)
                         .setReleasePolicy(new RepositoryPolicy(false, null, null))
                         .build());
             } else {
-                result = Optional.of(new RemoteRepository.Builder(id, "default", url)
+                result = Optional.of(new RemoteRepository.Builder(bare)
                         .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                         .build());
             }
