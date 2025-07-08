@@ -91,6 +91,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                         .buildOutputDirectory()
                         .resolve(name);
                 Files.createDirectories(bundleDir);
+                // TODO: sort out this; we cannot expect user to run clean
+                Files.deleteIfExists(bundleDir.resolve(artifactStore.name() + ".zip"));
                 logger.debug("Creating bundle in directory {}", bundleDir);
             } else {
                 bundleDir = Files.createTempDirectory(name);
