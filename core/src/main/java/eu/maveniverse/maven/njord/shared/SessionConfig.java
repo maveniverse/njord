@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -214,6 +215,11 @@ public interface SessionConfig {
          * The defined project distribution management repositories, never {@code null}.
          */
         Map<RepositoryMode, RemoteRepository> distributionManagementRepositories();
+
+        /**
+         * Returns the project {@code /target} directory.
+         */
+        Path buildDirectory();
     }
 
     /**
@@ -269,6 +275,7 @@ public interface SessionConfig {
             final Map<String, String> properties = J8Utils.copyOf(MavenUtils.toMap(project.getProperties()));
             final List<RemoteRepository> remoteRepositories = J8Utils.copyOf(project.getRemoteProjectRepositories());
             final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
+            final Path buildDirectory = Paths.get(project.getBuild().getDirectory());
             if (project.getDistributionManagement() != null) {
                 DeploymentRepository dr = project.getDistributionManagement().getRepository();
                 if (dr != null) {
@@ -307,6 +314,11 @@ public interface SessionConfig {
                 @Override
                 public Map<RepositoryMode, RemoteRepository> distributionManagementRepositories() {
                     return distributionManagementRepositories;
+                }
+
+                @Override
+                public Path buildDirectory() {
+                    return buildDirectory;
                 }
             };
         }
