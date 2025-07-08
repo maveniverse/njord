@@ -173,9 +173,6 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     /**
      * Creates (potentially auth and proxy) equipped {@link RemoteRepository} if able to. If user set
      * {@link #remoteRepository} parameter, it wins over {@link ArtifactStorePublisher}.
-     * <p>
-     * The returned repository has not set any policy, this method just sets {@code id} and {@code url}. So to say,
-     * this method return "raw" or "bare" repositories.
      */
     protected Optional<RemoteRepository> getRemoteRepository(Session ns, RepositoryMode mode)
             throws MojoFailureException {
