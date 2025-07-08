@@ -275,7 +275,7 @@ public interface SessionConfig {
             final Map<String, String> properties = J8Utils.copyOf(MavenUtils.toMap(project.getProperties()));
             final List<RemoteRepository> remoteRepositories = J8Utils.copyOf(project.getRemoteProjectRepositories());
             final Map<RepositoryMode, RemoteRepository> dmr = new HashMap<>();
-            final Path buildOutputDirectory = Paths.get(project.getBuild().getOutputDirectory());
+            final Path buildOutputDirectory = Paths.get(project.getBuild().getDirectory());
             if (project.getDistributionManagement() != null) {
                 DeploymentRepository dr = project.getDistributionManagement().getRepository();
                 if (dr != null) {
