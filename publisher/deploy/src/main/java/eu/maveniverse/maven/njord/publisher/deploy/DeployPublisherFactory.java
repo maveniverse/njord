@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -60,17 +61,11 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
         if (session.config().effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
             String altDeploymentRepository =
                     session.config().effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
-            String[] split = altDeploymentRepository.split("::");
-            if (split.length != 2) {
-                throw new IllegalArgumentException(
-                        "Invalid alt deployment repository syntax (supported is id::url): " + altDeploymentRepository);
-            }
-            String id = split[0];
-            String url = split[1];
-            releasesRepository = new RemoteRepository.Builder(id, "default", url)
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(altDeploymentRepository);
+            releasesRepository = new RemoteRepository.Builder(bare)
                     .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                     .build();
-            snapshotsRepository = new RemoteRepository.Builder(id, "default", url)
+            snapshotsRepository = new RemoteRepository.Builder(bare)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
         } else if (session.config().currentProject().isPresent()) {

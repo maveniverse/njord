@@ -22,7 +22,7 @@ var third = thirdLog.text
 
 // first run:
 assert first.contains("[INFO] Njord ${projectVersion} session created")
-assert first.contains('[INFO] Using alternate deployment repository id::njord:release')
+assert first.contains('[INFO] Using alternate deployment repository id::default::njord:release')
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
