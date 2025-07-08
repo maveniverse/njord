@@ -262,7 +262,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         post.setEntity(builder.build());
         try (CloseableHttpResponse response = httpClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() == 201) {
-                logger.info("Uploaded bundle {} ({} bytes) as {}", bundle.getFileName(), Files.size(bundle), bundleName);
+                logger.info(
+                        "Uploaded bundle {} ({} bytes) as {}", bundle.getFileName(), Files.size(bundle), bundleName);
                 return EntityUtils.toString(response.getEntity());
             } else {
                 throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
