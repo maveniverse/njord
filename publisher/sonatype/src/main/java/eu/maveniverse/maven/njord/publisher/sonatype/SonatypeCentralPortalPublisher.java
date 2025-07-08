@@ -83,9 +83,21 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         }
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
-            Path tmpDir = Files.createTempDirectory(name);
+            Path bundleDir;
+            if (session.config().currentProject().isPresent()) {
+                bundleDir = session.config()
+                        .currentProject()
+                        .orElseThrow(J8Utils.OET)
+                        .buildOutputDirectory()
+                        .resolve(name);
+                Files.createDirectories(bundleDir);
+                logger.debug("Creating bundle in directory {}", bundleDir);
+            } else {
+                bundleDir = Files.createTempDirectory(name);
+                logger.debug("Creating bundle in tmp directory; cleanup will happen at end of upload");
+            }
             try {
-                Path bundle = session.artifactStoreWriter().writeAsBundle(artifactStore, tmpDir);
+                Path bundle = session.artifactStoreWriter().writeAsBundle(artifactStore, bundleDir);
                 if (bundle == null) {
                     throw new IllegalStateException("Bundle ZIP was not created");
                 }
@@ -161,8 +173,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     throw new IOException(e.getMessage(), e);
                 }
             } finally {
-                if (Files.isDirectory(tmpDir)) {
-                    FileUtils.deleteRecursively(tmpDir);
+                if (!session.config().currentProject().isPresent() && Files.isDirectory(bundleDir)) {
+                    FileUtils.deleteRecursively(bundleDir);
                 }
             }
         } else { // snapshot
@@ -246,6 +258,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         post.setEntity(builder.build());
         try (CloseableHttpResponse response = httpClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() == 201) {
+                logger.info("Uploaded {} ({} bytes) as {}", bundle.getFileName(), Files.size(bundle), bundleName);
                 return EntityUtils.toString(response.getEntity());
             } else {
                 throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
