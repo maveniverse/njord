@@ -88,7 +88,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 bundleDir = session.config()
                         .currentProject()
                         .orElseThrow(J8Utils.OET)
-                        .buildOutputDirectory()
+                        .buildDirectory()
                         .resolve(name);
                 Files.createDirectories(bundleDir);
                 logger.debug("Creating bundle in directory {}", bundleDir);
