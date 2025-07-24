@@ -129,7 +129,11 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfig 
     }
 
     public Optional<String> publishingType() {
-        return Optional.ofNullable(publishingType);
+        if (publishingType == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(publishingType.toUpperCase(Locale.ENGLISH));
+        }
     }
 
     public boolean waitForStates() {

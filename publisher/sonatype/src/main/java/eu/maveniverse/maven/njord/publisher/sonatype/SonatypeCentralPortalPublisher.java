@@ -52,6 +52,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.json.JSONObject;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
+    private static final String CENTRAL_DEPLOYMENTS_URL = "https://central.sonatype.com/publishing/deployments";
     private final SonatypeCentralPortalPublisherConfig publisherConfig;
 
     public SonatypeCentralPortalPublisher(
@@ -170,8 +171,22 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 logger.info("Publishing of deployment {} succeeded: {}", deploymentId, deploymentState);
                             }
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                             throw new IOException(e.getMessage(), e);
                         }
+                    }
+                    if (publisherConfig
+                            .publishingType()
+                            .filter("AUTOMATIC"::equals)
+                            .isPresent()) {
+                        logger.info(
+                                "Publishing type is AUTOMATIC; deployment {} will be automatically published to Maven Central without further manual action (given that is is valid)",
+                                deploymentId);
+                    } else {
+                        logger.info(
+                                "Continue at {} to review and publish the deployment {}",
+                                CENTRAL_DEPLOYMENTS_URL,
+                                deploymentId);
                     }
                 } catch (URISyntaxException e) {
                     throw new IOException(e.getMessage(), e);
@@ -248,12 +263,9 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         uriBuilder.clearParameters();
         uriBuilder.setPath("/api/v1/publisher/upload");
         uriBuilder.addParameter("name", bundleName);
-        if (publisherConfig.publishingType().isPresent()) {
-            uriBuilder.addParameter(
-                    "publishingType",
-                    publisherConfig.publishingType().orElseThrow(J8Utils.OET).toUpperCase(Locale.ENGLISH));
-        }
-
+        publisherConfig.publishingType().ifPresent(publishingType -> {
+            uriBuilder.addParameter("publishingType", publishingType);
+        });
         HttpPost post = new HttpPost(uriBuilder.build());
         post.setHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
