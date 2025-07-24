@@ -1,0 +1,55 @@
+<site xmlns="http://maven.apache.org/SITE/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd"
+  name="Njord Maven Plugin">
+  <!--bannerLeft name=.. href=.. target=.. >
+    <image src=.. position=.. alt=.. width=.. height=.. style=.. />
+  </bannerLeft>
+  <bannerRight name=.. href=.. target=.. >
+    <image src=.. position=.. alt=.. width=.. height=.. style=.. />
+  </bannerRight-->
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>2.1.0</version>
+  </skin>
+
+  <publishDate position="right" />
+  <version position="right" />
+  <body>
+    <breadcrumbs>
+      <item name="Docs" href="../.." />
+      <item name="Njord (Njörðr)" href=".." />
+      <item name="njord-maven-plugin" href="index.html" />
+    </breadcrumbs>
+
+    <menu name="Plugin Documentation" >
+      <item name="njord:status" href="./status-mojo.html" />
+      <item name="njord:list" href="./list-mojo.html" />
+      <item name="njord:list-content" href="./list-content-mojo.html" />
+      <item name="njord:validate" href="./validate-mojo.html" />
+      <item name="njord:publish" href="./publish-mojo.html" />
+      <item name="njord:drop" href="./drop-mojo.html" />
+      <item name="njord:drop-all" href="./drop-all-mojo.html" />
+      <item name="njord:compare" href="./compare-mojo.html" />
+      <item name="njord:redeploy" href="./redeploy-mojo.html" />
+
+      <item name="Advanced" >
+        <item name="njord:check-artifacts-availability" href="./check-artifacts-availability-mojo.html" />
+        <item name="njord:export" href="./export-mojo.html" />
+        <item name="njord:export-all" href="./export-all-mojo.html" />
+        <item name="njord:import" href="./import-mojo.html" />
+        <item name="njord:import-all" href="./import-all-mojo.html" />
+        <item name="njord:merge" href="./merge-mojo.html" />
+        <item name="njord:merge-all" href="./merge-all-mojo.html" />
+        <item name="njord:write" href="./write-mojo.html" />
+        <item name="njord:write-bundle" href="./write-bundle-mojo.html" />
+        <item name="njord:list-comparators" href="./list-comparators-mojo.html" />
+        <item name="njord:list-publishers" href="./list-publishers-mojo.html" />
+        <item name="njord:list-templates" href="./list-templates-mojo.html" />
+      </item>
+
+      <item name="njord:help" href="./help-mojo.html" />
+    </menu>
+    <menu ref="reports" />
+  </body>
+</site>
