@@ -183,7 +183,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 "Publishing type is AUTOMATIC; deployment {} will be automatically published to Maven Central without further manual action (given that is is valid)",
                                 deploymentId);
                     } else {
-                        logger.warn(
+                        logger.info(
                                 "Continue at {} to review and publish the deployment {}",
                                 CENTRAL_DEPLOYMENTS_URL,
                                 deploymentId);
