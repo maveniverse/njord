@@ -2,7 +2,7 @@
 
 This module implements publisher for use with Sonatype provided Portal service.
 
-These publishers are **always available**.
+This publisher is **always available**.
 
 * Publisher ID: `sonatype-cp`
 * Configuration source: `properties` (`njord.properties`, Maven System properties, Maven User Properties or Project properties)
