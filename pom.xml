@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>40</version>
+    <version>41</version>
   </parent>
 
   <groupId>eu.maveniverse.maven.njord</groupId>
@@ -72,8 +72,8 @@
     <!-- Dependency versions -->
     <version.maveniverseShared>0.1.8</version.maveniverseShared>
     <version.maven>3.9.11</version.maven>
-    <version.resolver>1.9.23</version.resolver>
-    <version.mima>2.4.30</version.mima>
+    <version.resolver>1.9.24</version.resolver>
+    <version.mima>2.4.32</version.mima>
     <version.slf4j>1.7.36</version.slf4j>
   </properties>
 
@@ -198,6 +198,11 @@
       </dependency>
       <dependency>
         <groupId>eu.maveniverse.maven.mima.extensions</groupId>
+        <artifactId>mhc4</artifactId>
+        <version>${version.mima}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.mima.extensions</groupId>
         <artifactId>mmr</artifactId>
         <version>${version.mima}</version>
       </dependency>
@@ -206,6 +211,34 @@
         <artifactId>guice</artifactId>
         <version>6.0.0</version>
         <classifier>classes</classifier>
+      </dependency>
+
+      <!-- hc4 -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.14</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>4.5.14</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4.16</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.19.0</version>
       </dependency>
 
       <dependency>
