@@ -1,6 +1,6 @@
 # Sonatype CP publisher
 
-This module implements 1 publishers for use with Sonatype provided Portal service.
+This module implements publisher for use with Sonatype provided Portal service.
 
 These publishers are **always available**.
 
