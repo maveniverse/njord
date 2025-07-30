@@ -30,7 +30,6 @@
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
@@ -76,8 +75,8 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20250517</version>
     </dependency>
+
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>

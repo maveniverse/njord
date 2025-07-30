@@ -79,6 +79,39 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- reactor -->
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord</groupId>
+        <artifactId>core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord</groupId>
+        <artifactId>extension3</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.plugins</groupId>
+        <artifactId>njord</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>apache</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>deploy</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>sonatype</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- shared -->
       <dependency>
         <groupId>eu.maveniverse.maven.shared</groupId>
         <artifactId>core</artifactId>
@@ -239,6 +272,12 @@
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
         <version>1.19.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20250517</version>
       </dependency>
 
       <dependency>
