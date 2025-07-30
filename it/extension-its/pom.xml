@@ -34,12 +34,10 @@
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>extension3</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.plugins</groupId>
       <artifactId>njord</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

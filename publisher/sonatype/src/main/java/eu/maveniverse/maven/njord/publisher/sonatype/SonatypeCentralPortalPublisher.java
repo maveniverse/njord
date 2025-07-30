@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.mima.extensions.mhc4.impl.MavenHttpClient4FactoryImpl;
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
@@ -25,28 +26,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Map;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.AuthenticationContext;
-import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 import org.json.JSONObject;
@@ -54,6 +50,7 @@ import org.json.JSONObject;
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
     private static final String CENTRAL_DEPLOYMENTS_URL = "https://central.sonatype.com/publishing/deployments";
     private final SonatypeCentralPortalPublisherConfig publisherConfig;
+    private final MavenHttpClient4FactoryImpl mhc4;
 
     public SonatypeCentralPortalPublisher(
             Session session,
@@ -73,6 +70,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 snapshotsRepository,
                 artifactStoreRequirements);
         this.publisherConfig = requireNonNull(publisherConfig);
+        this.mhc4 = new MavenHttpClient4FactoryImpl(repositorySystem);
     }
 
     @Override
@@ -82,6 +80,14 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
             return;
         }
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> extraHeaders = (Map<String, String>) ConfigUtils.getMap(
+                session.config().session(),
+                Collections.emptyMap(),
+                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_HEADERS);
+
         if (repository.getPolicy(false).isEnabled()) { // release
             // create ZIP bundle
             Path bundleDir;
@@ -136,9 +142,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
                 // we need to use own HTTP client here
                 String deploymentId;
-                try (CloseableHttpClient httpClient = createHttpClient(repository)) {
+                try (CloseableHttpClient httpClient = mhc4.createDeploymentClient(
+                                session.config().session(), repository)
+                        .build()) {
                     URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
-                    deploymentId = upload(httpClient, uriBuilder, authValue, bundle, bundleName);
+                    deploymentId = upload(httpClient, uriBuilder, extraHeaders, authValue, bundle, bundleName);
                     logger.info("Deployment ID: {}", deploymentId);
 
                     if (publisherConfig.waitForStates()) {
@@ -150,7 +158,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 publisherConfig.waitForStatesFailureStates());
                         Instant waitingUntil = Instant.now().plus(publisherConfig.waitForStatesTimeout());
                         try {
-                            String deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
+                            String deploymentState =
+                                    deploymentState(httpClient, uriBuilder, extraHeaders, authValue, deploymentId);
                             logger.debug("deploymentState = {}", deploymentState);
                             while (publisherConfig.waitForStatesWaitStates().contains(deploymentState)) {
                                 if (Instant.now().isAfter(waitingUntil)) {
@@ -160,7 +169,8 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                                 Thread.sleep(
                                         publisherConfig.waitForStatesSleep().toMillis());
 
-                                deploymentState = deploymentState(httpClient, uriBuilder, authValue, deploymentId);
+                                deploymentState =
+                                        deploymentState(httpClient, uriBuilder, extraHeaders, authValue, deploymentId);
                                 logger.debug("deploymentState = {}", deploymentState);
                             }
 
@@ -212,50 +222,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         }
     }
 
-    private CloseableHttpClient createHttpClient(RemoteRepository repository) {
-        repository = repositorySystem.newDeploymentRepository(session.config().session(), repository);
-
-        HttpHost proxy = null;
-        CredentialsProvider proxyCredentialsProvider = null;
-
-        Proxy repositoryProxy = repository.getProxy();
-        if (repositoryProxy != null) {
-            proxy = new HttpHost(repositoryProxy.getHost(), repositoryProxy.getPort());
-            if (repositoryProxy.getAuthentication() != null) {
-                try (AuthenticationContext context =
-                        AuthenticationContext.forProxy(session.config().session(), repository)) {
-                    if (context != null) {
-                        String username = context.get(AuthenticationContext.USERNAME);
-                        String password = context.get(AuthenticationContext.PASSWORD);
-                        proxyCredentialsProvider = new BasicCredentialsProvider();
-                        proxyCredentialsProvider.setCredentials(
-                                new AuthScope(proxy.getHostName(), proxy.getPort()),
-                                new UsernamePasswordCredentials(username, password));
-                    }
-                }
-            }
-        }
-
-        // use Maven UA
-        final String userAgent = ConfigUtils.getString(
-                session.config().session(),
-                ConfigurationProperties.DEFAULT_USER_AGENT,
-                "aether.connector.userAgent",
-                "aether.transport.http.userAgent");
-
-        HttpClientBuilder builder = HttpClientBuilder.create().setUserAgent(userAgent);
-        if (proxy != null) {
-            builder.setProxy(proxy);
-            if (proxyCredentialsProvider != null) {
-                builder.setDefaultCredentialsProvider(proxyCredentialsProvider);
-            }
-        }
-        return builder.build();
-    }
-
     private String upload(
             CloseableHttpClient httpClient,
             URIBuilder uriBuilder,
+            Map<String, String> extraHeaders,
             String authorizationHeader,
             Path bundle,
             String bundleName)
@@ -267,6 +237,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
             uriBuilder.addParameter("publishingType", publishingType);
         });
         HttpPost post = new HttpPost(uriBuilder.build());
+        extraHeaders.forEach(post::setHeader);
         post.setHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
@@ -285,12 +256,17 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
     }
 
     private String deploymentState(
-            CloseableHttpClient httpClient, URIBuilder uriBuilder, String authorizationHeader, String deploymentId)
+            CloseableHttpClient httpClient,
+            URIBuilder uriBuilder,
+            Map<String, String> extraHeaders,
+            String authorizationHeader,
+            String deploymentId)
             throws IOException, URISyntaxException {
         uriBuilder.clearParameters();
         uriBuilder.setPath("/api/v1/publisher/status");
         uriBuilder.addParameter("id", deploymentId);
         HttpPost post = new HttpPost(uriBuilder.build());
+        extraHeaders.forEach(post::setHeader);
         post.setHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
         post.setHeader(HttpHeaders.ACCEPT, "application/json");
         try (CloseableHttpResponse response = httpClient.execute(post)) {
