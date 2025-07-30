@@ -5,12 +5,11 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.apache;
+package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
 
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.publisher.sonatype.central.SonatypeCentralRequirementsFactory;
-import eu.maveniverse.maven.njord.publisher.sonatype.nx2.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
@@ -21,15 +20,15 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
-@Named(ApacheRaoPublisherFactory.NAME)
-public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
-    public static final String NAME = "apache-rao";
+@Named(SonatypeS01PublisherFactory.NAME)
+public class SonatypeS01PublisherFactory implements MavenCentralPublisherFactory {
+    public static final String NAME = "sonatype-s01";
 
     private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
-    public ApacheRaoPublisherFactory(
+    public SonatypeS01PublisherFactory(
             RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
@@ -37,18 +36,18 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
 
     @Override
     public SonatypeNx2Publisher create(Session session) {
-        ApachePublisherConfig raoConfig = new ApachePublisherConfig(session.config());
+        SonatypeS01PublisherConfig s01Config = new SonatypeS01PublisherConfig(session.config());
         RemoteRepository releasesRepository =
-                raoConfig.releaseRepositoryId() != null && raoConfig.releaseRepositoryUrl() != null
+                s01Config.releaseRepositoryId() != null && s01Config.releaseRepositoryUrl() != null
                         ? new RemoteRepository.Builder(
-                                        raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
+                                        s01Config.releaseRepositoryId(), "default", s01Config.releaseRepositoryUrl())
                                 .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                                 .build()
                         : null;
         RemoteRepository snapshotsRepository =
-                raoConfig.snapshotRepositoryId() != null && raoConfig.snapshotRepositoryUrl() != null
+                s01Config.snapshotRepositoryId() != null && s01Config.snapshotRepositoryUrl() != null
                         ? new RemoteRepository.Builder(
-                                        raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
+                                        s01Config.snapshotRepositoryId(), "default", s01Config.snapshotRepositoryUrl())
                                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                                 .build()
                         : null;
@@ -57,7 +56,7 @@ public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
                 session,
                 repositorySystem,
                 NAME,
-                "Publishes to ASF RAO",
+                "Publishes to Sonatype S01",
                 CENTRAL,
                 snapshotsRepository,
                 releasesRepository,

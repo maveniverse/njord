@@ -25,7 +25,9 @@
 
   <modules>
     <module>deploy</module>
-    <module>sonatype</module>
+    <module>sonatype-central</module>
+    <module>sonatype-cp</module>
+    <module>sonatype-nx2</module>
     <module>apache</module>
   </modules>
 

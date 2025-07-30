@@ -17,7 +17,7 @@
     <version>0.8.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>apache</artifactId>
+  <artifactId>sonatype-cp</artifactId>
 
   <name>${project.groupId}:${project.artifactId}</name>
 
@@ -30,9 +30,34 @@
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>sonatype-central</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>sonatype-nx2</artifactId>
+      <groupId>eu.maveniverse.maven.mima.extensions</groupId>
+      <artifactId>mhc4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
     </dependency>
 
     <dependency>
