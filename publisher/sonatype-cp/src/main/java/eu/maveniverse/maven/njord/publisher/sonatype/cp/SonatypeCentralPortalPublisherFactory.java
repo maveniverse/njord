@@ -5,13 +5,13 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.apache;
+package eu.maveniverse.maven.njord.publisher.sonatype.cp;
 
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.publisher.sonatype.central.SonatypeCentralRequirementsFactory;
-import eu.maveniverse.maven.njord.publisher.sonatype.nx2.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,47 +21,44 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
-@Named(ApacheRaoPublisherFactory.NAME)
-public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
-    public static final String NAME = "apache-rao";
+@Named(SonatypeCentralPortalPublisherFactory.NAME)
+public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublisherFactory {
+    public static final String NAME = "sonatype-cp";
 
     private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
-    public ApacheRaoPublisherFactory(
+    public SonatypeCentralPortalPublisherFactory(
             RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
     }
 
     @Override
-    public SonatypeNx2Publisher create(Session session) {
-        ApachePublisherConfig raoConfig = new ApachePublisherConfig(session.config());
+    public ArtifactStorePublisher create(Session session) {
+        SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(session.config());
         RemoteRepository releasesRepository =
-                raoConfig.releaseRepositoryId() != null && raoConfig.releaseRepositoryUrl() != null
+                cpConfig.releaseRepositoryId() != null && cpConfig.releaseRepositoryUrl() != null
                         ? new RemoteRepository.Builder(
-                                        raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
+                                        cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
                                 .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                                 .build()
                         : null;
         RemoteRepository snapshotsRepository =
-                raoConfig.snapshotRepositoryId() != null && raoConfig.snapshotRepositoryUrl() != null
+                cpConfig.snapshotRepositoryId() != null && cpConfig.snapshotRepositoryUrl() != null
                         ? new RemoteRepository.Builder(
-                                        raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
+                                        cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
                                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                                 .build()
                         : null;
 
-        return new SonatypeNx2Publisher(
+        return new SonatypeCentralPortalPublisher(
                 session,
                 repositorySystem,
-                NAME,
-                "Publishes to ASF RAO",
-                CENTRAL,
-                snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
-                centralRequirementsFactory.create(session));
+                centralRequirementsFactory.create(session),
+                cpConfig);
     }
 }

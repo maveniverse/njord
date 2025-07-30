@@ -17,7 +17,7 @@
     <version>0.8.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>apache</artifactId>
+  <artifactId>sonatype-nx2</artifactId>
 
   <name>${project.groupId}:${project.artifactId}</name>
 
@@ -29,10 +29,6 @@
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>sonatype-central</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>sonatype-nx2</artifactId>
     </dependency>
 
     <dependency>

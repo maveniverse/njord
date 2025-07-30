@@ -36,7 +36,11 @@
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>sonatype</artifactId>
+      <artifactId>sonatype-cp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>sonatype-nx2</artifactId>
     </dependency>
 
     <dependency>
