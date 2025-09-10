@@ -24,9 +24,26 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <dependencies>
+    <!-- aligned with extension.xml -->
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>deploy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>apache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>sonatype-cp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>sonatype-nx2</artifactId>
     </dependency>
 
     <dependency>
