@@ -18,13 +18,16 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.shared.plugin.MojoSupport;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -39,6 +42,9 @@ public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
     private SessionFactory sessionFactory;
 
+    @Parameter(defaultValue = "${mojo}", readonly = true, required = true)
+    MojoExecution mojoExecution;
+
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
         try {
@@ -46,7 +52,15 @@ public abstract class NjordMojoSupport extends MojoSupport {
             if (!njordSession.isPresent()) {
                 doWithoutSession();
             } else {
-                doWithSession(njordSession.orElseThrow(J8Utils.OET));
+                Session session = njordSession.orElseThrow(J8Utils.OET);
+                if (!Objects.equals(
+                        session.config().version(), mojoExecution.getPlugin().getVersion())) {
+                    logger.warn(
+                            "Njord plugin and extension versions mismatch: {} vs {}; keep them aligned",
+                            mojoExecution.getPlugin().getVersion(),
+                            session.config().version());
+                }
+                doWithSession(session);
             }
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
