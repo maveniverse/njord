@@ -90,7 +90,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             authSource.getContentType(),
                             authSource.getUrl())
                     .build();
-            logger.debug("Found server {} configured auth redirect to {}", repository.getId(), authSource.getId());
+            logger.debug("Found server {} configured auth in server {}", repository.getId(), authSource.getId());
         }
         return repositorySystem.newDeploymentRepository(session.config().session(), authSource);
     }
@@ -208,7 +208,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                         : null;
             }
             if (redirect != null) {
-                logger.debug("Following service redirect {} -> {}", source, redirect);
+                logger.debug("Following redirect {} -> {}", source, redirect);
                 if (!sourcesVisited.add(redirect)) {
                     throw new IllegalStateException("Auth redirect forms a cycle: " + redirect);
                 }
@@ -219,7 +219,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             }
         }
         if (!Objects.equals(serverId, source)) {
-            logger.debug("Trail of service redirects for {}: {}", serverId, String.join(" -> ", sourcesVisited));
+            logger.debug("Trail of redirects for {}: {}", serverId, String.join(" -> ", sourcesVisited));
         }
         return config;
     }
