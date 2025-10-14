@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2023-2024 Maveniverse Org.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v2.0
+    which accompanies this distribution, and is available at
+    https://www.eclipse.org/legal/epl-v20.html
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>eu.maveniverse.maven.njord.it</groupId>
+    <artifactId>it</artifactId>
+    <version>0.8.5-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>publisher-sonatype-nx3-its</artifactId>
+  <packaging>pom</packaging>
+
+  <name>${project.groupId}:${project.artifactId}</name>
+
+  <properties>
+    <maven39Version>3.9.11</maven39Version>
+    <maven4Version>4.0.0-rc-3</maven4Version>
+
+    <!-- We need to skip this on Java lower than 17 (see profiles below) -->
+    <mvn4-its-run.skip>true</mvn4-its-run.skip>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord</groupId>
+      <artifactId>extension3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.plugins</groupId>
+      <artifactId>njord</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>sonatype-nx3</artifactId>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>run-its</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>docker-compose-up</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <phase>pre-integration-test</phase>
+                <configuration>
+                  <executable>docker</executable>
+                  <workingDirectory>${project.basedir}/docker</workingDirectory>
+                  <arguments>
+                    <argument>compose</argument>
+                    <argument>up</argument>
+                    <argument>-d</argument>
+                    <argument>--wait</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>docker-compose-down</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <phase>post-integration-test</phase>
+                <configuration>
+                  <executable>docker</executable>
+                  <workingDirectory>${project.basedir}/docker</workingDirectory>
+                  <arguments>
+                    <argument>compose</argument>
+                    <argument>down</argument>
+                    <argument>-v</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-maven-distro</id>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <phase>generate-test-resources</phase>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.apache.maven</groupId>
+                      <artifactId>apache-maven</artifactId>
+                      <version>${maven39Version}</version>
+                      <classifier>bin</classifier>
+                      <type>zip</type>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.apache.maven</groupId>
+                      <artifactId>apache-maven</artifactId>
+                      <version>${maven4Version}</version>
+                      <classifier>bin</classifier>
+                      <type>zip</type>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-user-home</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>generate-test-resources</phase>
+                <configuration>
+                  <target>
+                    <copy todir="${project.build.directory}/it-user">
+                      <fileset dir="src/it/user-home" />
+                    </copy>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-invoker-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>integration-test</id>
+                <phase>none</phase>
+              </execution>
+              <execution>
+                <id>its-install</id>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+                <phase>integration-test</phase>
+                <configuration>
+                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+                </configuration>
+              </execution>
+              <execution>
+                <id>mvn39-its-run</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>integration-test</phase>
+                <configuration>
+                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven39Version}</mavenHome>
+                  <cloneProjectsTo>${project.build.directory}/mvn39-it</cloneProjectsTo>
+                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
+                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
+                  <cloneClean>true</cloneClean>
+                  <pomIncludes>
+                    <pomInclude>*/pom.xml</pomInclude>
+                  </pomIncludes>
+                  <scriptVariables>
+                    <projectVersion>${project.version}</projectVersion>
+                  </scriptVariables>
+                  <preBuildHookScript>setup</preBuildHookScript>
+                  <postBuildHookScript>verify</postBuildHookScript>
+                  <addTestClassPath>false</addTestClassPath>
+                </configuration>
+              </execution>
+              <execution>
+                <id>mvn4-its-run</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>integration-test</phase>
+                <configuration>
+                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>
+                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>
+                  <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>
+                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
+                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
+                  <cloneClean>true</cloneClean>
+                  <pomIncludes>
+                    <pomInclude>*/pom.xml</pomInclude>
+                  </pomIncludes>
+                  <scriptVariables>
+                    <projectVersion>${project.version}</projectVersion>
+                  </scriptVariables>
+                  <preBuildHookScript>setup</preBuildHookScript>
+                  <postBuildHookScript>verify</postBuildHookScript>
+                  <addTestClassPath>false</addTestClassPath>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>maven4-capable-jdk</id>
+      <activation>
+        <jdk>[17,)</jdk>
+      </activation>
+      <properties>
+        <mvn4-its-run.skip>false</mvn4-its-run.skip>
+      </properties>
+    </profile>
+  </profiles>
+</project>

@@ -120,6 +120,11 @@
         <artifactId>sonatype-nx2</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>sonatype-nx3</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- shared -->
       <dependency>
