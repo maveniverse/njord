@@ -25,6 +25,7 @@
   <properties>
     <maven39Version>3.9.11</maven39Version>
     <maven4Version>4.0.0-rc-3</maven4Version>
+    <groovyVersion>4.0.24</groovyVersion>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
@@ -50,45 +51,6 @@
       <id>run-its</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>docker-compose-up</id>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-                <phase>pre-integration-test</phase>
-                <configuration>
-                  <executable>docker</executable>
-                  <workingDirectory>${project.basedir}/docker</workingDirectory>
-                  <arguments>
-                    <argument>compose</argument>
-                    <argument>up</argument>
-                    <argument>-d</argument>
-                    <argument>--wait</argument>
-                  </arguments>
-                </configuration>
-              </execution>
-              <execution>
-                <id>docker-compose-down</id>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-                <phase>post-integration-test</phase>
-                <configuration>
-                  <executable>docker</executable>
-                  <workingDirectory>${project.basedir}/docker</workingDirectory>
-                  <arguments>
-                    <argument>compose</argument>
-                    <argument>down</argument>
-                    <argument>-v</argument>
-                  </arguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
@@ -143,6 +105,20 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
+            <dependencies>
+              <!-- Control Groovy version for script execution -->
+              <dependency>
+                <groupId>org.apache.groovy</groupId>
+                <artifactId>groovy</artifactId>
+                <version>${groovyVersion}</version>
+              </dependency>
+              <!-- Add Ant support for Groovy scripts (includes ant transitively) -->
+              <dependency>
+                <groupId>org.apache.groovy</groupId>
+                <artifactId>groovy-ant</artifactId>
+                <version>${groovyVersion}</version>
+              </dependency>
+            </dependencies>
             <executions>
               <execution>
                 <id>integration-test</id>
