@@ -95,23 +95,21 @@ def startNexus(File testBasedir, int maxAttempts = 60, int waitSeconds = 2) {
     // Copy template data (with EULA accepted) to bypass onboarding wizard
     println "[DOCKER] Copying pre-configured Nexus database (EULA accepted)..."
     def templateDir = new File(dockerComposeDir, "data-template")
-    if (templateDir.exists()) {
-        // Use AntBuilder to copy db directory only
-        def ant = new AntBuilder()
-        def templateDb = new File(templateDir, "db")
-        def targetDb = new File(dataDir, "db")
-        if (templateDb.exists()) {
-            ant.copy(todir: targetDb, overwrite: true) {
-                fileset(dir: templateDb)
-            }
-            println "[DOCKER] Database template copied successfully"
-        } else {
-            println "[DOCKER] Warning: Template database not found at ${templateDb}"
-        }
-    } else {
-        println "[DOCKER] Warning: Template directory not found at ${templateDir}"
-        println "[DOCKER] Nexus will start with onboarding wizard - tests may fail"
+    if (!templateDir.exists()) {
+        throw new RuntimeException("Template directory not found at ${templateDir}")
     }
+
+    def templateDb = new File(templateDir, "db")
+    if (!templateDb.exists()) {
+        throw new RuntimeException("Template database not found at ${templateDb}")
+    }
+
+    def ant = new AntBuilder()
+    def targetDb = new File(dataDir, "db")
+    ant.copy(todir: targetDb, overwrite: true) {
+        fileset(dir: templateDb)
+    }
+    println "[DOCKER] Database template copied successfully"
 
     // Start containers
     runDockerCommand(["docker", "compose", "up", "-d"] as String[], dockerComposeDir, "DOCKER")
