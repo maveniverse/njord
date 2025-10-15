@@ -122,7 +122,7 @@ def startNexus(File testBasedir, int maxAttempts = 60, int waitSeconds = 2) {
     boolean nexusReady = false
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            URL url = new URL(statusEndpoint)
+            URL url = URI.create(statusEndpoint).toURL()
             HttpURLConnection conn = (HttpURLConnection) url.openConnection()
             conn.setRequestMethod("GET")
             conn.setConnectTimeout(2000)
