@@ -17,7 +17,6 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
-import org.apache.maven.model.Developer;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Scm;
@@ -77,24 +76,8 @@ public class PomProjectValidator extends ValidatorSupport {
                 if (m.getDevelopers().isEmpty()) {
                     collector.addError("MISSING project/developers");
                 } else {
-                    boolean ok = true;
-                    for (Developer developer : m.getDevelopers()) {
-                        if (ok
-                                && (nullOrBlank(developer.getId())
-                                        && nullOrBlank(developer.getName())
-                                        && nullOrBlank(developer.getEmail()))) {
-                            ok = false;
-                            collector.addError("MISSING project/developers/developer (id, name or email)");
-                        }
-                        if (ok && nullOrBlank(developer.getId())
-                                || nullOrBlank(developer.getName())
-                                || nullOrBlank(developer.getEmail())) {
-                            collector.addWarning("INCOMPLETE project/developers/developer (id, name or email)");
-                        }
-                    }
-                    if (ok) {
-                        collector.addInfo("VALID project/developers");
-                    }
+                    // currently there is no check on elements within the developers section by Sonatype
+                    collector.addInfo("VALID project/developers");
                 }
                 if (m.getScm() == null) {
                     collector.addError("MISSING project/scm");
