@@ -93,6 +93,11 @@ public class PublisherTestSupport {
             }
 
             @Override
+            public boolean isConfigured() {
+                return false;
+            }
+
+            @Override
             public Optional<RemoteRepository> targetReleaseRepository() {
                 return Optional.empty();
             }
