@@ -152,6 +152,7 @@ public abstract class NjordMojoSupport extends MojoSupport {
                 "    RELEASES:  {}", fmt(publisher.serviceReleaseRepository().orElse(null)));
         logger.info(
                 "    SNAPSHOTS: {}", fmt(publisher.serviceSnapshotRepository().orElse(null)));
+        logger.info("  Operational state: {}", publisher.isConfigured() ? "Configured" : "Not configured");
     }
 
     private String fmt(RemoteRepository repo) {

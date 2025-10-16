@@ -24,6 +24,11 @@ public interface ArtifactStorePublisher {
     String description();
 
     /**
+     * Returns {@code true} if this publisher is configured and is usable.
+     */
+    boolean isConfigured();
+
+    /**
      * The remote repository where release artifacts will become available after publishing succeeded.
      */
     Optional<RemoteRepository> targetReleaseRepository();

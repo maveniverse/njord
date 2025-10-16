@@ -18,9 +18,9 @@ import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
  * Properties supported (note: at least the URLs must be provided as defaults are most probably wrong):
  * <ul>
  *     <li><code>njord.publisher.sonatype-nx2.releaseRepositoryId</code> - the release service server.id (default "releases")</li>
- *     <li><code>njord.publisher.sonatype-nx2.releaseRepositoryUrl</code> - the release service URL <em>(default to http://localhost:8081/content/repositories/releases/)</em></li>
+ *     <li><code>njord.publisher.sonatype-nx2.releaseRepositoryUrl</code> - the release service URL <em>(mandatory; without setting it publisher cannot publish releases)</em></li>
  *     <li><code>njord.publisher.sonatype-nx2.snapshotRepositoryId</code> - the snapshot service server.id (default "snapshots")</li>
- *     <li><code>njord.publisher.sonatype-nx2.snapshotRepositoryUrl</code> - the snapshot service URL <em>(default to http://localhost:8081/content/repositories/snapshots/)</em></li>
+ *     <li><code>njord.publisher.sonatype-nx2.snapshotRepositoryUrl</code> - the snapshot service URL <em>(mandatory; without setting it publisher cannot publish snapshots)</em></li>
  *     <li><code>njord.publisher.sonatype-nx2.artifactStoreRequirements</code> - the requirements deployment must fulfil (defaults to NONE)</li>
  * </ul>
  */
@@ -34,15 +34,11 @@ public final class SonatypeNx2PublisherConfig extends PublisherConfig {
                 repositoryId(sessionConfig, RepositoryMode.RELEASE, "releases"),
                 sessionConfig
                         .effectiveProperties()
-                        .getOrDefault(
-                                keyName(SonatypeNx2PublisherFactory.NAME, "releaseRepositoryUrl"),
-                                "http://localhost:8081/content/repositories/releases/"),
+                        .get(keyName(SonatypeNx2PublisherFactory.NAME, "releaseRepositoryUrl")),
                 repositoryId(sessionConfig, RepositoryMode.SNAPSHOT, "snapshots"),
                 sessionConfig
                         .effectiveProperties()
-                        .getOrDefault(
-                                keyName(SonatypeNx2PublisherFactory.NAME, "snapshotRepositoryUrl"),
-                                "http://localhost:8081/content/repositories/snapshots/"));
+                        .get(keyName(SonatypeNx2PublisherFactory.NAME, "snapshotRepositoryUrl")));
         this.artifactStoreRequirements = sessionConfig
                 .effectiveProperties()
                 .getOrDefault(
