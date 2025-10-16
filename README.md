@@ -68,11 +68,11 @@ server, for example `sonatype-cp` publisher needs following stanza in your `sett
 
 Supported publishers are:
 
-| Publisher (publisher ID)                                       | server.id               | What is needed                                                                                                           |
-|----------------------------------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Sonatype Central Portal (`sonatype-cp`)                        | -                       | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/).                                                     |
-| Apache RAO on https://repository.apache.org/ (`apache-rao`)    | `apache.releases.https` | As above but using RAO instance.                                                                                         |
-| Sonatype Nx2 "generic" (`sonatype-nx2`)                        | -                       | To be used by "private" Sonatype Nexus 2 instances; user must configure URLs at least for this publisher to be usable.   |
+| Publisher (publisher ID)                                    | server.id               | What is needed                                                                                                               |
+|-------------------------------------------------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Sonatype Central Portal (`sonatype-cp`)                     | -                       | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/). |
+| Apache RAO on https://repository.apache.org/ (`apache-rao`) | `apache.releases.https` | As above but using RAO instance.                                                                                             |
+| Sonatype Nx2 "generic" (`sonatype-nx2`)                     | -                       | To be used by "private" Sonatype Nexus 2 instances; user must configure URLs at least for this publisher to be usable.       |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
 The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`) or from user
