@@ -45,9 +45,8 @@ class DeployReleaseIT extends AbstractNexusIT {
 
     @BeforeEach
     void setupTestProject() throws IOException {
-        // Copy test project from resources to temp directory
-        File sourceProject =
-                Paths.get("src/test/resources/test-projects/deploy-release").toFile();
+        // Copy test project from src/it to temp directory (same source as maven-invoker-plugin)
+        File sourceProject = Paths.get("src/it/deploy-release").toFile();
         projectDir = tempDir.resolve("deploy-release").toFile();
 
         FileUtils.copyDirectory(sourceProject, projectDir);
