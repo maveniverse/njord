@@ -13,14 +13,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.Comparator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,6 +36,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @Testcontainers
 public abstract class AbstractNexusIT {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractNexusIT.class);
 
     protected static final String NEXUS_IMAGE = "sonatype/nexus3:latest";
     protected static final int NEXUS_PORT = 8081;
@@ -63,9 +66,13 @@ public abstract class AbstractNexusIT {
             nexusDataDir.mkdirs();
 
             // Copy template to writable location
-            System.out.println("[SETUP] Copying Nexus data template from: " + dataTemplateDir);
-            System.out.println("[SETUP] To writable directory: " + nexusDataDir);
+            log.info("Copying Nexus data template from: {}", dataTemplateDir);
+            log.info("To writable directory: {}", nexusDataDir);
             copyDirectory(dataTemplateDir.toPath(), nexusDataDir.toPath());
+
+            // Set up container log file
+            Path containerLogFile = targetDir.resolve("nexus-container.log");
+            log.info("Nexus container logs will be written to: {}", containerLogFile);
 
             nexus = new GenericContainer<>(NEXUS_IMAGE)
                     .withExposedPorts(NEXUS_PORT)
@@ -75,7 +82,17 @@ public abstract class AbstractNexusIT {
                                     + "-Djava.util.prefs.userRoot=/nexus-data/javaprefs "
                                     + "-Dnexus.security.randompassword=false")
                     .withFileSystemBind(nexusDataDir.getAbsolutePath(), "/nexus-data")
-                    .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("NEXUS-CONTAINER")))
+                    .withLogConsumer(outputFrame -> {
+                        try {
+                            Files.write(
+                                    containerLogFile,
+                                    outputFrame.getUtf8String().getBytes(StandardCharsets.UTF_8),
+                                    StandardOpenOption.CREATE,
+                                    StandardOpenOption.APPEND);
+                        } catch (IOException e) {
+                            log.error("Failed to write container log: {}", e.getMessage());
+                        }
+                    })
                     .waitingFor(Wait.forHttp("/service/rest/v1/status")
                             .forStatusCode(200)
                             .withStartupTimeout(Duration.ofMinutes(3)));
@@ -95,15 +112,15 @@ public abstract class AbstractNexusIT {
         userHome = targetDir.resolve("it-user").toFile();
         recreateUserHome();
 
-        System.out.println("[SETUP] Nexus container started at: " + getNexusUrl());
-        System.out.println("[SETUP] Local repository: " + localRepository.getAbsolutePath());
-        System.out.println("[SETUP] User home: " + userHome.getAbsolutePath());
+        log.info("Nexus container started at: {}", getNexusUrl());
+        log.info("Local repository: {}", localRepository.getAbsolutePath());
+        log.info("User home: {}", userHome.getAbsolutePath());
     }
 
     @AfterEach
     void cleanupNexusData() throws IOException {
         // Restart container with fresh data for next test to avoid conflicts
-        System.out.println("[CLEANUP] Restarting Nexus with fresh data for next test");
+        log.info("Restarting Nexus with fresh data for next test");
         nexus.stop();
 
         // Recreate nexus data from template
@@ -117,13 +134,13 @@ public abstract class AbstractNexusIT {
         copyDirectory(dataTemplateDir.toPath(), nexusDataDir.toPath());
 
         nexus.start();
-        System.out.println("[CLEANUP] Nexus restarted at: " + getNexusUrl());
+        log.info("Nexus restarted at: {}", getNexusUrl());
     }
 
     @AfterAll
     static void teardownTestEnvironment() {
         // Testcontainers will automatically stop and remove the container
-        System.out.println("[TEARDOWN] Nexus container stopped");
+        log.info("Nexus container stopped");
     }
 
     /**
@@ -206,7 +223,7 @@ public abstract class AbstractNexusIT {
         if (version == null) {
             // Fallback for IDE execution: read from POM
             version = readVersionFromPom();
-            System.out.println("[WARN] project.version not set in system properties, using fallback: " + version);
+            log.warn("project.version not set in system properties, using fallback: {}", version);
         }
         return version;
     }
@@ -219,7 +236,7 @@ public abstract class AbstractNexusIT {
         String version = System.getProperty("maven39Version");
         if (version == null) {
             version = "3.9.11"; // Default from pom.xml
-            System.out.println("[WARN] maven39Version not set in system properties, using default: " + version);
+            log.warn("maven39Version not set in system properties, using default: {}", version);
         }
         return version;
     }
@@ -232,7 +249,7 @@ public abstract class AbstractNexusIT {
         String version = System.getProperty("maven4Version");
         if (version == null) {
             version = "4.0.0-rc-3"; // Default from pom.xml
-            System.out.println("[WARN] maven4Version not set in system properties, using default: " + version);
+            log.warn("maven4Version not set in system properties, using default: {}", version);
         }
         return version;
     }

@@ -8,8 +8,14 @@
 package eu.maveniverse.maven.njord.publisher.nx3.support;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import org.apache.maven.shared.invoker.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for invoking Maven programmatically using the maven-invoker component.
@@ -19,6 +25,8 @@ import org.apache.maven.shared.invoker.*;
  * </p>
  */
 public class MavenInvokerHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(MavenInvokerHelper.class);
 
     private final File mavenHome;
     private final File localRepository;
@@ -74,7 +82,7 @@ public class MavenInvokerHelper {
      */
     public InvocationResult invoke(File projectDir, List<String> goals, Properties properties)
             throws MavenInvocationException {
-        return invoke(projectDir, goals, properties, Collections.emptyMap());
+        return invoke(projectDir, goals, properties, Collections.emptyMap(), null);
     }
 
     /**
@@ -90,11 +98,46 @@ public class MavenInvokerHelper {
     public InvocationResult invoke(
             File projectDir, List<String> goals, Properties properties, Map<String, String> environment)
             throws MavenInvocationException {
-        // Build output handler that captures and prints output
+        return invoke(projectDir, goals, properties, environment, null);
+    }
+
+    /**
+     * Invokes Maven with the specified goals, properties, environment variables, and optional log file.
+     *
+     * @param projectDir  the project directory
+     * @param goals       the Maven goals to execute
+     * @param properties  additional properties to pass to Maven
+     * @param environment environment variables to set
+     * @param logFile     optional log file to write output to (like maven-invoker-plugin's -l option)
+     * @return the result of the invocation
+     * @throws MavenInvocationException if the invocation fails
+     */
+    public InvocationResult invoke(
+            File projectDir,
+            List<String> goals,
+            Properties properties,
+            Map<String, String> environment,
+            File logFile)
+            throws MavenInvocationException {
+        // Build output handler that captures, prints, and optionally writes to log file
         StringBuilder outputBuffer = new StringBuilder();
         InvocationOutputHandler outputHandler = line -> {
-            outputBuffer.append(line).append(System.lineSeparator());
-            System.out.println("[MVN] " + line);
+            String lineWithNewline = line + System.lineSeparator();
+            outputBuffer.append(lineWithNewline);
+            log.info("[MVN] {}", line);
+
+            // Write to log file if specified (like maven-invoker-plugin's -l option)
+            if (logFile != null) {
+                try {
+                    Files.write(
+                            logFile.toPath(),
+                            lineWithNewline.getBytes(StandardCharsets.UTF_8),
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    log.error("Failed to write to log file {}: {}", logFile, e.getMessage());
+                }
+            }
         };
 
         // Merge system properties and convert environment variables to properties
@@ -113,7 +156,7 @@ public class MavenInvokerHelper {
                 allProperties.setProperty("env.MAVEN_GPG_PASSPHRASE", value);
             } else {
                 // Log warning for other environment variables
-                System.out.println("[WARN] Environment variable " + key + " may not be fully supported");
+                log.warn("Environment variable {} may not be fully supported", key);
             }
         }
 
@@ -142,27 +185,6 @@ public class MavenInvokerHelper {
     }
 
     private String lastInvocationOutput = "";
-
-    /**
-     * Gets the Maven home directory.
-     */
-    public File getMavenHome() {
-        return mavenHome;
-    }
-
-    /**
-     * Gets the local repository directory.
-     */
-    public File getLocalRepository() {
-        return localRepository;
-    }
-
-    /**
-     * Gets the user home directory.
-     */
-    public File getUserHome() {
-        return userHome;
-    }
 
     /**
      * Gets the output from the last invocation.

@@ -10,12 +10,14 @@ package eu.maveniverse.maven.njord.publisher.nx3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import eu.maveniverse.maven.njord.publisher.nx3.support.InvokerPropertiesParser;
 import eu.maveniverse.maven.njord.publisher.nx3.support.MavenInvokerHelper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
@@ -25,6 +27,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Integration test for deploying and publishing releases to Nexus Repository 3.
@@ -37,13 +41,17 @@ import org.junit.jupiter.api.condition.JRE;
  */
 class DeployReleaseIT extends AbstractNexusIT {
 
+    private static final Logger log = LoggerFactory.getLogger(DeployReleaseIT.class);
+
     private File projectDir;
 
     @BeforeEach
-    void setupTestProject() throws IOException {
+    void setupTestProject(org.junit.jupiter.api.TestInfo testInfo) throws IOException {
         // Copy test project to target directory (like maven-invoker-plugin does)
         // This makes it easier to debug by inspecting target/test-projects/
-        String testName = getCurrentTestName();
+        String testName = testInfo.getTestMethod()
+                .map(m -> m.getName())
+                .orElse("unknown-test");
         File targetTestProjects = Paths.get("target/test-projects").toFile();
         targetTestProjects.mkdirs();
 
@@ -57,35 +65,21 @@ class DeployReleaseIT extends AbstractNexusIT {
         FileUtils.copyDirectory(sourceProject, projectDir);
 
         // Perform property interpolation (like maven-invoker-plugin does)
-        interpolateFile(projectDir.toPath().resolve(".mvn/extensions.xml").toFile(), getProjectVersion());
+        interpolateFile(projectDir.toPath().resolve(".mvn/extensions.xml").toFile(), "@project.version@",
+                getProjectVersion());
 
-        System.out.println("[TEST] Test project copied to: " + projectDir.getAbsolutePath());
+        log.info("Test project copied to: {}", projectDir.getAbsolutePath());
     }
 
     /**
-     * Gets the current test method name for organizing test project directories.
+     * Replaces placeholders in a file.
      */
-    private String getCurrentTestName() {
-        // Use stack trace to get test method name
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        for (StackTraceElement element : stackTrace) {
-            if (element.getClassName().equals(this.getClass().getName())
-                    && element.getMethodName().startsWith("test")) {
-                return element.getMethodName();
-            }
-        }
-        return "unknown-test";
-    }
-
-    /**
-     * Replaces @project.version@ placeholders in a file with the actual project version.
-     */
-    private void interpolateFile(File file, String projectVersion) throws IOException {
+    private void interpolateFile(File file, String placeholder, String value) throws IOException {
         if (!file.exists()) {
             return;
         }
         String content = FileUtils.readFileToString(file, "UTF-8");
-        content = content.replace("@project.version@", projectVersion);
+        content = content.replace(placeholder, value);
         FileUtils.writeStringToFile(file, content, "UTF-8");
     }
 
@@ -101,11 +95,10 @@ class DeployReleaseIT extends AbstractNexusIT {
     }
 
     private void runDeployReleaseTest(String mavenVersion) throws MavenInvocationException, IOException {
-        System.out.println("[TEST] Running deploy-release test with Maven " + mavenVersion);
+        log.info("Running deploy-release test with Maven {}", mavenVersion);
 
         // Set up Maven invoker
-        File mavenHome =
-                Paths.get("target/dependency/apache-maven-" + mavenVersion).toFile();
+        File mavenHome = Paths.get("target/dependency/apache-maven-" + mavenVersion).toFile();
         if (!mavenHome.exists()) {
             throw new IllegalStateException(
                     "Maven distribution not found at: " + mavenHome + ". Run 'mvn generate-test-resources' first.");
@@ -113,61 +106,52 @@ class DeployReleaseIT extends AbstractNexusIT {
 
         MavenInvokerHelper invoker = new MavenInvokerHelper(mavenHome, getLocalRepository(), getUserHome());
 
-        // Environment variables for GPG
-        Map<String, String> env = new HashMap<>();
-        env.put("MAVEN_GPG_PASSPHRASE", "TEST");
-
-        // Additional properties
+        // Additional properties for interpolation
         Properties props = new Properties();
-        // Pass the Nexus URL with the actual mapped port
         props.setProperty("nexus.url", getNexusUrl());
 
-        // 1. Clean any existing stores
-        System.out.println("[TEST] Step 1: Cleaning existing artifact stores");
-        InvocationResult result1 = invoker.invoke(
-                projectDir,
-                java.util.Arrays.asList("-V", "-e", "njord:" + getProjectVersion() + ":drop-all", "-Dyes"),
-                props,
-                env);
-        assertEquals(0, result1.getExitCode(), "drop-all goal should succeed");
+        // Parse invoker.properties file
+        File invokerPropsFile = new File(projectDir, "invoker.properties");
+        if (!invokerPropsFile.exists()) {
+            throw new IllegalStateException("invoker.properties not found at: " + invokerPropsFile);
+        }
 
-        // 2. Deploy to local staging with signing
-        System.out.println("[TEST] Step 2: Deploying artifacts to local staging");
-        InvocationResult result2 = invoker.invoke(
-                projectDir,
-                java.util.Arrays.asList(
-                        "-V", "-e",
-                        "clean", "deploy",
-                        "-P", "release"),
-                props,
-                env);
-        assertEquals(0, result2.getExitCode(), "deploy goal should succeed");
+        Map<String, String> interpolationValues = new HashMap<>();
+        interpolationValues.put("project.version", getProjectVersion());
+        interpolationValues.put("nexus.url", getNexusUrl());
 
-        String deployOutput = invoker.getLastInvocationOutput();
-        assertThat(deployOutput)
-                .as("Deploy output should indicate Njord session created")
-                .contains("[INFO] Njord " + getProjectVersion() + " session created");
+        InvokerPropertiesParser parser = new InvokerPropertiesParser(invokerPropsFile, interpolationValues);
 
-        // 3. Publish to Nexus Repository
-        System.out.println("[TEST] Step 3: Publishing staged artifacts to Nexus");
-        InvocationResult result3 = invoker.invoke(
-                projectDir,
-                java.util.Arrays.asList(
-                        "-V",
-                        "-e",
-                        "njord:" + getProjectVersion() + ":publish",
-                        "-Dpublisher=sonatype-nx3",
-                        "-Ddetails"),
-                props,
-                env);
-        assertEquals(0, result3.getExitCode(), "publish goal should succeed");
+        // Get environment variables from invoker.properties
+        Map<String, String> env = parser.getEnvironmentVariables();
+        log.info("Environment variables from invoker.properties: {}", env);
 
-        String publishOutput = invoker.getLastInvocationOutput();
-        assertThat(publishOutput)
-                .as("Publish output should indicate publishing started")
-                .contains("[INFO] Publishing nx3-deploy-release-")
+        // Execute all goal invocations
+        List<InvokerPropertiesParser.GoalInvocation> invocations = parser.getGoalInvocations(projectDir);
+        log.info("Found {} goal invocation(s) in invoker.properties", invocations.size());
+
+        for (int i = 0; i < invocations.size(); i++) {
+            InvokerPropertiesParser.GoalInvocation invocation = invocations.get(i);
+            int stepNumber = i + 1;
+
+            log.info("Step {}: Executing goals: {}", stepNumber, String.join(" ", invocation.getGoals()));
+
+            InvocationResult result =
+                    invoker.invoke(projectDir, invocation.getGoals(), props, env, invocation.getLogFile());
+
+            assertEquals(0, result.getExitCode(), "Goal invocation " + stepNumber + " should succeed");
+
+            if (invocation.getLogFile() != null) {
+                log.info("Logs written to: {}", invocation.getLogFile().getAbsolutePath());
+            }
+        }
+
+        // Verify expected output
+        String lastOutput = invoker.getLastInvocationOutput();
+        assertThat(lastOutput)
+                .as("Last invocation output should indicate publishing")
                 .contains("sonatype-nx3");
 
-        System.out.println("[TEST] Deploy-release test completed successfully with Maven " + mavenVersion);
+        log.info("Deploy-release test completed successfully with Maven {}", mavenVersion);
     }
 }
