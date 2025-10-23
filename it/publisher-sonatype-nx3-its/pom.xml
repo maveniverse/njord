@@ -22,6 +22,15 @@
 
   <name>${project.groupId}:${project.artifactId}</name>
 
+  <properties>
+    <maven39Version>3.9.11</maven39Version>
+    <maven4Version>4.0.0-rc-3</maven4Version>
+    <groovyVersion>4.0.24</groovyVersion>
+
+    <!-- We need to skip this on Java lower than 17 (see profiles below) -->
+    <mvn4-its-run.skip>true</mvn4-its-run.skip>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <!-- Force consistent JUnit Platform versions -->
@@ -42,15 +51,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <properties>
-    <maven39Version>3.9.11</maven39Version>
-    <maven4Version>4.0.0-rc-3</maven4Version>
-    <groovyVersion>4.0.24</groovyVersion>
-
-    <!-- We need to skip this on Java lower than 17 (see profiles below) -->
-    <mvn4-its-run.skip>true</mvn4-its-run.skip>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -73,11 +73,11 @@
       <version>5.10.5</version>
       <scope>test</scope>
     </dependency>
-    <!-- SLF4J implementation for test logging -->
+    <!-- SLF4J implementation for test logging (match Testcontainers version) -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>2.0.16</version>
+      <version>1.7.36</version>
       <scope>test</scope>
     </dependency>
 
@@ -257,6 +257,26 @@
 <!--              </execution>-->
 <!--            </executions>-->
 <!--          </plugin>-->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-invoker-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>integration-test</id>
+                <phase>none</phase>
+              </execution>
+              <execution>
+                <id>its-install</id>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+                <phase>pre-integration-test</phase>
+                <configuration>
+                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>

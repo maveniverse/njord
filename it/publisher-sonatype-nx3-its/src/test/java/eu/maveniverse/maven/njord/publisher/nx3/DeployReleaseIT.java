@@ -25,7 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
-import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Integration test for deploying and publishing releases to Nexus Repository 3.
@@ -38,20 +37,56 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class DeployReleaseIT extends AbstractNexusIT {
 
-    @TempDir
-    Path tempDir;
-
     private File projectDir;
 
     @BeforeEach
     void setupTestProject() throws IOException {
-        // Copy test project from src/it to temp directory (same source as maven-invoker-plugin)
-        File sourceProject = Paths.get("src/it/deploy-release").toFile();
-        projectDir = tempDir.resolve("deploy-release").toFile();
+        // Copy test project to target directory (like maven-invoker-plugin does)
+        // This makes it easier to debug by inspecting target/test-projects/
+        String testName = getCurrentTestName();
+        File targetTestProjects = Paths.get("target/test-projects").toFile();
+        targetTestProjects.mkdirs();
 
+        File sourceProject = Paths.get("src/it/deploy-release").toFile();
+        projectDir = new File(targetTestProjects, testName + "/deploy-release");
+
+        // Clean and recreate
+        if (projectDir.exists()) {
+            FileUtils.deleteDirectory(projectDir);
+        }
         FileUtils.copyDirectory(sourceProject, projectDir);
 
+        // Perform property interpolation (like maven-invoker-plugin does)
+        interpolateFile(projectDir.toPath().resolve(".mvn/extensions.xml").toFile(), getProjectVersion());
+
         System.out.println("[TEST] Test project copied to: " + projectDir.getAbsolutePath());
+    }
+
+    /**
+     * Gets the current test method name for organizing test project directories.
+     */
+    private String getCurrentTestName() {
+        // Use stack trace to get test method name
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        for (StackTraceElement element : stackTrace) {
+            if (element.getClassName().equals(this.getClass().getName())
+                    && element.getMethodName().startsWith("test")) {
+                return element.getMethodName();
+            }
+        }
+        return "unknown-test";
+    }
+
+    /**
+     * Replaces @project.version@ placeholders in a file with the actual project version.
+     */
+    private void interpolateFile(File file, String projectVersion) throws IOException {
+        if (!file.exists()) {
+            return;
+        }
+        String content = FileUtils.readFileToString(file, "UTF-8");
+        content = content.replace("@project.version@", projectVersion);
+        FileUtils.writeStringToFile(file, content, "UTF-8");
     }
 
     @Test
@@ -84,6 +119,8 @@ class DeployReleaseIT extends AbstractNexusIT {
 
         // Additional properties
         Properties props = new Properties();
+        // Pass the Nexus URL with the actual mapped port
+        props.setProperty("nexus.url", getNexusUrl());
 
         // 1. Clean any existing stores
         System.out.println("[TEST] Step 1: Cleaning existing artifact stores");
