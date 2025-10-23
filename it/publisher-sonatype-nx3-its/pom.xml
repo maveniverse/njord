@@ -18,7 +18,7 @@
   </parent>
 
   <artifactId>publisher-sonatype-nx3-its</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
 
@@ -43,6 +43,50 @@
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>sonatype-nx3</artifactId>
+    </dependency>
+
+    <!-- Testing Framework -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.11.4</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>1.20.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>1.20.4</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Maven Invoker (programmatic usage) -->
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-invoker</artifactId>
+      <version>3.3.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Utilities -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.27.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.18.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -182,6 +226,25 @@
                   <postBuildHookScript>verify</postBuildHookScript>
                   <addTestClassPath>false</addTestClassPath>
                 </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <maven39Version>${maven39Version}</maven39Version>
+                <maven4Version>${maven4Version}</maven4Version>
+                <project.version>${project.version}</project.version>
+              </systemPropertyVariables>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
