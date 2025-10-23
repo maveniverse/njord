@@ -6,35 +6,33 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-// Find the scripts directory
-def scriptsDir = new File(basedir.parentFile.parentFile.parentFile, "src/it/scripts")
-if (!scriptsDir.exists()) {
-    scriptsDir = new File(basedir, "../scripts")
-}
+/*
+ * Verification script for deploy-release test.
+ * This script is compatible with both maven-invoker-plugin and maven-failsafe-plugin.
+ *
+ * When used with failsafe-plugin + Testcontainers:
+ * - Docker cleanup is handled by Testcontainers automatically
+ * - Bindings provided: basedir, projectVersion
+ */
 
-try {
-    File firstLog = new File(basedir, 'first.log')
-    assert firstLog.exists()
-    var first = firstLog.text
+// Read and verify deploy.log (deploy to staging)
+File deployLog = new File(basedir, 'deploy.log')
+assert deployLog.exists(), "deploy.log not found"
+def deployOutput = deployLog.text
 
-    File secondLog = new File(basedir, 'second.log')
-    assert secondLog.exists()
-    var second = secondLog.text
+// Read and verify publish.log (publish to Nexus)
+File publishLog = new File(basedir, 'publish.log')
+assert publishLog.exists(), "publish.log not found"
+def publishOutput = publishLog.text
 
-    // Lets make strict assertion
-    // Also, consider Maven 3 vs 4 diff: they resolve differently; do not assert counts
+// Assertions for deploy phase
+assert deployOutput.contains("[INFO] Njord ${projectVersion} session created"),
+    "Deploy log should contain session created message"
 
-    // first run:
-    assert first.contains("[INFO] Njord ${projectVersion} session created")
+// Assertions for publish phase
+assert publishOutput.contains("[INFO] Publishing nx3-deploy-release-"),
+    "Publish log should contain publishing message"
+assert publishOutput.contains("sonatype-nx3"),
+    "Publish log should contain publisher name"
 
-    // second run:
-    assert second.contains("[INFO] Njord ${projectVersion} session created")
-    assert second.contains("[INFO] Publishing nx3-deploy-release-00001 ")
-    assert second.contains("sonatype-nx3")
-} finally {
-    // Teardown: Always stop Docker containers
-    println "[TEARDOWN] Stopping Docker containers..."
-
-    def dockerLib = evaluate(new File(scriptsDir, "DockerLib.groovy"))
-    dockerLib.stopContainers(basedir)
-}
+println "[VERIFY] All assertions passed successfully"

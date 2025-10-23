@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.nx3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import eu.maveniverse.maven.njord.publisher.nx3.support.GroovyScriptRunner;
 import eu.maveniverse.maven.njord.publisher.nx3.support.InvokerPropertiesParser;
 import eu.maveniverse.maven.njord.publisher.nx3.support.MavenInvokerHelper;
 import java.io.File;
@@ -146,7 +147,11 @@ class DeployReleaseIT extends AbstractNexusIT {
             }
         }
 
-        // Verify expected output
+        // Run verify.groovy script if it exists (maven-invoker-plugin compatibility)
+        log.info("Checking for verify.groovy script...");
+        GroovyScriptRunner.runVerifyScript(projectDir, getProjectVersion());
+
+        // Additional Java assertions (optional, verify.groovy may handle most)
         String lastOutput = invoker.getLastInvocationOutput();
         assertThat(lastOutput)
                 .as("Last invocation output should indicate publishing")
