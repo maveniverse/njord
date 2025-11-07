@@ -51,8 +51,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
         requireNonNull(repositoryMode);
 
-        HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
+        HashMap<String, String> config = new HashMap<>();
         configuration(repository.getId(), false).ifPresent(config::putAll);
+        config.putAll(session.config().effectiveProperties());
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
             String redirectUrl;
             switch (repositoryMode) {
@@ -151,8 +152,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 return Optional.of(name);
             } else {
                 // see is name a server id (w/ config) and return configured publisher
-                HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
+                HashMap<String, String> config = new HashMap<>();
                 configuration(name, false).ifPresent(config::putAll);
+                config.putAll(session.config().effectiveProperties());
                 String originServerId = config.getOrDefault(SessionConfig.SERVER_ID_KEY, "<properties>");
                 String publisher = config.get(SessionConfig.CONFIG_PUBLISHER);
                 if (publisher != null
