@@ -62,6 +62,11 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
     }
 
     @Override
+    public boolean isConfigured() {
+        return serviceReleaseRepository != null || targetReleaseRepository != null;
+    }
+
+    @Override
     public Optional<RemoteRepository> targetReleaseRepository() {
         return Optional.ofNullable(targetReleaseRepository);
     }
@@ -120,7 +125,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
                 : serviceSnapshotRepository;
         if (repository == null) {
             throw new IllegalArgumentException("Repository mode " + artifactStore.repositoryMode()
-                    + " not supported; provide RemoteRepository for it");
+                    + " not supported; configure RemoteRepository for it");
         }
         return repository;
     }
