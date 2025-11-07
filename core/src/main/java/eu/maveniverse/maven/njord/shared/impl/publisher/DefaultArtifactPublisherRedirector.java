@@ -77,10 +77,10 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
 
         RemoteRepository authSource = repository;
-        Optional<Map<String, String>> config = configuration(authSource.getId(), true);
-        if (config.isPresent()) {
+        Map<String, String> config = effectiveConfiguration(repository.getId(), true);
+        if (config.containsKey(SessionConfig.SERVER_ID_KEY)) {
             authSource = new RemoteRepository.Builder(
-                            requireNonNull(config.orElseThrow(J8Utils.OET).get(SessionConfig.SERVER_ID_KEY)),
+                            requireNonNull(config.get(SessionConfig.SERVER_ID_KEY)),
                             authSource.getContentType(),
                             authSource.getUrl())
                     .build();
@@ -176,13 +176,16 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
     /**
      * Creates "effective" server configuration by properly factoring in possible server configuration. Returns a mutable
-     * map of properties.
+     * map of properties. Is configuration for asked {@code serverId} existing, can be queried by the presence of the
+     * {@link SessionConfig#SERVER_ID_KEY} key in the returned map.
      */
     protected Map<String, String> effectiveConfiguration(String serverId, boolean followAuthRedirection) {
         HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
-        configuration(serverId, followAuthRedirection).ifPresent(config::putAll);
-        session.config().currentProject().ifPresent(project -> config.putAll(project.projectProperties()));
-        config.putAll(session.config().userProperties());
+        configuration(serverId, followAuthRedirection).ifPresent(server -> {
+            config.putAll(server);
+            session.config().currentProject().ifPresent(project -> config.putAll(project.projectProperties()));
+            config.putAll(session.config().userProperties());
+        });
         return config;
     }
 
