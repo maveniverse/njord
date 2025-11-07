@@ -51,9 +51,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
         requireNonNull(repositoryMode);
 
-        HashMap<String, String> config = new HashMap<>();
-        configuration(repository.getId(), false).ifPresent(config::putAll);
-        config.putAll(session.config().effectiveProperties());
+        Map<String, String> config = effectiveConfiguration(repository.getId(), false);
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
             String redirectUrl;
             switch (repositoryMode) {
@@ -152,9 +150,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 return Optional.of(name);
             } else {
                 // see is name a server id (w/ config) and return configured publisher
-                HashMap<String, String> config = new HashMap<>();
-                configuration(name, false).ifPresent(config::putAll);
-                config.putAll(session.config().effectiveProperties());
+                Map<String, String> config = effectiveConfiguration(name, false);
                 String originServerId = config.getOrDefault(SessionConfig.SERVER_ID_KEY, "<properties>");
                 String publisher = config.get(SessionConfig.CONFIG_PUBLISHER);
                 if (publisher != null
@@ -176,6 +172,18 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             }
         }
         return getArtifactStorePublisherName();
+    }
+
+    /**
+     * Creates "effective" server configuration by properly factoring in possible server configuration. Returns a mutable
+     * map of properties.
+     */
+    protected Map<String, String> effectiveConfiguration(String serverId, boolean followAuthRedirection) {
+        HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
+        configuration(serverId, followAuthRedirection).ifPresent(config::putAll);
+        session.config().currentProject().ifPresent(project -> config.putAll(project.projectProperties()));
+        config.putAll(session.config().userProperties());
+        return config;
     }
 
     /**
