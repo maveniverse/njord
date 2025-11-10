@@ -19,15 +19,21 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DeploymentRepository;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.configuration.PlexusConfiguration;
+import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -186,6 +192,25 @@ public interface SessionConfig {
     Optional<String> prefix();
 
     /**
+     * Returns configuration for all configured servers (those having it).
+     */
+    Map<String, Map<String, String>> serverConfigurations();
+
+    /**
+     * This key is always inserted into map returned by {@link #serverConfiguration(String)} carrying the
+     * "origin server ID".
+     */
+    String SERVER_ID_KEY = "_serverId";
+
+    /**
+     * Server configuration that is built from Maven Settings XML servers. The server (or its config) may or may
+     * not be present, this is reflected by {@link Optional}.
+     * The map (if present) always contains mapping with key {@link #SERVER_ID_KEY} that contains server ID that
+     * configuration originates from.
+     */
+    Optional<Map<String, String>> serverConfiguration(String id);
+
+    /**
      * Shim for "current project". Provides needed information from project.
      */
     interface CurrentProject {
@@ -242,6 +267,7 @@ public interface SessionConfig {
                 systemProperties(),
                 session(),
                 remoteRepositories(),
+                serverConfigurations(),
                 currentProject().orElse(null));
     }
 
@@ -262,6 +288,7 @@ public interface SessionConfig {
                 session.getSystemProperties(),
                 session,
                 remoteRepositories,
+                extractServerConfigurations(session.getConfigProperties()),
                 null);
     }
 
@@ -335,6 +362,7 @@ public interface SessionConfig {
         private Map<String, String> systemProperties;
         private RepositorySystemSession session;
         private List<RemoteRepository> remoteRepositories;
+        private Map<String, Map<String, String>> serverConfiguration;
         private CurrentProject currentProject;
 
         public Builder(
@@ -347,6 +375,7 @@ public interface SessionConfig {
                 Map<String, String> systemProperties,
                 RepositorySystemSession session,
                 List<RemoteRepository> remoteRepositories,
+                Map<String, Map<String, String>> serverConfiguration,
                 CurrentProject currentProject) {
             this.enabled = enabled;
             this.dryRun = dryRun;
@@ -357,6 +386,7 @@ public interface SessionConfig {
             this.systemProperties = systemProperties;
             this.session = session;
             this.remoteRepositories = remoteRepositories;
+            this.serverConfiguration = serverConfiguration;
             this.currentProject = currentProject;
         }
 
@@ -400,6 +430,11 @@ public interface SessionConfig {
             return this;
         }
 
+        public Builder serverConfiguration(Map<String, Map<String, String>> serverConfiguration) {
+            this.serverConfiguration = requireNonNull(serverConfiguration);
+            return this;
+        }
+
         public Builder currentProject(CurrentProject currentProject) {
             this.currentProject = currentProject;
             return this;
@@ -416,6 +451,7 @@ public interface SessionConfig {
                     systemProperties,
                     session,
                     remoteRepositories,
+                    serverConfiguration,
                     currentProject);
         }
 
@@ -435,6 +471,7 @@ public interface SessionConfig {
             private final boolean autoPublish;
             private final boolean autoDrop;
             private final String prefix;
+            private final Map<String, Map<String, String>> serverConfigurations;
             private final CurrentProject currentProject;
 
             private Impl(
@@ -447,6 +484,7 @@ public interface SessionConfig {
                     Map<String, String> systemProperties,
                     RepositorySystemSession session,
                     List<RemoteRepository> remoteRepositories,
+                    Map<String, Map<String, String>> serverConfigurations,
                     CurrentProject currentProject) {
                 this.version = requireNonNull(version, "version");
                 this.currentProject = currentProject; // nullable
@@ -511,6 +549,7 @@ public interface SessionConfig {
                     prefixString = currentProject.artifact().getArtifactId();
                 }
                 this.prefix = prefixString;
+                this.serverConfigurations = J8Utils.copyOf(requireNonNull(serverConfigurations, "serverConfiguration"));
             }
 
             @Override
@@ -588,9 +627,79 @@ public interface SessionConfig {
             }
 
             @Override
+            public Map<String, Map<String, String>> serverConfigurations() {
+                return serverConfigurations;
+            }
+
+            @Override
+            public Optional<Map<String, String>> serverConfiguration(String id) {
+                return Optional.ofNullable(serverConfigurations.get(id));
+            }
+
+            @Override
             public Optional<CurrentProject> currentProject() {
                 return Optional.ofNullable(currentProject);
             }
         }
+    }
+
+    /**
+     * Extracts Njord configuration from Maven Resolver configuration properties.
+     * @param configProperties the Maven resolver config properties
+     * @return A map containing a Map with configuration entries. The key of the outer map is the server id.
+     * The key of the inner map is the configuration property name.
+     */
+    static Map<String, Map<String, String>> extractServerConfigurations(Map<String, Object> configProperties) {
+        return configProperties.entrySet().stream()
+                .map(e -> {
+                    final String serverId;
+                    serverId = extractServerId(e.getKey());
+                    if (serverId == null) {
+                        return null;
+                    }
+                    Map<String, String> serviceConfiguration = extractNjordConfiguration(e.getValue(), serverId);
+                    return new AbstractMap.SimpleEntry<>(serverId, serviceConfiguration);
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
+    /**
+     * Extracts the populating server id from a Maven Resolver configuration key.
+     * @param configKey the configuration key
+     * @return the server id to which the given key belongs or {@code null} if not belonging to a server section
+     * @see <a href="https://github.com/apache/maven/blob/f06732524589040a63f8595bb4d1f24cca82d14c/impl/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java#L241">Maven 4 DefaultRepositorySystemSessionFactory</a>
+     * @see <a href="https://github.com/apache/maven/blob/3e54c93a704957b63ee3494413a2b544fd3d825b/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java#L252">Maven 3 DefaultRepositorySystemSessionFactory</a>
+     */
+    static String extractServerId(String configKey) {
+        final String serverId;
+        if (configKey.startsWith("aether.transport.wagon.config.")) {
+            serverId = configKey.substring("aether.transport.wagon.config.".length());
+        } else if (configKey.startsWith("aether.connector.wagon.config.")) {
+            serverId = configKey.substring("aether.connector.wagon.config.".length());
+        } else {
+            serverId = null;
+        }
+        return serverId;
+    }
+
+    static Map<String, String> extractNjordConfiguration(Object configValue, String serverId) {
+        PlexusConfiguration config;
+        if (configValue instanceof PlexusConfiguration) {
+            config = (PlexusConfiguration) configValue;
+        } else if (configValue instanceof Xpp3Dom) {
+            config = new XmlPlexusConfiguration((Xpp3Dom) configValue);
+        } else {
+            throw new IllegalArgumentException(
+                    "unexpected configuration type: " + configValue.getClass().getName());
+        }
+        Map<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
+        serviceConfiguration.put(SERVER_ID_KEY, serverId);
+        for (PlexusConfiguration child : config.getChildren()) {
+            if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
+                serviceConfiguration.put(child.getName(), child.getValue());
+            }
+        }
+        return serviceConfiguration;
     }
 }
