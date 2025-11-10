@@ -19,12 +19,15 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DeploymentRepository;
 import org.apache.maven.project.MavenProject;
@@ -640,41 +643,63 @@ public interface SessionConfig {
         }
     }
 
+    /**
+     * Extracts Njord configuration from Maven Resolver configuration properties.
+     * @param configProperties the Maven resolver config properties
+     * @return A map containing a Map with configuration entries. The key of the outer map is the server id.
+     * The key of the inner map is the configuration property name.
+     */
     static Map<String, Map<String, String>> extractServerConfigurations(Map<String, Object> configProperties) {
-        HashMap<String, Map<String, String>> serverConfigurations = new HashMap<>();
-        configProperties.entrySet().stream()
-                .filter(e -> e.getKey().startsWith("aether.transport.wagon.config.")
-                        || e.getKey().startsWith("aether.connector.wagon.config."))
-                .forEach(e -> {
-                    Object value = e.getValue();
-                    if (value != null) {
-                        String serverId;
-                        if (e.getKey().startsWith("aether.transport.wagon.config.")) {
-                            serverId = e.getKey().substring("aether.transport.wagon.config.".length());
-                        } else if (e.getKey().startsWith("aether.connector.wagon.config.")) {
-                            serverId = e.getKey().substring("aether.connector.wagon.config.".length());
-                        } else {
-                            throw new IllegalArgumentException("unexpected configuration key: " + e.getKey());
-                        }
-                        PlexusConfiguration config;
-                        if (value instanceof PlexusConfiguration) {
-                            config = (PlexusConfiguration) value;
-                        } else if (value instanceof Xpp3Dom) {
-                            config = new XmlPlexusConfiguration((Xpp3Dom) value);
-                        } else {
-                            throw new IllegalArgumentException("unexpected configuration type: "
-                                    + value.getClass().getName());
-                        }
-                        HashMap<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
-                        serviceConfiguration.put(SERVER_ID_KEY, serverId);
-                        for (PlexusConfiguration child : config.getChildren()) {
-                            if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
-                                serviceConfiguration.put(child.getName(), child.getValue());
-                            }
-                        }
-                        serverConfigurations.put(serverId, serviceConfiguration);
+        return configProperties.entrySet().stream()
+                .map(e -> {
+                    final String serverId;
+                    serverId = extractServerId(e.getKey());
+                    if (serverId == null) {
+                        return null;
                     }
-                });
-        return serverConfigurations;
+                    Map<String, String> serviceConfiguration = extractNjordConfiguration(e.getValue(), serverId);
+                    return new AbstractMap.SimpleEntry<>(serverId, serviceConfiguration);
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
+    /**
+     * Extracts the populating server id from a Maven Resolver configuration key.
+     * @param configKey the configuration key
+     * @return the server id to which the given key belongs or {@code null} if not belonging to a server section
+     * @see <a href="https://github.com/apache/maven/blob/f06732524589040a63f8595bb4d1f24cca82d14c/impl/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java#L241">Maven 4 DefaultRepositorySystemSessionFactory</a>
+     * @see <a href="https://github.com/apache/maven/blob/3e54c93a704957b63ee3494413a2b544fd3d825b/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java#L252">Maven 3 DefaultRepositorySystemSessionFactory</a>
+     */
+    static String extractServerId(String configKey) {
+        final String serverId;
+        if (configKey.startsWith("aether.transport.wagon.config.")) {
+            serverId = configKey.substring("aether.transport.wagon.config.".length());
+        } else if (configKey.startsWith("aether.connector.wagon.config.")) {
+            serverId = configKey.substring("aether.connector.wagon.config.".length());
+        } else {
+            serverId = null;
+        }
+        return serverId;
+    }
+
+    static Map<String, String> extractNjordConfiguration(Object configValue, String serverId) {
+        PlexusConfiguration config;
+        if (configValue instanceof PlexusConfiguration) {
+            config = (PlexusConfiguration) configValue;
+        } else if (configValue instanceof Xpp3Dom) {
+            config = new XmlPlexusConfiguration((Xpp3Dom) configValue);
+        } else {
+            throw new IllegalArgumentException(
+                    "unexpected configuration type: " + configValue.getClass().getName());
+        }
+        Map<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
+        serviceConfiguration.put(SERVER_ID_KEY, serverId);
+        for (PlexusConfiguration child : config.getChildren()) {
+            if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
+                serviceConfiguration.put(child.getName(), child.getValue());
+            }
+        }
+        return serviceConfiguration;
     }
 }
