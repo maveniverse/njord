@@ -80,22 +80,14 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
     }
 
     static boolean isDistributionRepo(RemoteRepository repository, SessionConfig config) {
-        if (config.currentProject().isPresent()) {
-            RemoteRepository distributionRepository = config.currentProject()
-                    .orElseThrow(J8Utils.OET)
-                    .distributionManagementRepositories()
-                    .get(config.currentProject().orElseThrow(J8Utils.OET).repositoryMode());
-            if (distributionRepository != null
-                    && !distributionRepository.getId().equals(repository.getId())) {
+        Optional<String> deploymentRepoId = config.deploymentRepositoryId();
+        if (deploymentRepoId.isPresent()) {
+            if (!deploymentRepoId.get().equals(repository.getId())) {
                 logger.debug(
-                        "Repository {} is not having the id of the project's distribution repository {}",
+                        "Repository {} is not having the deployment repository id {}",
                         repository,
-                        distributionRepository);
+                        deploymentRepoId.get());
                 return false;
-            } else {
-                logger.debug(
-                        "Haven't found project's distribution repository for repository mode {}",
-                        config.currentProject().orElseThrow(J8Utils.OET).repositoryMode());
             }
         } else {
             logger.debug("No project available every repository may be a distribution one");

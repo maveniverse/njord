@@ -123,19 +123,12 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             }
         }
         if (session.config().currentProject().isPresent()) {
-            RemoteRepository distributionRepository = session.config()
-                    .currentProject()
-                    .orElseThrow(J8Utils.OET)
-                    .distributionManagementRepositories()
-                    .get(session.config()
-                            .currentProject()
-                            .orElseThrow(J8Utils.OET)
-                            .repositoryMode());
-            if (distributionRepository != null && distributionRepository.getId() != null) {
+            Optional<String> deploymentRepositoryId = session.config().deploymentRepositoryId();
+            if (deploymentRepositoryId.isPresent()) {
                 logger.debug(
                         "Trying current project distribution management repository ID {}",
-                        distributionRepository.getId());
-                return getArtifactStorePublisherName(distributionRepository.getId());
+                        deploymentRepositoryId.get());
+                return getArtifactStorePublisherName(deploymentRepositoryId.get());
             }
         }
         return Optional.empty();

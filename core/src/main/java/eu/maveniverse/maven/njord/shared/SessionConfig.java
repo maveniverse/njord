@@ -111,6 +111,19 @@ public interface SessionConfig {
     boolean enabled();
 
     /**
+     *
+     * @return the repository id used for deployment in the current project's repository mode or empty if unknown
+     */
+    Optional<String> deploymentRepositoryId();
+
+    /**
+     *
+     * @param mode the repository mode
+     * @return the repository id used for deployment in the given mode or empty if unknown
+     */
+    Optional<String> deploymentRepositoryId(RepositoryMode mode);
+
+    /**
      * If this returns {@code true}, no any kind of "irrevocable" operation will happen.
      */
     boolean dryRun();
@@ -639,6 +652,31 @@ public interface SessionConfig {
             @Override
             public Optional<CurrentProject> currentProject() {
                 return Optional.ofNullable(currentProject);
+            }
+
+            @Override
+            public Optional<String> deploymentRepositoryId() {
+                if (currentProject().isPresent()) {
+                    RepositoryMode mode =
+                            currentProject().orElseThrow(J8Utils.OET).repositoryMode();
+                    return deploymentRepositoryId(mode);
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<String> deploymentRepositoryId(RepositoryMode mode) {
+                requireNonNull(mode);
+                if (currentProject().isPresent()) {
+                    RemoteRepository repository = currentProject()
+                            .orElseThrow(J8Utils.OET)
+                            .distributionManagementRepositories()
+                            .get(mode);
+                    if (repository != null) {
+                        return Optional.of(repository.getId());
+                    }
+                }
+                return Optional.empty();
             }
         }
     }
