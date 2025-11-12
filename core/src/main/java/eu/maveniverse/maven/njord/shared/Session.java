@@ -116,4 +116,10 @@ public interface Session extends Closeable {
      * Cleans up "best effort" and reports failures as warnings.
      */
     int dropSessionArtifactStores();
+
+    /**
+     * Overwrite the wrapped {@link SessionConfig} with the given value
+     * @param sessionConfig the new session config to associate with this session
+     */
+    void setSessionConfig(SessionConfig sessionConfig);
 }

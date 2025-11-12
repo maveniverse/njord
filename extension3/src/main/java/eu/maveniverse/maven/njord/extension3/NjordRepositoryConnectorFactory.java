@@ -90,7 +90,7 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                 return false;
             }
         } else {
-            logger.debug("No project available every repository may be a distribution one");
+            logger.debug("No project available, every repository may be a distribution one");
         }
         return true;
     }

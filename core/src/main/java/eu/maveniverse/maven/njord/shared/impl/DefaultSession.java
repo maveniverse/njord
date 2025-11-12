@@ -27,7 +27,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
-import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
+import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
@@ -44,7 +44,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
+public class DefaultSession extends CloseableSupport implements Session {
     private final String sessionBoundStoreKey;
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
@@ -53,6 +53,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
     private final MavenModelReaderImpl mavenModelReader;
+    private SessionConfig config;
 
     public DefaultSession(
             SessionConfig sessionConfig,
@@ -63,7 +64,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
-        super(sessionConfig);
+        this.config = sessionConfig;
         this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
@@ -80,6 +81,11 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public SessionConfig config() {
         return config;
+    }
+
+    @Override
+    public void setSessionConfig(SessionConfig sessionConfig) {
+        this.config = sessionConfig;
     }
 
     @Override

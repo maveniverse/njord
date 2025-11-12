@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -363,6 +364,41 @@ public interface SessionConfig {
             };
         }
         return null;
+    }
+
+    static CurrentProject currentProjectWithAlternativeDeploymentRepositories(
+            CurrentProject currentProject, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+        final Map<RepositoryMode, RemoteRepository> distributionManagementRepositories =
+                new EnumMap<>(RepositoryMode.class);
+        distributionManagementRepositories.put(RepositoryMode.RELEASE, releasesRepository);
+        distributionManagementRepositories.put(RepositoryMode.SNAPSHOT, snapshotsRepository);
+        return new CurrentProject() {
+
+            @Override
+            public Artifact artifact() {
+                return currentProject.artifact();
+            }
+
+            @Override
+            public Map<String, String> projectProperties() {
+                return currentProject.projectProperties();
+            }
+
+            @Override
+            public List<RemoteRepository> remoteRepositories() {
+                return currentProject.remoteRepositories();
+            }
+
+            @Override
+            public Map<RepositoryMode, RemoteRepository> distributionManagementRepositories() {
+                return distributionManagementRepositories;
+            }
+
+            @Override
+            public Path buildDirectory() {
+                return currentProject.buildDirectory();
+            }
+        };
     }
 
     class Builder {

@@ -11,12 +11,14 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.SessionConfig.CurrentProject;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -68,6 +70,14 @@ public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
             snapshotsRepository = new RemoteRepository.Builder(bare)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
+            Optional<CurrentProject> currentProject = session.config().currentProject();
+            if (currentProject.isPresent()) {
+                SessionConfig.Builder builder = session.config().toBuilder()
+                        .currentProject(SessionConfig.currentProjectWithAlternativeDeploymentRepositories(
+                                currentProject.orElseThrow(J8Utils.OET), releasesRepository, snapshotsRepository));
+                // overwrite session config
+                session.setSessionConfig(builder.build());
+            }
         } else if (session.config().currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
                     session.config().currentProject().orElseThrow(J8Utils.OET);
