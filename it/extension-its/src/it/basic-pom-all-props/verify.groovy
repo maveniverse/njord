@@ -14,4 +14,5 @@ var first = firstLog.text
 
 // first run:
 assert first.contains("[INFO] Njord ${projectVersion} session created")
+assert first.contains("INFO] Uploading to basic-pom-all-props-00001:")
 assert first.contains("[INFO] BUILD SUCCESS")
