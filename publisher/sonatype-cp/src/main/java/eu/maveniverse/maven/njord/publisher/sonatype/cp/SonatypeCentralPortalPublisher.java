@@ -48,7 +48,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.json.JSONObject;
 
 public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSupport {
-    private static final String CENTRAL_DEPLOYMENTS_URL = "https://central.sonatype.com/publishing/deployments";
+    private static final String CENTRAL_DEPLOYMENTS_URL = "https://central.sonatype.com/publishing";
     private final SonatypeCentralPortalPublisherConfig publisherConfig;
     private final MavenHttpClient4FactoryImpl mhc4;
 
