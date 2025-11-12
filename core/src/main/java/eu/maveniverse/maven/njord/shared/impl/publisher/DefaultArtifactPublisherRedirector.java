@@ -52,7 +52,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repositoryMode);
 
         Map<String, String> config = effectiveConfiguration(repository.getId(), false);
-        if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
+        if (config.containsKey(SessionConfig.SERVER_ID_KEY)
+                && !repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
             String redirectUrl;
             switch (repositoryMode) {
                 case RELEASE:

@@ -16,6 +16,46 @@
     <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
+    <description>Just to pass validation</description>
+    <url>http://justtopassvalidation.foobar</url>
+
+    <licenses>
+      <license>
+        <name>EPLv2</name>
+        <url>https://www.eclipse.org/legal/epl-v20.html</url>
+      </license>
+    </licenses>
+
+    <developers>
+      <developer>
+        <id>to not have warning</id>
+        <email>to not have warning</email>
+        <name>Maveniverse Team</name>
+        <organization>Maveniverse Team</organization>
+      </developer>
+    </developers>
+
+    <scm>
+      <connection>scm:git:git@github.com:maveniverse/njord.git</connection>
+      <developerConnection>scm:git:git@github.com:maveniverse/njord.git</developerConnection>
+      <tag>HEAD</tag>
+      <url>https://github.com/maveniverse/njord</url>
+    </scm>
+
+    <distributionManagement>
+      <repository>
+        <id>deploy-release-service</id>
+        <name>Project Release Target</name>
+        <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
+        <url>file:${basedir}/target/releases</url>
+      </repository>
+      <snapshotRepository>
+        <id>deploy-release-service</id>
+        <name>Project Snapshot Target</name>
+        <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
+        <url>file:${basedir}/target/snapshots</url>
+      </snapshotRepository>
+    </distributionManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
