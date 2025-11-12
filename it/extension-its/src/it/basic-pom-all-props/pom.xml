@@ -44,13 +44,13 @@
 
     <distributionManagement>
       <repository>
-        <id>deploy-release-service</id>
+        <id>pom-all-props-server</id>
         <name>Project Release Target</name>
         <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
         <url>file:${basedir}/target/releases</url>
       </repository>
       <snapshotRepository>
-        <id>deploy-release-service</id>
+        <id>pom-all-props-server</id>
         <name>Project Snapshot Target</name>
         <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
         <url>file:${basedir}/target/snapshots</url>
