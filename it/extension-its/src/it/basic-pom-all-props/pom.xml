@@ -46,14 +46,14 @@
       <repository>
         <id>pom-all-props-server</id>
         <name>Project Release Target</name>
-        <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
-        <url>file:${basedir}/target/releases</url>
+        <!-- bad URL; to fail if m-deploy-p tries to deploy -->
+        <url>https://example.com/invalid</url>
       </repository>
       <snapshotRepository>
         <id>pom-all-props-server</id>
         <name>Project Snapshot Target</name>
-        <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
-        <url>file:${basedir}/target/snapshots</url>
+        <!-- bad URL; to fail if m-deploy-p tries to deploy -->
+        <url>https://example.com/invalid</url>
       </snapshotRepository>
     </distributionManagement>
 

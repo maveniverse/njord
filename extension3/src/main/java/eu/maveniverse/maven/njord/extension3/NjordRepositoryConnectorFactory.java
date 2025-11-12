@@ -66,6 +66,9 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                     return new NjordRepositoryConnector(
                             artifactStore,
                             repository,
+                            repository.getUrl() != null && !repository.getUrl().startsWith(NAME + ":")
+                                    ? basicRepositoryConnectorFactory.newInstance(session, repository)
+                                    : null,
                             basicRepositoryConnectorFactory.newInstance(
                                     artifactStore.storeRepositorySession(session),
                                     artifactStore.storeRemoteRepository()));
