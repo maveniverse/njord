@@ -38,6 +38,9 @@ public class MavenServerHelper {
                         return null;
                     }
                     Map<String, String> serviceConfiguration = extractNjordConfiguration(e.getValue(), serverId);
+                    if (serviceConfiguration.isEmpty()) {
+                        return null;
+                    }
                     return new AbstractMap.SimpleEntry<>(serverId, serviceConfiguration);
                 })
                 .filter(Objects::nonNull)
@@ -77,11 +80,13 @@ public class MavenServerHelper {
                     "unexpected configuration type: " + configValue.getClass().getName());
         }
         Map<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
-        serviceConfiguration.put(SessionConfig.SERVER_ID_KEY, serverId);
         for (PlexusConfiguration child : config.getChildren()) {
             if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
                 serviceConfiguration.put(child.getName(), child.getValue());
             }
+        }
+        if (!serviceConfiguration.isEmpty()) {
+            serviceConfiguration.put(SessionConfig.SERVER_ID_KEY, serverId);
         }
         return serviceConfiguration;
     }
