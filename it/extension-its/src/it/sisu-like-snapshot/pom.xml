@@ -44,15 +44,15 @@
 
     <distributionManagement>
         <repository>
-            <id>sonatype-cp-service</id>
-            <name>Sonatype Central Portal</name>
-            <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
-        <snapshotRepository>
-            <id>sonatype-cp-service</id>
-            <name>Sonatype Central Portal</name>
-            <url>https://central.sonatype.com/repository/maven-snapshots</url>
-        </snapshotRepository>
+          <id>black-hole-service</id>
+          <name>Black Hole Service</name>
+          <url>https://maveniverse.eu/releases</url>
+      </repository>
+      <snapshotRepository>
+          <id>black-hole-service</id>
+          <name>Black Hole Service</name>
+          <url>https://maveniverse.eu/snapshots</url>
+      </snapshotRepository>
     </distributionManagement>
 
     <properties>

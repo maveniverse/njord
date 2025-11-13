@@ -305,8 +305,9 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
 
     @Override
     public String toString() {
-        String origin =
-                originProjectArtifact == null ? "" : " from " + ArtifactIdUtils.toId(originProjectArtifact) + " ";
+        String origin = originProjectArtifact == null
+                ? ""
+                : " staged from " + ArtifactIdUtils.toId(originProjectArtifact) + " ";
         if (closed.get()) {
             return String.format(
                     "%s%s(%s, %s, %s, closed)",

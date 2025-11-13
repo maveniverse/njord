@@ -5,36 +5,41 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.deploy;
+package eu.maveniverse.maven.njord.shared.publisher.blackhole;
 
-import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class DeployPublisher extends ArtifactStorePublisherSupport {
-    public DeployPublisher(
+/**
+ * Black hole publisher (or like {@code /dev/null} device), publisher that does not publish anything.
+ * Usable for testing.
+ */
+public class BlackHolePublisher extends ArtifactStorePublisherSupport {
+    private final boolean fail;
+
+    public BlackHolePublisher(
             Session session,
             RepositorySystem repositorySystem,
             RemoteRepository releasesRepository,
             RemoteRepository snapshotsRepository,
-            ArtifactStoreRequirements artifactStoreRequirements) {
+            ArtifactStoreRequirements artifactStoreRequirements,
+            boolean fail) {
         super(
                 session,
                 repositorySystem,
-                DeployPublisherFactory.NAME,
-                "Publishes to any repository just like maven-deploy-plugin would",
+                BlackHolePublisherFactory.NAME,
+                "Publishes to /dev/null (for testing purposes)",
                 releasesRepository,
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
                 artifactStoreRequirements);
+        this.fail = fail;
     }
 
     @Override
@@ -48,19 +53,13 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                     repository.getUrl());
             return;
         }
-        // handle auth redirection, if needed and
-        // just deploy as m-deploy-p would
         try (ArtifactStore store = artifactStore) {
             RemoteRepository publishingRepository =
                     session.artifactPublisherRedirector().getPublishingRepository(repository, true);
             logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, publishingRepository);
-            new ArtifactStoreDeployer(
-                            repositorySystem,
-                            new DefaultRepositorySystemSession(session.config().session())
-                                    .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                            publishingRepository,
-                            true)
-                    .deploy(store);
+            if (fail) {
+                throw new IOException(name + " is set to fail");
+            }
         }
     }
 }
