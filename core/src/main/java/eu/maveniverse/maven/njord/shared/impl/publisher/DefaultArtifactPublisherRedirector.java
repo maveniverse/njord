@@ -56,10 +56,18 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             String redirectUrl;
             switch (repositoryMode) {
                 case RELEASE:
-                    redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL);
+                    redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL); // server/config
+                    if (redirectUrl == null) {
+                        redirectUrl =
+                                config.get(SessionConfig.CONFIG_RELEASE_URL + "." + repository.getId()); // suffixed
+                    }
                     break;
                 case SNAPSHOT:
-                    redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL);
+                    redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL); // server/config
+                    if (redirectUrl == null) {
+                        redirectUrl =
+                                config.get(SessionConfig.CONFIG_RELEASE_URL + "." + repository.getId()); // suffixed
+                    }
                     break;
                 default:
                     throw new IllegalStateException("Unknown repository mode: " + repositoryMode);

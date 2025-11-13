@@ -21,4 +21,4 @@ assert first.contains("[INFO] Njord ${projectVersion} session created")
 
 // second run:
 assert second.contains("[INFO] Njord ${projectVersion} session created")
-assert second.contains('[INFO] Dry run; not publishing to \'sonatype-cp\' service at https://central.sonatype.com/api/v1/publisher/upload')
+assert second.contains('[INFO] Publishing sisu-like-release-00001 staged from eu.maveniverse.maven.njord.it:sisu-like-release:jar:1.0.0')

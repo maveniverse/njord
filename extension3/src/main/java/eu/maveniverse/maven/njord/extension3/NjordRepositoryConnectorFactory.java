@@ -62,13 +62,10 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
                     RepositoryConnectorFactory basicRepositoryConnectorFactory = requireNonNull(
                             repositoryConnectorFactories.get("basic").get(),
                             "No basic repository connector factory found");
-                    ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(url.substring(6));
+                    ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(repository, url.substring(6));
                     return new NjordRepositoryConnector(
                             artifactStore,
                             repository,
-                            repository.getUrl() != null && !repository.getUrl().startsWith(NAME + ":")
-                                    ? basicRepositoryConnectorFactory.newInstance(session, repository)
-                                    : null,
                             basicRepositoryConnectorFactory.newInstance(
                                     artifactStore.storeRepositorySession(session),
                                     artifactStore.storeRemoteRepository()));

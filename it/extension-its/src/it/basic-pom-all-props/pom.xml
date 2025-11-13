@@ -62,8 +62,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <njord.publisher>sonatype-cp</njord.publisher>
-        <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
-        <njord.snapshotUrl>njord:template:snapshot-sca</njord.snapshotUrl>
+        <njord.releaseUrl.pom-all-props-server>njord:template:release-sca</njord.releaseUrl.pom-all-props-server>
+        <njord.snapshotUrl.pom-all-props-server>njord:template:snapshot-sca</njord.snapshotUrl.pom-all-props-server>
     </properties>
 
     <dependencies>

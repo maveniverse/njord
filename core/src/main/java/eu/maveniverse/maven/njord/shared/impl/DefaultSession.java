@@ -182,7 +182,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
-    public ArtifactStore getOrCreateSessionArtifactStore(String uri) {
+    public ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri) {
         requireNonNull(uri);
         checkClosed();
         ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();

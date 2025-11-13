@@ -78,12 +78,16 @@ public interface SessionConfig {
     String CONFIG_PUBLISHER = KEY_PREFIX + "publisher";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL.
+     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL. This key <em>may not</em>
+     * appear in system, user or project properties (their presence will cause Njord to fail). In the system, user
+     * or project properties this property key <em>must be suffixed with repository ID they belong to.</em>
      */
     String CONFIG_RELEASE_URL = KEY_PREFIX + "releaseUrl";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for snapshot Njord URL.
+     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL. This key <em>may not</em>
+     * appear in system, user or project properties (their presence will cause Njord to fail). In the system, user
+     * or project properties this property key <em>must be suffixed with repository ID they belong to.</em>
      */
     String CONFIG_SNAPSHOT_URL = KEY_PREFIX + "snapshotUrl";
 
@@ -187,7 +191,7 @@ public interface SessionConfig {
     Optional<String> prefix();
 
     /**
-     * Returns configuration for all configured servers (those having it).
+     * Returns configuration for all configured servers (only those having it).
      */
     Map<String, Map<String, String>> serverConfigurations();
 
@@ -517,6 +521,13 @@ public interface SessionConfig {
                 }
                 eff.putAll(this.userProperties);
                 this.effectiveProperties = J8Utils.copyOf(eff);
+
+                if (this.effectiveProperties.containsKey(CONFIG_RELEASE_URL)
+                        || this.effectiveProperties.containsKey(CONFIG_SNAPSHOT_URL)) {
+                    throw new IllegalArgumentException(
+                            "Must not specify " + CONFIG_RELEASE_URL + " and/or " + CONFIG_SNAPSHOT_URL
+                                    + " configuration in properties; in properties they have to be suffixed with targeted '.repositoryId`!");
+                }
 
                 this.enabled = enabled != null
                         ? enabled
