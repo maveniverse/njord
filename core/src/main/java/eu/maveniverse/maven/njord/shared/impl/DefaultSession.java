@@ -185,8 +185,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     public ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri) {
         requireNonNull(uri);
         checkClosed();
-        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
-        String storeName = sessionBoundStore.computeIfAbsent(uri, k -> {
+        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
+        String storeName = sessionBoundStore.computeIfAbsent(repository, k -> {
             try {
                 String artifactStoreName;
                 if (!uri.contains(":")) {
@@ -261,7 +261,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public int publishSessionArtifactStores() throws IOException {
         checkClosed();
-        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
+        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
         if (sessionBoundStore.isEmpty()) {
             return 0;
         }
@@ -293,7 +293,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public int dropSessionArtifactStores() {
         checkClosed();
-        ConcurrentMap<String, String> sessionBoundStore = getSessionBoundStore();
+        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
         if (sessionBoundStore.isEmpty()) {
             return 0;
         }
@@ -319,8 +319,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
      * Returns map of "Njord URI" to "storeName" that were created in current session.
      */
     @SuppressWarnings("unchecked")
-    private ConcurrentMap<String, String> getSessionBoundStore() {
-        return (ConcurrentHashMap<String, String>)
+    private ConcurrentMap<RemoteRepository, String> getSessionBoundStore() {
+        return (ConcurrentHashMap<RemoteRepository, String>)
                 config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
     }
 }
