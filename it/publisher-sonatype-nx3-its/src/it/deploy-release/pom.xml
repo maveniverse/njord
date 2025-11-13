@@ -46,12 +46,12 @@
         <repository>
             <id>nexus-test</id>
             <name>Nexus Test Repository</name>
-            <url>http://localhost:8081</url>
+            <url>${nexus.url}</url>
         </repository>
         <snapshotRepository>
             <id>nexus-test</id>
             <name>Nexus Test Snapshot Repository</name>
-            <url>http://localhost:8081</url>
+            <url>${nexus.url}</url>
         </snapshotRepository>
     </distributionManagement>
 

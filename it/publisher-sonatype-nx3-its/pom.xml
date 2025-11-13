@@ -18,7 +18,7 @@
   </parent>
 
   <artifactId>publisher-sonatype-nx3-its</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
 
@@ -30,6 +30,27 @@
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Force consistent JUnit Platform versions -->
+      <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-commons</artifactId>
+        <version>1.10.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-engine</artifactId>
+        <version>1.10.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>5.10.5</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -43,6 +64,65 @@
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>sonatype-nx3</artifactId>
+    </dependency>
+
+    <!-- Testing Framework -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.5</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- SLF4J implementation for test logging (match Testcontainers version) -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.36</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers 2.x -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>2.0.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <version>2.0.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Maven Invoker (programmatic usage) -->
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-invoker</artifactId>
+      <version>3.3.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Utilities -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.27.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.18.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Groovy for verify.groovy script execution (optional, maven-invoker-plugin compatibility) -->
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>${groovyVersion}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -102,23 +182,92 @@
               </execution>
             </executions>
           </plugin>
+<!--          <plugin>-->
+<!--            <groupId>org.apache.maven.plugins</groupId>-->
+<!--            <artifactId>maven-invoker-plugin</artifactId>-->
+<!--            <dependencies>-->
+<!--              &lt;!&ndash; Control Groovy version for script execution &ndash;&gt;-->
+<!--              <dependency>-->
+<!--                <groupId>org.apache.groovy</groupId>-->
+<!--                <artifactId>groovy</artifactId>-->
+<!--                <version>${groovyVersion}</version>-->
+<!--              </dependency>-->
+<!--              &lt;!&ndash; Add Ant support for Groovy scripts (includes ant transitively) &ndash;&gt;-->
+<!--              <dependency>-->
+<!--                <groupId>org.apache.groovy</groupId>-->
+<!--                <artifactId>groovy-ant</artifactId>-->
+<!--                <version>${groovyVersion}</version>-->
+<!--              </dependency>-->
+<!--            </dependencies>-->
+<!--            <executions>-->
+<!--              <execution>-->
+<!--                <id>integration-test</id>-->
+<!--                <phase>none</phase>-->
+<!--              </execution>-->
+<!--              <execution>-->
+<!--                <id>its-install</id>-->
+<!--                <goals>-->
+<!--                  <goal>install</goal>-->
+<!--                </goals>-->
+<!--                <phase>integration-test</phase>-->
+<!--                <configuration>-->
+<!--                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>-->
+<!--                </configuration>-->
+<!--              </execution>-->
+<!--              <execution>-->
+<!--                <id>mvn39-its-run</id>-->
+<!--                <goals>-->
+<!--                  <goal>run</goal>-->
+<!--                </goals>-->
+<!--                <phase>integration-test</phase>-->
+<!--                <configuration>-->
+<!--                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven39Version}</mavenHome>-->
+<!--                  <cloneProjectsTo>${project.build.directory}/mvn39-it</cloneProjectsTo>-->
+<!--                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>-->
+<!--                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>-->
+<!--                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>-->
+<!--                  <cloneClean>true</cloneClean>-->
+<!--                  <pomIncludes>-->
+<!--                    <pomInclude>*/pom.xml</pomInclude>-->
+<!--                  </pomIncludes>-->
+<!--                  <scriptVariables>-->
+<!--                    <projectVersion>${project.version}</projectVersion>-->
+<!--                  </scriptVariables>-->
+<!--                  <preBuildHookScript>setup</preBuildHookScript>-->
+<!--                  <postBuildHookScript>verify</postBuildHookScript>-->
+<!--                  <addTestClassPath>false</addTestClassPath>-->
+<!--                </configuration>-->
+<!--              </execution>-->
+<!--              <execution>-->
+<!--                <id>mvn4-its-run</id>-->
+<!--                <goals>-->
+<!--                  <goal>run</goal>-->
+<!--                </goals>-->
+<!--                <phase>integration-test</phase>-->
+<!--                <configuration>-->
+<!--                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>-->
+<!--                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>-->
+<!--                  <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>-->
+<!--                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>-->
+<!--                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>-->
+<!--                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>-->
+<!--                  <cloneClean>true</cloneClean>-->
+<!--                  <pomIncludes>-->
+<!--                    <pomInclude>*/pom.xml</pomInclude>-->
+<!--                  </pomIncludes>-->
+<!--                  <scriptVariables>-->
+<!--                    <projectVersion>${project.version}</projectVersion>-->
+<!--                  </scriptVariables>-->
+<!--                  <preBuildHookScript>setup</preBuildHookScript>-->
+<!--                  <postBuildHookScript>verify</postBuildHookScript>-->
+<!--                  <addTestClassPath>false</addTestClassPath>-->
+<!--                </configuration>-->
+<!--              </execution>-->
+<!--            </executions>-->
+<!--          </plugin>-->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <dependencies>
-              <!-- Control Groovy version for script execution -->
-              <dependency>
-                <groupId>org.apache.groovy</groupId>
-                <artifactId>groovy</artifactId>
-                <version>${groovyVersion}</version>
-              </dependency>
-              <!-- Add Ant support for Groovy scripts (includes ant transitively) -->
-              <dependency>
-                <groupId>org.apache.groovy</groupId>
-                <artifactId>groovy-ant</artifactId>
-                <version>${groovyVersion}</version>
-              </dependency>
-            </dependencies>
             <executions>
               <execution>
                 <id>integration-test</id>
@@ -129,59 +278,29 @@
                 <goals>
                   <goal>install</goal>
                 </goals>
-                <phase>integration-test</phase>
+                <phase>pre-integration-test</phase>
                 <configuration>
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                 </configuration>
               </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <maven39Version>${maven39Version}</maven39Version>
+                <maven4Version>${maven4Version}</maven4Version>
+                <project.version>${project.version}</project.version>
+              </systemPropertyVariables>
+            </configuration>
+            <executions>
               <execution>
-                <id>mvn39-its-run</id>
                 <goals>
-                  <goal>run</goal>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
                 </goals>
-                <phase>integration-test</phase>
-                <configuration>
-                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven39Version}</mavenHome>
-                  <cloneProjectsTo>${project.build.directory}/mvn39-it</cloneProjectsTo>
-                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
-                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
-                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
-                  <cloneClean>true</cloneClean>
-                  <pomIncludes>
-                    <pomInclude>*/pom.xml</pomInclude>
-                  </pomIncludes>
-                  <scriptVariables>
-                    <projectVersion>${project.version}</projectVersion>
-                  </scriptVariables>
-                  <preBuildHookScript>setup</preBuildHookScript>
-                  <postBuildHookScript>verify</postBuildHookScript>
-                  <addTestClassPath>false</addTestClassPath>
-                </configuration>
-              </execution>
-              <execution>
-                <id>mvn4-its-run</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <phase>integration-test</phase>
-                <configuration>
-                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>
-                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>
-                  <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>
-                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
-                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
-                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
-                  <cloneClean>true</cloneClean>
-                  <pomIncludes>
-                    <pomInclude>*/pom.xml</pomInclude>
-                  </pomIncludes>
-                  <scriptVariables>
-                    <projectVersion>${project.version}</projectVersion>
-                  </scriptVariables>
-                  <preBuildHookScript>setup</preBuildHookScript>
-                  <postBuildHookScript>verify</postBuildHookScript>
-                  <addTestClassPath>false</addTestClassPath>
-                </configuration>
               </execution>
             </executions>
           </plugin>
