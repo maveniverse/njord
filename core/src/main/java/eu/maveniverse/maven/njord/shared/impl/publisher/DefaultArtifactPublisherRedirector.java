@@ -80,14 +80,18 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         } else {
             throw new IllegalStateException("Unknown repository mode: " + mode);
         }
-        // if conf comes from server/config, and contains it unprefixed, use it
-        if (serverConfig.containsKey(SessionConfig.SERVER_ID_KEY) && serverConfig.containsKey(key)) {
-            return serverConfig.get(key);
-        }
-        // try repoId suffixed property (most specific)
+        // try repoId suffixed property (most specific, should take precedence)
         String suffixedUrl = effectiveConfig.get(key + "." + repository.getId());
         if (suffixedUrl != null) {
             return suffixedUrl;
+        }
+
+        // if server config contains the url unprefixed,
+        if (serverConfig.containsKey(key)) {
+            // use it if it is not overwritten by from some other source having a higher priority
+            if (effectiveConfig.get(key).equals(serverConfig.get(key))) {
+                return serverConfig.get(key);
+            }
         }
         // if project present, try unprefixed IF repoID == project.release.distRepoID
         Optional<SessionConfig.CurrentProject> project = session.config().currentProject();
