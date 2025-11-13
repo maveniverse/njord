@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.njord.it</groupId>
     <artifactId>it</artifactId>
-    <version>0.8.5-SNAPSHOT</version>
+    <version>0.8.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>extension-its</artifactId>
@@ -24,7 +24,7 @@
 
   <properties>
     <maven39Version>3.9.11</maven39Version>
-    <maven4Version>4.0.0-rc-3</maven4Version>
+    <maven4Version>4.0.0-rc-4</maven4Version>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>

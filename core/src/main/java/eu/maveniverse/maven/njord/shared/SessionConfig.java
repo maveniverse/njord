@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.MavenServerHelper;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import eu.maveniverse.maven.shared.core.maven.MavenUtils;
@@ -77,12 +78,22 @@ public interface SessionConfig {
     String CONFIG_PUBLISHER = KEY_PREFIX + "publisher";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL.
+     * Configuration key for release Njord URL. Usage of this key happen in multiple ways:
+     * <ul>
+     *     <li>used as entry in {@code settings/servers/server[]/config} element: then it defines staging release URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>suffixed with {@code .repositoryId}</em>: then it defines staging release URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>without suffix</em>: then it defines staging URL for current project distribution management releases repository</li>
+     * </ul>
      */
     String CONFIG_RELEASE_URL = KEY_PREFIX + "releaseUrl";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for snapshot Njord URL.
+     * Configuration key for snapshot Njord URL. Usage of this key happen in multiple ways:
+     * <ul>
+     *     <li>used as entry in {@code settings/servers/server[]/config} element: then it defines staging snapshot URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>suffixed with {@code .repositoryId}</em>: then it defines staging snapshot URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>without suffix</em>: then it defines staging URL for current project distribution management snapshots repository</li>
+     * </ul>
      */
     String CONFIG_SNAPSHOT_URL = KEY_PREFIX + "snapshotUrl";
 
@@ -186,6 +197,25 @@ public interface SessionConfig {
     Optional<String> prefix();
 
     /**
+     * Returns configuration for all configured servers (only those having it).
+     */
+    Map<String, Map<String, String>> serverConfigurations();
+
+    /**
+     * This key is always inserted into map returned by {@link #serverConfiguration(String)} carrying the
+     * "origin server ID".
+     */
+    String SERVER_ID_KEY = "_serverId";
+
+    /**
+     * Server configuration that is built from Maven Settings XML servers. The server (or its config) may or may
+     * not be present, this is reflected by {@link Optional}.
+     * The map (if present) always contains mapping with key {@link #SERVER_ID_KEY} that contains server ID that
+     * configuration originates from.
+     */
+    Optional<Map<String, String>> serverConfiguration(String id);
+
+    /**
      * Shim for "current project". Provides needed information from project.
      */
     interface CurrentProject {
@@ -242,6 +272,7 @@ public interface SessionConfig {
                 systemProperties(),
                 session(),
                 remoteRepositories(),
+                serverConfigurations(),
                 currentProject().orElse(null));
     }
 
@@ -262,6 +293,7 @@ public interface SessionConfig {
                 session.getSystemProperties(),
                 session,
                 remoteRepositories,
+                MavenServerHelper.extractServerConfigurations(session.getConfigProperties()),
                 null);
     }
 
@@ -335,6 +367,7 @@ public interface SessionConfig {
         private Map<String, String> systemProperties;
         private RepositorySystemSession session;
         private List<RemoteRepository> remoteRepositories;
+        private Map<String, Map<String, String>> serverConfiguration;
         private CurrentProject currentProject;
 
         public Builder(
@@ -347,6 +380,7 @@ public interface SessionConfig {
                 Map<String, String> systemProperties,
                 RepositorySystemSession session,
                 List<RemoteRepository> remoteRepositories,
+                Map<String, Map<String, String>> serverConfiguration,
                 CurrentProject currentProject) {
             this.enabled = enabled;
             this.dryRun = dryRun;
@@ -357,6 +391,7 @@ public interface SessionConfig {
             this.systemProperties = systemProperties;
             this.session = session;
             this.remoteRepositories = remoteRepositories;
+            this.serverConfiguration = serverConfiguration;
             this.currentProject = currentProject;
         }
 
@@ -400,6 +435,11 @@ public interface SessionConfig {
             return this;
         }
 
+        public Builder serverConfiguration(Map<String, Map<String, String>> serverConfiguration) {
+            this.serverConfiguration = requireNonNull(serverConfiguration);
+            return this;
+        }
+
         public Builder currentProject(CurrentProject currentProject) {
             this.currentProject = currentProject;
             return this;
@@ -416,6 +456,7 @@ public interface SessionConfig {
                     systemProperties,
                     session,
                     remoteRepositories,
+                    serverConfiguration,
                     currentProject);
         }
 
@@ -435,6 +476,7 @@ public interface SessionConfig {
             private final boolean autoPublish;
             private final boolean autoDrop;
             private final String prefix;
+            private final Map<String, Map<String, String>> serverConfigurations;
             private final CurrentProject currentProject;
 
             private Impl(
@@ -447,6 +489,7 @@ public interface SessionConfig {
                     Map<String, String> systemProperties,
                     RepositorySystemSession session,
                     List<RemoteRepository> remoteRepositories,
+                    Map<String, Map<String, String>> serverConfigurations,
                     CurrentProject currentProject) {
                 this.version = requireNonNull(version, "version");
                 this.currentProject = currentProject; // nullable
@@ -511,6 +554,7 @@ public interface SessionConfig {
                     prefixString = currentProject.artifact().getArtifactId();
                 }
                 this.prefix = prefixString;
+                this.serverConfigurations = J8Utils.copyOf(requireNonNull(serverConfigurations, "serverConfiguration"));
             }
 
             @Override
@@ -585,6 +629,16 @@ public interface SessionConfig {
             @Override
             public Optional<String> prefix() {
                 return Optional.ofNullable(prefix);
+            }
+
+            @Override
+            public Map<String, Map<String, String>> serverConfigurations() {
+                return serverConfigurations;
+            }
+
+            @Override
+            public Optional<Map<String, String>> serverConfiguration(String id) {
+                return Optional.ofNullable(serverConfigurations.get(id));
             }
 
             @Override

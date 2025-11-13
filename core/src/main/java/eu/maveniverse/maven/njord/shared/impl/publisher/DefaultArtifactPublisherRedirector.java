@@ -20,12 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.codehaus.plexus.configuration.PlexusConfiguration;
-import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.ConfigUtils;
 
 public class DefaultArtifactPublisherRedirector extends ComponentSupport implements ArtifactPublisherRedirector {
     protected final Session session;
@@ -55,27 +51,46 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
         requireNonNull(repositoryMode);
 
-        String url = repository.getUrl();
-        Optional<Map<String, String>> sco = configuration(repository.getId(), false);
-        if (!url.startsWith(SessionConfig.NAME + ":") && sco.isPresent()) {
-            Map<String, String> config = sco.orElseThrow(J8Utils.OET);
-            String redirectUrl;
-            switch (repositoryMode) {
-                case RELEASE:
-                    redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL);
-                    break;
-                case SNAPSHOT:
-                    redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL);
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown repository mode: " + repositoryMode);
-            }
+        Map<String, String> config = effectiveConfiguration(repository.getId(), false);
+        if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
+            String redirectUrl = getRedirectUrl(config, repositoryMode, repository);
             if (redirectUrl != null) {
                 logger.debug("Found server {} configured URL: {}", repository.getId(), redirectUrl);
                 return redirectUrl;
             }
         }
-        return url;
+        return repository.getUrl();
+    }
+
+    private String getRedirectUrl(Map<String, String> config, RepositoryMode mode, RemoteRepository repository) {
+        String key;
+        if (mode == RepositoryMode.RELEASE) {
+            key = SessionConfig.CONFIG_RELEASE_URL;
+        } else if (mode == RepositoryMode.SNAPSHOT) {
+            key = SessionConfig.CONFIG_SNAPSHOT_URL;
+        } else {
+            throw new IllegalStateException("Unknown repository mode: " + mode);
+        }
+        // if conf comes from server/config, and contains it unprefixed, use it
+        if (config.containsKey(SessionConfig.SERVER_ID_KEY) && config.containsKey(key)) {
+            return config.get(key);
+        }
+        // try repoId suffixed property (most specific)
+        String suffixedUrl = config.get(key + "." + repository.getId());
+        if (suffixedUrl != null) {
+            return suffixedUrl;
+        }
+        // if project present, try unprefixed IF repoID == project.release.distRepoID
+        Optional<SessionConfig.CurrentProject> project = session.config().currentProject();
+        if (config.containsKey(key) && project.isPresent()) {
+            RemoteRepository dist = project.orElseThrow(J8Utils.OET)
+                    .distributionManagementRepositories()
+                    .get(mode);
+            if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
+                return config.get(key);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -83,10 +98,10 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
 
         RemoteRepository authSource = repository;
-        Optional<Map<String, String>> config = configuration(authSource.getId(), true);
-        if (config.isPresent()) {
+        Map<String, String> config = effectiveConfiguration(repository.getId(), true);
+        if (config.containsKey(SessionConfig.SERVER_ID_KEY)) {
             authSource = new RemoteRepository.Builder(
-                            requireNonNull(config.orElseThrow(J8Utils.OET).get(SERVER_ID_KEY)),
+                            requireNonNull(config.get(SessionConfig.SERVER_ID_KEY)),
                             authSource.getContentType(),
                             authSource.getUrl())
                     .build();
@@ -155,24 +170,22 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 logger.debug("Passed in name {} is a valid publisher name", name);
                 return Optional.of(name);
             } else {
-                // see is name a server id (w/ config)
-                Optional<Map<String, String>> sco = configuration(name, false);
-                if (sco.isPresent()) {
-                    String originServerId = sco.orElseThrow(J8Utils.OET).get(SERVER_ID_KEY);
-                    String publisher = sco.orElseThrow(J8Utils.OET).get(SessionConfig.CONFIG_PUBLISHER);
-                    if (publisher != null
-                            && session.selectArtifactStorePublisher(publisher).isPresent()) {
-                        if (session.selectArtifactStorePublisher(publisher).isPresent()) {
-                            logger.debug(
-                                    "Passed in name {} led us to server {} with configured publisher {}",
-                                    name,
-                                    originServerId,
-                                    publisher);
-                            return Optional.of(publisher);
-                        } else {
-                            throw new IllegalStateException(String.format(
-                                    "Server '%s' contains unknown publisher '%s'", originServerId, publisher));
-                        }
+                // see is name a server id (w/ config) and return configured publisher
+                Map<String, String> config = effectiveConfiguration(name, false);
+                String originServerId = config.getOrDefault(SessionConfig.SERVER_ID_KEY, "<properties>");
+                String publisher = config.get(SessionConfig.CONFIG_PUBLISHER);
+                if (publisher != null
+                        && session.selectArtifactStorePublisher(publisher).isPresent()) {
+                    if (session.selectArtifactStorePublisher(publisher).isPresent()) {
+                        logger.debug(
+                                "Passed in name {} led us to server {} with configured publisher {}",
+                                name,
+                                originServerId,
+                                publisher);
+                        return Optional.of(publisher);
+                    } else {
+                        throw new IllegalStateException(String.format(
+                                "Server '%s' contains unknown publisher '%s'", originServerId, publisher));
                     }
                 }
                 throw new IllegalArgumentException("Name '" + name
@@ -183,21 +196,30 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
     }
 
     /**
-     * This key is always inserted into map returned by {@link #configuration(String)} and {@link #configuration(String, boolean)}
-     * carrying the "origin server ID".
+     * Creates "effective" server configuration by properly factoring in possible server configuration. Returns a mutable
+     * map of properties. Is configuration for asked {@code serverId} existing, can be queried by the presence of the
+     * {@link SessionConfig#SERVER_ID_KEY} key in the returned map.
      */
-    protected static final String SERVER_ID_KEY = "_serverId";
+    protected Map<String, String> effectiveConfiguration(String serverId, boolean followAuthRedirection) {
+        HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
+        configuration(serverId, followAuthRedirection).ifPresent(server -> {
+            config.putAll(server);
+            session.config().currentProject().ifPresent(project -> config.putAll(project.projectProperties()));
+            config.putAll(session.config().userProperties());
+        });
+        return config;
+    }
 
     /**
      * Returns the Njord configuration for given server ID (under servers/server/serverId/config) and is able to
-     * follow redirections. Hence, if a map is returned, the {@link #SERVER_ID_KEY} may be different that the
+     * follow redirections. Hence, if a map is returned, the {@link SessionConfig#SERVER_ID_KEY} may be different that the
      * server ID called used (due redirections).
      */
     protected Optional<Map<String, String>> configuration(String serverId, boolean followAuthRedirection) {
         requireNonNull(serverId);
 
         String source = serverId;
-        Optional<Map<String, String>> config = configuration(source);
+        Optional<Map<String, String>> config = session.config().serverConfiguration(source);
         LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
         sourcesVisited.add(source);
         while (config.isPresent()) {
@@ -213,7 +235,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                     throw new IllegalStateException("Auth redirect forms a cycle: " + redirect);
                 }
                 source = redirect;
-                config = configuration(source);
+                config = session.config().serverConfiguration(source);
             } else {
                 break;
             }
@@ -222,39 +244,5 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             logger.debug("Trail of redirects for {}: {}", serverId, String.join(" -> ", sourcesVisited));
         }
         return config;
-    }
-
-    /**
-     * Returns the Njord configuration for given server ID (under servers/server/serverId/config).
-     * The map (if present) always contains mapping with key {@link #SERVER_ID_KEY} that contains server ID that
-     * configuration originates from.
-     */
-    protected Optional<Map<String, String>> configuration(String serverId) {
-        requireNonNull(serverId);
-        Object configuration = ConfigUtils.getObject(
-                session.config().session(),
-                null,
-                "aether.connector.wagon.config." + serverId,
-                "aether.transport.wagon.config." + serverId);
-        if (configuration != null) {
-            PlexusConfiguration config;
-            if (configuration instanceof PlexusConfiguration) {
-                config = (PlexusConfiguration) configuration;
-            } else if (configuration instanceof Xpp3Dom) {
-                config = new XmlPlexusConfiguration((Xpp3Dom) configuration);
-            } else {
-                throw new IllegalArgumentException("unexpected configuration type: "
-                        + configuration.getClass().getName());
-            }
-            HashMap<String, String> serviceConfiguration = new HashMap<>(config.getChildCount() + 1);
-            serviceConfiguration.put(SERVER_ID_KEY, serverId);
-            for (PlexusConfiguration child : config.getChildren()) {
-                if (child.getName().startsWith(SessionConfig.KEY_PREFIX) && child.getValue() != null) {
-                    serviceConfiguration.put(child.getName(), child.getValue());
-                }
-            }
-            return Optional.of(serviceConfiguration);
-        }
-        return Optional.empty();
     }
 }

@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.aether.artifact.Artifact;
@@ -367,12 +368,19 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     private String newArtifactStoreName(String prefix) throws IOException {
+        return newArtifactStoreName(
+                prefix,
+                Files.list(config.basedir())
+                        .filter(Files::isDirectory)
+                        .filter(d -> Files.isRegularFile(metaRepositoryProperties(d))));
+    }
+
+    static String newArtifactStoreName(String prefix, Stream<Path> existingStoreDirectories) {
         String prefixDash = prefix + "-";
+        Pattern pattern = Pattern.compile(Pattern.quote(prefixDash) + "\\d+");
         int num = 0;
-        try (Stream<Path> candidates = Files.list(config.basedir())
-                .filter(Files::isDirectory)
-                .filter(d -> d.getFileName().toString().startsWith(prefixDash))
-                .filter(d -> Files.isRegularFile(metaRepositoryProperties(d)))
+        try (Stream<Path> candidates = existingStoreDirectories
+                .filter(d -> pattern.matcher(d.getFileName().toString()).matches())
                 .sorted(Comparator.reverseOrder())) {
             Optional<Path> greatest = candidates.findFirst();
             if (greatest.isPresent()) {
@@ -385,11 +393,11 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         return formatArtifactStoreName(prefix, num + 1);
     }
 
-    private String formatArtifactStoreName(String prefix, int num) {
+    private static String formatArtifactStoreName(String prefix, int num) {
         return String.format("%s-%05d", prefix, num);
     }
 
-    private Path metaRepositoryProperties(Path basedir) {
+    private static Path metaRepositoryProperties(Path basedir) {
         return basedir.resolve(".meta").resolve("repository.properties");
     }
 
