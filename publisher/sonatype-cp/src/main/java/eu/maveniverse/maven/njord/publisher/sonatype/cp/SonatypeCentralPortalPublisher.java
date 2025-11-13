@@ -77,7 +77,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
         RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
         if (session.config().dryRun()) {
-            logger.info("Dry run; not publishing to '{}' service at {}", name, repository.getUrl());
+            logger.info(
+                    "Dry run; not publishing '{}' to '{}' service at {}",
+                    artifactStore.name(),
+                    name,
+                    repository.getUrl());
             return;
         }
 
@@ -139,6 +143,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                     throw new IllegalStateException(
                             "No authorization information found for repository " + authSource.getId());
                 }
+                logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, repository);
 
                 // we need to use own HTTP client here
                 String deploymentId;

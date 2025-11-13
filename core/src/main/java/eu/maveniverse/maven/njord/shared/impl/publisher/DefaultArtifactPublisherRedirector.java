@@ -53,23 +53,44 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
         Map<String, String> config = effectiveConfiguration(repository.getId(), false);
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
-            String redirectUrl;
-            switch (repositoryMode) {
-                case RELEASE:
-                    redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL);
-                    break;
-                case SNAPSHOT:
-                    redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL);
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown repository mode: " + repositoryMode);
-            }
+            String redirectUrl = getRedirectUrl(config, repositoryMode, repository);
             if (redirectUrl != null) {
                 logger.debug("Found server {} configured URL: {}", repository.getId(), redirectUrl);
                 return redirectUrl;
             }
         }
         return repository.getUrl();
+    }
+
+    private String getRedirectUrl(Map<String, String> config, RepositoryMode mode, RemoteRepository repository) {
+        String key;
+        if (mode == RepositoryMode.RELEASE) {
+            key = SessionConfig.CONFIG_RELEASE_URL;
+        } else if (mode == RepositoryMode.SNAPSHOT) {
+            key = SessionConfig.CONFIG_SNAPSHOT_URL;
+        } else {
+            throw new IllegalStateException("Unknown repository mode: " + mode);
+        }
+        // if conf comes from server/config, and contains it unprefixed, use it
+        if (config.containsKey(SessionConfig.SERVER_ID_KEY) && config.containsKey(key)) {
+            return config.get(key);
+        }
+        // try repoId suffixed property (most specific)
+        String suffixedUrl = config.get(key + "." + repository.getId());
+        if (suffixedUrl != null) {
+            return suffixedUrl;
+        }
+        // if project present, try unprefixed IF repoID == project.release.distRepoID
+        Optional<SessionConfig.CurrentProject> project = session.config().currentProject();
+        if (config.containsKey(key) && project.isPresent()) {
+            RemoteRepository dist = project.orElseThrow(J8Utils.OET)
+                    .distributionManagementRepositories()
+                    .get(mode);
+            if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
+                return config.get(key);
+            }
+        }
+        return null;
     }
 
     @Override

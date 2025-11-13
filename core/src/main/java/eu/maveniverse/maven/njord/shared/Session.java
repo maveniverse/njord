@@ -88,7 +88,7 @@ public interface Session extends Closeable {
     Optional<Model> readEffectiveModel(Artifact artifact, List<RemoteRepository> remoteRepositories);
 
     /**
-     * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(String)} method for syntax).
+     * Selects template based on provided URL (see {@link #getOrCreateSessionArtifactStore(RemoteRepository, String)} method for syntax).
      * For existing stores it will return the template of the store.
      */
     ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri);
@@ -99,7 +99,7 @@ public interface Session extends Closeable {
      * {@code repoId::njord:template:templateName}
      * {@code repoId::njord:store:storeName}
      */
-    ArtifactStore getOrCreateSessionArtifactStore(String uri);
+    ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri);
 
     /**
      * Publishes all session-bound artifact stores created in this session. Session publishes all own created
