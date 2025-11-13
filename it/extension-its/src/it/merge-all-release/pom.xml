@@ -23,7 +23,6 @@
 
         <!-- Build MUST BE reproducible -->
         <project.build.outputTimestamp>2025-04-17T00:00:00Z</project.build.outputTimestamp>
-        <attach-classifier>first</attach-classifier>
     </properties>
 
     <dependencies>
@@ -59,6 +58,7 @@
                                 <artifact>
                                     <file>target/merge-all-release-1.0.0.jar</file>
                                     <type>jar</type>
+                                    <!-- must be given on CLI -->
                                     <classifier>${attach-classifier}</classifier>
                                 </artifact>
                             </artifacts>
