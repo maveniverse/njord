@@ -15,6 +15,10 @@ import java.io.IOException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * Black hole publisher (or like {@code /dev/null} device), publisher that does not publish anything.
+ * Usable for testing.
+ */
 public class BlackHolePublisher extends ArtifactStorePublisherSupport {
     private final boolean fail;
 

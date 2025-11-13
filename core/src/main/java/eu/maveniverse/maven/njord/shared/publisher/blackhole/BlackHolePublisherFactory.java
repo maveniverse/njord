@@ -23,14 +23,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
- * Black hole publisher (or like {@code /dev/null} device), publisher that does not publish anything.
- * Usable for testing.
- * <p>
- * It obeys one familiar property: <code>altDeploymentRepository</code> and very same syntax as Maven Deploy Plugin
- * <code>id::url</code>. This implies that one can "black hole publish" any artifact store with command like this:
- * <pre>
- *   $ mvn njord:publish -Dpublisher=black-hole -DaltDeploymentRepository=myserver::myurl
- * </pre>
+ * Black hole publisher (or like {@code /dev/null} device) factory.
  */
 @Singleton
 @Named(BlackHolePublisherFactory.NAME)
