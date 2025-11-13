@@ -24,7 +24,7 @@
 
   <properties>
     <maven39Version>3.9.11</maven39Version>
-    <maven4Version>4.0.0-rc-4</maven4Version>
+    <maven4Version>4.0.0-rc-5</maven4Version>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
@@ -47,32 +47,18 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
+            <groupId>eu.maveniverse.maven.plugins</groupId>
+            <artifactId>toolbox</artifactId>
             <executions>
               <execution>
-                <id>prepare-maven-distro</id>
+                <id>prepare-maven-distros</id>
                 <goals>
-                  <goal>unpack</goal>
+                  <goal>gav-copy</goal>
                 </goals>
                 <phase>generate-test-resources</phase>
                 <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>org.apache.maven</groupId>
-                      <artifactId>apache-maven</artifactId>
-                      <version>${maven39Version}</version>
-                      <classifier>bin</classifier>
-                      <type>zip</type>
-                    </artifactItem>
-                    <artifactItem>
-                      <groupId>org.apache.maven</groupId>
-                      <artifactId>apache-maven</artifactId>
-                      <version>${maven4Version}</version>
-                      <classifier>bin</classifier>
-                      <type>zip</type>
-                    </artifactItem>
-                  </artifactItems>
+                  <sourceSpec>resolve(concat(gav(org.apache.maven:apache-maven:zip:bin:${maven39Version}),gav(org.apache.maven:apache-maven:zip:bin:${maven4Version})))</sourceSpec>
+                  <sinkSpec>unpack(${project.build.directory},fixed(dependency))</sinkSpec>
                 </configuration>
               </execution>
             </executions>
