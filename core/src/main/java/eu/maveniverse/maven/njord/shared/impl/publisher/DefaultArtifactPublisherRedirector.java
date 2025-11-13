@@ -53,20 +53,48 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
         Map<String, String> config = effectiveConfiguration(repository.getId(), false);
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
-            String redirectUrl;
+            String redirectUrl = null;
             switch (repositoryMode) {
                 case RELEASE:
-                    redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL); // server/config
+                    // if conf comes from server/config, use it unprefixed
+                    if (config.containsKey(SessionConfig.SERVER_ID_KEY)) {
+                        redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL);
+                    }
+                    // try repoId suffixed property (most specific)
                     if (redirectUrl == null) {
-                        redirectUrl =
-                                config.get(SessionConfig.CONFIG_RELEASE_URL + "." + repository.getId()); // suffixed
+                        redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL + "." + repository.getId());
+                    }
+                    // if project present, try unprefixed IF repoID == project.release.distRepoID
+                    if (redirectUrl == null && session.config().currentProject().isPresent()) {
+                        RemoteRepository dist = session.config()
+                                .currentProject()
+                                .orElseThrow(J8Utils.OET)
+                                .distributionManagementRepositories()
+                                .get(RepositoryMode.RELEASE);
+                        if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
+                            redirectUrl = config.get(SessionConfig.CONFIG_RELEASE_URL);
+                        }
                     }
                     break;
                 case SNAPSHOT:
-                    redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL); // server/config
+                    // if conf comes from server/config, use it unprefixed
+                    if (config.containsKey(SessionConfig.SERVER_ID_KEY)) {
+                        redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL);
+                    }
+                    // try repoId suffixed property (most specific)
                     if (redirectUrl == null) {
-                        redirectUrl =
-                                config.get(SessionConfig.CONFIG_RELEASE_URL + "." + repository.getId()); // suffixed
+                        redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL + "." + repository.getId());
+                    }
+                    // if project present, try unprefixed IF repoID == project.snapshot.distRepoID
+                    if (redirectUrl == null && session.config().currentProject().isPresent()) {
+                        RemoteRepository dist = session.config()
+                                .currentProject()
+                                .orElseThrow(J8Utils.OET)
+                                .distributionManagementRepositories()
+                                .get(RepositoryMode.SNAPSHOT);
+                        if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
+                            redirectUrl = config.get(SessionConfig.CONFIG_SNAPSHOT_URL);
+                        }
                     }
                     break;
                 default:

@@ -78,16 +78,22 @@ public interface SessionConfig {
     String CONFIG_PUBLISHER = KEY_PREFIX + "publisher";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL. This key <em>may not</em>
-     * appear in system, user or project properties (their presence will cause Njord to fail). In the system, user
-     * or project properties this property key <em>must be suffixed with repository ID they belong to.</em>
+     * Configuration key for release Njord URL. Usage of this key happen in multiple ways:
+     * <ul>
+     *     <li>used as entry in {@code settings/servers/server[]/config} element: then it defines staging release URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>suffixed with {@code .repositoryId}</em>: then it defines staging release URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>without suffix</em>: then it defines staging URL for current project distribution management releases repository</li>
+     * </ul>
      */
     String CONFIG_RELEASE_URL = KEY_PREFIX + "releaseUrl";
 
     /**
-     * Configuration key in {@code settings/servers/server/configuration} for release Njord URL. This key <em>may not</em>
-     * appear in system, user or project properties (their presence will cause Njord to fail). In the system, user
-     * or project properties this property key <em>must be suffixed with repository ID they belong to.</em>
+     * Configuration key for snapshot Njord URL. Usage of this key happen in multiple ways:
+     * <ul>
+     *     <li>used as entry in {@code settings/servers/server[]/config} element: then it defines staging snapshot URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>suffixed with {@code .repositoryId}</em>: then it defines staging snapshot URL for given repository ID</li>
+     *     <li>used as property (system, user or project) <em>without suffix</em>: then it defines staging URL for current project distribution management snapshots repository</li>
+     * </ul>
      */
     String CONFIG_SNAPSHOT_URL = KEY_PREFIX + "snapshotUrl";
 
@@ -521,13 +527,6 @@ public interface SessionConfig {
                 }
                 eff.putAll(this.userProperties);
                 this.effectiveProperties = J8Utils.copyOf(eff);
-
-                if (this.effectiveProperties.containsKey(CONFIG_RELEASE_URL)
-                        || this.effectiveProperties.containsKey(CONFIG_SNAPSHOT_URL)) {
-                    throw new IllegalArgumentException(
-                            "Must not specify " + CONFIG_RELEASE_URL + " and/or " + CONFIG_SNAPSHOT_URL
-                                    + " configuration in properties; in properties they have to be suffixed with targeted '.repositoryId`!");
-                }
 
                 this.enabled = enabled != null
                         ? enabled
