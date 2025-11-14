@@ -58,7 +58,8 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                     config,
                     configuration(repository.getId(), false).orElse(Collections.emptyMap()),
                     repositoryMode,
-                    repository);
+                    repository.getId(),
+                    session.config().currentProject());
             if (redirectUrl != null) {
                 logger.debug("Found server {} configured URL: {}", repository.getId(), redirectUrl);
                 return redirectUrl;
@@ -67,11 +68,12 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         return repository.getUrl();
     }
 
-    private String getRedirectUrl(
+    static String getRedirectUrl(
             Map<String, String> effectiveConfig,
             Map<String, String> serverConfig,
             RepositoryMode mode,
-            RemoteRepository repository) {
+            String repositoryId,
+            Optional<SessionConfig.CurrentProject> project) {
         String key;
         if (mode == RepositoryMode.RELEASE) {
             key = SessionConfig.CONFIG_RELEASE_URL;
@@ -81,25 +83,22 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
             throw new IllegalStateException("Unknown repository mode: " + mode);
         }
         // try repoId suffixed property (most specific, should take precedence)
-        String suffixedUrl = effectiveConfig.get(key + "." + repository.getId());
+        String suffixedUrl = effectiveConfig.get(key + "." + repositoryId);
         if (suffixedUrl != null) {
             return suffixedUrl;
         }
 
-        // if server config contains the url unprefixed,
-        if (serverConfig.containsKey(key)) {
-            // use it if it is not overwritten by from some other source having a higher priority
-            if (effectiveConfig.get(key).equals(serverConfig.get(key))) {
-                return serverConfig.get(key);
-            }
+        // if server config contains the url unprefixed, use it if it is not overwritten by from some other source
+        // having a higher priority
+        if (serverConfig.containsKey(key) && effectiveConfig.get(key).equals(serverConfig.get(key))) {
+            return serverConfig.get(key);
         }
         // if project present, try unprefixed IF repoID == project.release.distRepoID
-        Optional<SessionConfig.CurrentProject> project = session.config().currentProject();
         if (effectiveConfig.containsKey(key) && project.isPresent()) {
             RemoteRepository dist = project.orElseThrow(J8Utils.OET)
                     .distributionManagementRepositories()
                     .get(mode);
-            if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
+            if (dist != null && Objects.equals(repositoryId, dist.getId())) {
                 return effectiveConfig.get(key);
             }
         }

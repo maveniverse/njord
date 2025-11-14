@@ -13,10 +13,18 @@ import eu.maveniverse.maven.mima.context.Runtime;
 import eu.maveniverse.maven.mima.context.Runtimes;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -113,6 +121,91 @@ public class DefaultArtifactPublisherRedirectorTest extends PublisherTestSupport
                     new RemoteRepository.Builder("unconfigured", "default", "whatever").build());
             Assertions.assertEquals("unconfigured", authSource.getId());
             Assertions.assertNull(authSource.getAuthentication());
+        }
+    }
+
+    @Test
+    void redirectUrl() {
+        // configured in server configuration
+        Map<String, String> effectiveProps = new HashMap<>();
+        Map<String, String> serverProps = new HashMap<>();
+        serverProps.put("njord.releaseUrl", "serverValue");
+        effectiveProps.putAll(serverProps);
+        Assertions.assertEquals(
+                "serverValue",
+                DefaultArtifactPublisherRedirector.getRedirectUrl(
+                        effectiveProps, serverProps, RepositoryMode.RELEASE, "my-id", Optional.empty()));
+        // configured in project properties
+        effectiveProps.put("njord.releaseUrl", "projectValue");
+        SessionConfig.CurrentProject project =
+                new ProjectWithDistributionManagement("my-id", "releaseDistributionValue", null, null);
+        Assertions.assertEquals(
+                "projectValue",
+                DefaultArtifactPublisherRedirector.getRedirectUrl(
+                        effectiveProps, serverProps, RepositoryMode.RELEASE, "my-id", Optional.of(project)));
+        // configured also with id suffix
+        effectiveProps.put("njord.releaseUrl.my-id", "suffixedValue");
+        Assertions.assertEquals(
+                "suffixedValue",
+                DefaultArtifactPublisherRedirector.getRedirectUrl(
+                        effectiveProps, serverProps, RepositoryMode.RELEASE, "my-id", Optional.of(project)));
+    }
+
+    @Test
+    void redirectUrlReturningNull() {
+        // Njord not configured
+        Map<String, String> effectiveProps = new HashMap<>();
+        Map<String, String> serverProps = new HashMap<>();
+        Assertions.assertNull(DefaultArtifactPublisherRedirector.getRedirectUrl(
+                effectiveProps, serverProps, RepositoryMode.RELEASE, "my-id", Optional.empty()));
+        // different repo id
+        effectiveProps.put("njord.releaseUrl", "projectValue");
+        Assertions.assertNull(DefaultArtifactPublisherRedirector.getRedirectUrl(
+                effectiveProps, serverProps, RepositoryMode.RELEASE, "my-other-id", Optional.empty()));
+    }
+
+    static final class ProjectWithDistributionManagement implements SessionConfig.CurrentProject {
+
+        private final Map<RepositoryMode, RemoteRepository> distributionMgmtRepos;
+
+        ProjectWithDistributionManagement(
+                String releaseRepoId, String releaseRepoUrl, String snapshotRepoId, String snapshotRepoUrl) {
+            distributionMgmtRepos = new EnumMap<>(RepositoryMode.class);
+            distributionMgmtRepos.put(
+                    RepositoryMode.RELEASE,
+                    new RemoteRepository.Builder(releaseRepoId, "default", releaseRepoUrl)
+                            .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                            .build());
+            distributionMgmtRepos.put(
+                    RepositoryMode.SNAPSHOT,
+                    new RemoteRepository.Builder(snapshotRepoId, "default", snapshotRepoUrl)
+                            .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                            .build());
+        }
+
+        @Override
+        public Artifact artifact() {
+            return null;
+        }
+
+        @Override
+        public Map<String, String> projectProperties() {
+            return null;
+        }
+
+        @Override
+        public List<RemoteRepository> remoteRepositories() {
+            return null;
+        }
+
+        @Override
+        public Map<RepositoryMode, RemoteRepository> distributionManagementRepositories() {
+            return distributionMgmtRepos;
+        }
+
+        @Override
+        public Path buildDirectory() {
+            return null;
         }
     }
 }
