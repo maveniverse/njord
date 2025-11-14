@@ -189,6 +189,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         String storeName = sessionBoundStore.computeIfAbsent(repository, k -> {
             try {
                 String artifactStoreName;
+                boolean isNewArtifactStore = true;
                 if (!uri.contains(":")) {
                     if (uri.isEmpty()) {
                         // empty -> default IF project is available
@@ -210,6 +211,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                     // template:xxx
                     artifactStoreName = createUsingTemplate(uri.substring(9));
                 } else if (uri.startsWith("store:")) {
+                    isNewArtifactStore = false;
                     // store:xxx
                     artifactStoreName = uri.substring(6);
                     Optional<ArtifactStore> existingStore =
@@ -221,6 +223,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
                 }
+                logger.info("Created Njord artifact store {} for remote repository {}", artifactStoreName, repository);
                 return artifactStoreName;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
