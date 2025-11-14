@@ -299,6 +299,11 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
+    public boolean isEmpty() {
+        return artifacts().isEmpty() && metadata().isEmpty();
+    }
+
+    @Override
     protected void doClose() throws IOException {
         DirectoryLocker.INSTANCE.unlockDirectory(basedir);
     }

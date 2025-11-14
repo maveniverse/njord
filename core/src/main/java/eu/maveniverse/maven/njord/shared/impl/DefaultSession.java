@@ -277,7 +277,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                     try (ArtifactStore as = internalArtifactStoreManager
                             .selectArtifactStore(storeName)
                             .orElseThrow(J8Utils.OET)) {
-                        if (!as.artifacts().isEmpty()) {
+                        if (!as.isEmpty()) {
                             p.publish(as);
                             result.addAndGet(1);
                         } else {
