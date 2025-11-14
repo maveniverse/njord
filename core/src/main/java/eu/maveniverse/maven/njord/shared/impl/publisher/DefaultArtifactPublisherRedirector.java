@@ -15,6 +15,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -53,7 +54,12 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
         Map<String, String> config = effectiveConfiguration(repository.getId(), false);
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
-            String redirectUrl = getRedirectUrl(config, repositoryMode, repository);
+            String redirectUrl = getRedirectUrl(
+                    config,
+                    configuration(repository.getId(), false).orElse(Collections.emptyMap()),
+                    repositoryMode,
+                    repository.getId(),
+                    session.config().currentProject());
             if (redirectUrl != null) {
                 logger.debug("Found server {} configured URL: {}", repository.getId(), redirectUrl);
                 return redirectUrl;
@@ -62,7 +68,12 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         return repository.getUrl();
     }
 
-    private String getRedirectUrl(Map<String, String> config, RepositoryMode mode, RemoteRepository repository) {
+    static String getRedirectUrl(
+            Map<String, String> effectiveConfig,
+            Map<String, String> serverConfig,
+            RepositoryMode mode,
+            String repositoryId,
+            Optional<SessionConfig.CurrentProject> project) {
         String key;
         if (mode == RepositoryMode.RELEASE) {
             key = SessionConfig.CONFIG_RELEASE_URL;
@@ -71,23 +82,24 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         } else {
             throw new IllegalStateException("Unknown repository mode: " + mode);
         }
-        // if conf comes from server/config, and contains it unprefixed, use it
-        if (config.containsKey(SessionConfig.SERVER_ID_KEY) && config.containsKey(key)) {
-            return config.get(key);
-        }
-        // try repoId suffixed property (most specific)
-        String suffixedUrl = config.get(key + "." + repository.getId());
+        // try repoId suffixed property (most specific, should take precedence)
+        String suffixedUrl = effectiveConfig.get(key + "." + repositoryId);
         if (suffixedUrl != null) {
             return suffixedUrl;
         }
+
+        // if server config contains the url unprefixed, use it if it is not overwritten by from some other source
+        // having a higher priority
+        if (serverConfig.containsKey(key) && effectiveConfig.get(key).equals(serverConfig.get(key))) {
+            return serverConfig.get(key);
+        }
         // if project present, try unprefixed IF repoID == project.release.distRepoID
-        Optional<SessionConfig.CurrentProject> project = session.config().currentProject();
-        if (config.containsKey(key) && project.isPresent()) {
+        if (effectiveConfig.containsKey(key) && project.isPresent()) {
             RemoteRepository dist = project.orElseThrow(J8Utils.OET)
                     .distributionManagementRepositories()
                     .get(mode);
-            if (dist != null && Objects.equals(repository.getId(), dist.getId())) {
-                return config.get(key);
+            if (dist != null && Objects.equals(repositoryId, dist.getId())) {
+                return effectiveConfig.get(key);
             }
         }
         return null;
