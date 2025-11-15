@@ -127,4 +127,12 @@ public interface ArtifactStore extends Closeable {
      * to apply changes.
      */
     Operation put(Collection<Artifact> artifacts, Collection<Metadata> metadata) throws IOException;
+
+    /**
+     * @return {@code true} if store contains neither artifacts nor metadata, {@code false} otherwise.
+     * @see #artifacts()
+     * @see #metadata()
+     * @since 0.8.7
+     */
+    boolean isEmpty();
 }

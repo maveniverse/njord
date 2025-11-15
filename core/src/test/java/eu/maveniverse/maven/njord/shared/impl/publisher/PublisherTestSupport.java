@@ -201,7 +201,7 @@ public class PublisherTestSupport {
 
             @Override
             public Collection<Artifact> artifacts() {
-                return Collections.emptyList();
+                return Collections.unmodifiableCollection(contents.values());
             }
 
             @Override
@@ -255,6 +255,11 @@ public class PublisherTestSupport {
 
             @Override
             public void close() throws IOException {}
+
+            @Override
+            public boolean isEmpty() {
+                return contents.isEmpty();
+            }
         };
     }
 }
