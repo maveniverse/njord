@@ -28,6 +28,7 @@
     <module>sonatype-central</module>
     <module>sonatype-cp</module>
     <module>sonatype-nx2</module>
+    <module>sonatype-nx3</module>
     <module>apache</module>
   </modules>
 

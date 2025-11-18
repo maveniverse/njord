@@ -57,5 +57,11 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>nx3-its</id>
+      <modules>
+        <module>publisher-sonatype-nx3-its</module>
+      </modules>
+    </profile>
   </profiles>
 </project>
