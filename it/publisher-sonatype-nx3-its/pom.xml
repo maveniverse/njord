@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.njord.it</groupId>
     <artifactId>it</artifactId>
-    <version>0.8.7-SNAPSHOT</version>
+    <version>0.8.8-SNAPSHOT</version>
   </parent>
 
   <artifactId>publisher-sonatype-nx3-its</artifactId>
