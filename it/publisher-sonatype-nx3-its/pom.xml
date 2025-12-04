@@ -25,7 +25,7 @@
   <properties>
     <maven39Version>3.9.11</maven39Version>
     <maven4Version>4.0.0-rc-3</maven4Version>
-    <groovyVersion>5.0.2</groovyVersion>
+    <groovyVersion>5.0.3</groovyVersion>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
