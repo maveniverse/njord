@@ -72,7 +72,7 @@
     <!-- Dependency versions -->
     <version.maveniverseShared>0.1.9</version.maveniverseShared>
     <version.maven>3.9.11</version.maven>
-    <version.resolver>1.9.24</version.resolver>
+    <version.resolver>1.9.25</version.resolver>
     <version.mima>2.4.38</version.mima>
     <version.slf4j>1.7.36</version.slf4j>
   </properties>
