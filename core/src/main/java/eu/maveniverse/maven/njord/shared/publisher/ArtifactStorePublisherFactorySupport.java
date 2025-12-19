@@ -17,6 +17,7 @@ import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -27,6 +28,16 @@ public abstract class ArtifactStorePublisherFactorySupport extends ComponentSupp
      * support it. It is NOT supported by all publishers.
      */
     protected static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
+
+    protected final RepositorySystem repositorySystem;
+    protected final Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories;
+
+    protected ArtifactStorePublisherFactorySupport(
+            RepositorySystem repositorySystem,
+            Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories) {
+        this.repositorySystem = requireNonNull(repositorySystem);
+        this.artifactStoreRequirementsFactories = requireNonNull(artifactStoreRequirementsFactories);
+    }
 
     @Override
     public final ArtifactStorePublisher create(Session session) {
@@ -68,6 +79,17 @@ public abstract class ArtifactStorePublisherFactorySupport extends ComponentSupp
             result.put(RepositoryMode.SNAPSHOT, snapshotRepository);
         }
         return result;
+    }
+
+    protected ArtifactStoreRequirements createArtifactStoreRequirements(
+            Session session, PublisherConfigSupport config) {
+        ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
+        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
+            artifactStoreRequirements = artifactStoreRequirementsFactories
+                    .get(config.artifactStoreRequirements())
+                    .create(session);
+        }
+        return artifactStoreRequirements;
     }
 
     protected abstract ArtifactStorePublisher doCreate(

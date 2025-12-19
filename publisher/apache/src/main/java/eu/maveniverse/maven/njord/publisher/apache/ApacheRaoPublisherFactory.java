@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
@@ -37,13 +38,14 @@ public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupp
     public static final String SNAPSHOT_REPOSITORY_URL =
             "https://repository.apache.org/content/repositories/snapshots/";
 
-    private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
     public ApacheRaoPublisherFactory(
             RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
-        this.repositorySystem = requireNonNull(repositorySystem);
+        super(
+                repositorySystem,
+                Collections.singletonMap(SonatypeCentralRequirementsFactory.NAME, centralRequirementsFactory));
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
     }
 

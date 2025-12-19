@@ -7,13 +7,10 @@
  */
 package eu.maveniverse.maven.njord.publisher.deploy;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import java.util.Map;
 import javax.inject.Inject;
@@ -42,29 +39,22 @@ public class DeployPublisherFactory extends ArtifactStorePublisherFactorySupport
         implements ArtifactStorePublisherFactory {
     public static final String NAME = "deploy";
 
-    private final RepositorySystem repositorySystem;
-    private final Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories;
-
     @Inject
     public DeployPublisherFactory(
             RepositorySystem repositorySystem,
             Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.artifactStoreRequirementsFactories = requireNonNull(artifactStoreRequirementsFactories);
+        super(repositorySystem, artifactStoreRequirementsFactories);
     }
 
     @Override
     protected ArtifactStorePublisher doCreate(
             Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
         DeployPublisherConfig config = new DeployPublisherConfig(session.config());
-        ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
-        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
-            artifactStoreRequirements = artifactStoreRequirementsFactories
-                    .get(config.artifactStoreRequirements())
-                    .create(session);
-        }
-
         return new DeployPublisher(
-                session, repositorySystem, releasesRepository, snapshotsRepository, artifactStoreRequirements);
+                session,
+                repositorySystem,
+                releasesRepository,
+                snapshotsRepository,
+                createArtifactStoreRequirements(session, config));
     }
 }

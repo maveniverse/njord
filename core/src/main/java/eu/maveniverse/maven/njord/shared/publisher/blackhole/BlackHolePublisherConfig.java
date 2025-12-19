@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.shared.publisher.blackhole;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Black Hole publisher config.
@@ -24,8 +25,7 @@ public final class BlackHolePublisherConfig extends PublisherConfigSupport {
 
     public BlackHolePublisherConfig(SessionConfig sessionConfig) {
         super(BlackHolePublisherFactory.NAME, sessionConfig);
-        this.fail = Boolean.parseBoolean(
-                sessionConfig.effectiveProperties().getOrDefault(keyName("fail"), Boolean.FALSE.toString()));
+        this.fail = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("fail"));
     }
 
     public boolean fail() {

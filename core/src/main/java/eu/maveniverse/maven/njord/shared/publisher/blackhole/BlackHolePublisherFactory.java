@@ -7,13 +7,10 @@
  */
 package eu.maveniverse.maven.njord.shared.publisher.blackhole;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.util.HashMap;
@@ -34,15 +31,11 @@ public class BlackHolePublisherFactory extends ArtifactStorePublisherFactorySupp
         implements ArtifactStorePublisherFactory {
     public static final String NAME = "black-hole";
 
-    private final RepositorySystem repositorySystem;
-    private final Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories;
-
     @Inject
     public BlackHolePublisherFactory(
             RepositorySystem repositorySystem,
             Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.artifactStoreRequirementsFactories = requireNonNull(artifactStoreRequirementsFactories);
+        super(repositorySystem, artifactStoreRequirementsFactories);
     }
 
     @Override
@@ -65,19 +58,13 @@ public class BlackHolePublisherFactory extends ArtifactStorePublisherFactorySupp
     protected ArtifactStorePublisher doCreate(
             Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
         BlackHolePublisherConfig config = new BlackHolePublisherConfig(session.config());
-        ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
-        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
-            artifactStoreRequirements = artifactStoreRequirementsFactories
-                    .get(config.artifactStoreRequirements())
-                    .create(session);
-        }
 
         return new BlackHolePublisher(
                 session,
                 repositorySystem,
                 releasesRepository,
                 snapshotsRepository,
-                artifactStoreRequirements,
+                createArtifactStoreRequirements(session, config),
                 config.fail());
     }
 }

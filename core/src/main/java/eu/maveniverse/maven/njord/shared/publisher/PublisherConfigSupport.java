@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Publisher config support class.
@@ -22,14 +23,19 @@ public abstract class PublisherConfigSupport {
     public PublisherConfigSupport(String name, SessionConfig sessionConfig) {
         this.name = requireNonNull(name);
         this.sessionConfig = requireNonNull(sessionConfig);
-        this.artifactStoreRequirements = sessionConfig
-                .effectiveProperties()
-                .getOrDefault(keyName("artifactStoreRequirements"), ArtifactStoreRequirements.NONE.name());
+        this.artifactStoreRequirements = ConfigUtils.getString(
+                sessionConfig.effectiveProperties(),
+                ArtifactStoreRequirements.NONE.name(),
+                keyNames("artifactStoreRequirements"));
     }
 
     protected String keyName(String property) {
         requireNonNull(property);
         return "njord.publisher." + name + "." + property;
+    }
+
+    protected String[] keyNames(String property) {
+        return new String[] {keyName(property), SessionConfig.KEY_PREFIX + property};
     }
 
     public String artifactStoreRequirements() {

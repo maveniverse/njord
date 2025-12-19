@@ -48,42 +48,26 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(SonatypeCentralPortalPublisherFactory.NAME, sessionConfig);
         // njord.publisher.sonatype-cp.bundleName
-        this.bundleName = ConfigUtils.getString(
-                sessionConfig.effectiveProperties(),
-                null,
-                keyName("bundleName"),
-                SessionConfig.KEY_PREFIX + "bundleName");
+        this.bundleName = ConfigUtils.getString(sessionConfig.effectiveProperties(), null, keyNames("bundleName"));
 
         // njord.publisher.sonatype-cp.publishingType
-        this.publishingType = ConfigUtils.getString(
-                sessionConfig.effectiveProperties(),
-                null,
-                keyName("publishingType"),
-                SessionConfig.KEY_PREFIX + "publishingType");
+        this.publishingType =
+                ConfigUtils.getString(sessionConfig.effectiveProperties(), null, keyNames("publishingType"));
 
         // njord.publisher.sonatype-cp.waitForStates
-        this.waitForStates = ConfigUtils.getBoolean(
-                sessionConfig.effectiveProperties(),
-                false,
-                keyName("waitForStates"),
-                SessionConfig.KEY_PREFIX + "waitForStates");
+        this.waitForStates =
+                ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("waitForStates"));
 
         // njord.publisher.sonatype-cp.waitForStatesTimeout
-        this.waitForStatesTimeout = Duration.parse(ConfigUtils.getString(
-                sessionConfig.effectiveProperties(),
-                "PT15M",
-                keyName("waitForStatesTimeout"),
-                SessionConfig.KEY_PREFIX + "waitForStatesTimeout"));
+        this.waitForStatesTimeout = Duration.parse(
+                ConfigUtils.getString(sessionConfig.effectiveProperties(), "PT15M", keyNames("waitForStatesTimeout")));
         if (this.waitForStatesTimeout.isNegative()) {
             throw new IllegalArgumentException("waitForStatesTimeout cannot be negative");
         }
 
         // njord.publisher.sonatype-cp.waitForStatesSleep
-        this.waitForStatesSleep = Duration.parse(ConfigUtils.getString(
-                sessionConfig.effectiveProperties(),
-                "PT10S",
-                keyName("waitForStatesSleep"),
-                SessionConfig.KEY_PREFIX + "waitForStatesSleep"));
+        this.waitForStatesSleep = Duration.parse(
+                ConfigUtils.getString(sessionConfig.effectiveProperties(), "PT10S", keyNames("waitForStatesSleep")));
         if (this.waitForStatesSleep.isNegative()) {
             throw new IllegalArgumentException("waitForStatesSleep cannot be negative");
         }
@@ -93,17 +77,13 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 sessionConfig.effectiveProperties(),
                                 "pending,validating",
-                                keyName("waitForStatesWaitStates"),
-                                SessionConfig.KEY_PREFIX + "waitForStatesWaitStates")
+                                keyNames("waitForStatesWaitStates"))
                         .toLowerCase(Locale.ENGLISH))));
 
         // njord.publisher.sonatype-cp.waitForStatesFailureStates
         this.waitForStatesFailureStates = Collections.unmodifiableSet(
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                sessionConfig.effectiveProperties(),
-                                "failed",
-                                keyName("waitForStatesFailureStates"),
-                                SessionConfig.KEY_PREFIX + "waitForStatesFailureStates")
+                                sessionConfig.effectiveProperties(), "failed", keyNames("waitForStatesFailureStates"))
                         .toLowerCase(Locale.ENGLISH))));
     }
 

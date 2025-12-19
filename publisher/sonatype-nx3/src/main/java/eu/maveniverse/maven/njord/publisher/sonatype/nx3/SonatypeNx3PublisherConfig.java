@@ -11,6 +11,7 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import java.time.Duration;
 import java.util.Map;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Sonatype Nexus Repository 3 publisher configuration.
@@ -44,16 +45,16 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
         Map<String, String> effectiveProperties = sessionConfig.effectiveProperties();
 
         // Required: release repository name
-        this.releaseRepositoryName = effectiveProperties.get(keyName("releaseRepositoryName"));
+        this.releaseRepositoryName =
+                ConfigUtils.getString(effectiveProperties, null, keyNames("releaseRepositoryName"));
 
         // Optional: snapshot repository name
-        this.snapshotRepositoryName = effectiveProperties.get(keyName("snapshotRepositoryName"));
+        this.snapshotRepositoryName =
+                ConfigUtils.getString(effectiveProperties, null, keyNames("snapshotRepositoryName"));
+        ;
 
         // Tag: check specific property first, then generic njord.tag, then compute default
-        String tagValue = effectiveProperties.get(keyName("tag"));
-        if (tagValue == null) {
-            tagValue = effectiveProperties.get("njord.tag");
-        }
+        String tagValue = ConfigUtils.getString(effectiveProperties, null, keyNames("tag"));
         if (tagValue == null && sessionConfig.currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
                     sessionConfig.currentProject().get();

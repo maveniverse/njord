@@ -7,13 +7,10 @@
  */
 package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import java.util.Map;
 import javax.inject.Inject;
@@ -28,28 +25,17 @@ public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySu
         implements ArtifactStorePublisherFactory {
     public static final String NAME = "sonatype-nx2";
 
-    private final RepositorySystem repositorySystem;
-    private final Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories;
-
     @Inject
     public SonatypeNx2PublisherFactory(
             RepositorySystem repositorySystem,
             Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.artifactStoreRequirementsFactories = requireNonNull(artifactStoreRequirementsFactories);
+        super(repositorySystem, artifactStoreRequirementsFactories);
     }
 
     @Override
     protected ArtifactStorePublisher doCreate(
             Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
         SonatypeNx2PublisherConfig config = new SonatypeNx2PublisherConfig(session.config());
-        ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
-        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
-            artifactStoreRequirements = artifactStoreRequirementsFactories
-                    .get(config.artifactStoreRequirements())
-                    .create(session);
-        }
-
         return new SonatypeNx2Publisher(
                 session,
                 repositorySystem,
@@ -59,6 +45,6 @@ public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySu
                 snapshotsRepository,
                 releasesRepository,
                 snapshotsRepository,
-                artifactStoreRequirements);
+                createArtifactStoreRequirements(session, config));
     }
 }
