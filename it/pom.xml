@@ -25,6 +25,7 @@
 
   <modules>
     <module>extension-its</module>
+    <module>publisher-sonatype-nx3-its</module>
   </modules>
 
   <properties>
