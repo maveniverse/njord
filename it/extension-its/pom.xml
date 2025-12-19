@@ -23,9 +23,6 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
-    <maven39Version>3.9.12</maven39Version>
-    <maven4Version>4.0.0-rc-5</maven4Version>
-
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
   </properties>
