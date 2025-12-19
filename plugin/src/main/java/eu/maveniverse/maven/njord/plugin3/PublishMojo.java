@@ -21,9 +21,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "publish", threadSafe = true, requiresProject = false, aggregator = true)
 public class PublishMojo extends PublisherSupportMojo {
     /**
-     * Whether source store should be dropped after successful operation.
+     * Whether source store should be dropped after successful operation. Defaults to {@code false}.
      */
-    @Parameter(required = true, property = "drop", defaultValue = "true")
+    @Parameter(required = true, property = "drop", defaultValue = "false")
     private boolean drop;
 
     @Override
