@@ -109,6 +109,8 @@ def startNexus(File testBasedir, int maxAttempts = 60, int waitSeconds = 2) {
     ant.copy(todir: targetDb, overwrite: true) {
         fileset(dir: templateDb)
     }
+    // TODO: needs manual step
+    // sudo chown -R 200 publisher-sonatype-nx3-its/docker/dat
     println "[DOCKER] Database template copied successfully"
 
     // Start containers

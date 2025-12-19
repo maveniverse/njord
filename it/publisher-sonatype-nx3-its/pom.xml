@@ -25,7 +25,8 @@
   <properties>
     <maven39Version>3.9.12</maven39Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
-    <groovyVersion>5.0.3</groovyVersion>
+    <!-- Java 8 -->
+    <groovyVersion>4.0.29</groovyVersion>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
@@ -119,6 +120,11 @@
                 <version>${groovyVersion}</version>
               </dependency>
             </dependencies>
+            <configuration>
+              <!-- TODO: this IT must be invoked manually (due Nx3 docker requirements) -->
+              <skipInstallation>true</skipInstallation>
+              <skipInvocation>true</skipInvocation>
+            </configuration>
             <executions>
               <execution>
                 <id>integration-test</id>
@@ -165,7 +171,7 @@
                 </goals>
                 <phase>integration-test</phase>
                 <configuration>
-                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>
+                  <!--skipInvocation>${mvn4-its-run.skip}</skipInvocation-->
                   <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>
                   <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
