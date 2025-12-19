@@ -94,6 +94,12 @@ public interface Session extends Closeable {
     ArtifactStoreTemplate selectSessionArtifactStoreTemplate(String uri);
 
     /**
+     * Returns {@code true} if this repository should be handled by connector. Calls to
+     * {@link #getOrCreateSessionArtifactStore(RemoteRepository, String)} must be protected by this method.
+     */
+    boolean handleRemoteRepository(RemoteRepository repository);
+
+    /**
      * Creates session-bound artifact store and memoize it during session.
      * {@code repoId::njord:}
      * {@code repoId::njord:template:templateName}
