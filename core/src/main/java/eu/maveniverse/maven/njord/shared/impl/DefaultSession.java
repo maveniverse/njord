@@ -40,11 +40,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
+import org.apache.maven.rtinfo.RuntimeInformation;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
+    private final RuntimeInformation mavenRuntimeInformation;
     private final String sessionBoundStoresKey;
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
@@ -56,6 +58,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     public DefaultSession(
             SessionConfig sessionConfig,
+            RuntimeInformation mavenRuntimeInformation,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
@@ -64,6 +67,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
         super(sessionConfig);
+        this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
         this.sessionBoundStoresKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
@@ -185,21 +189,19 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     public boolean handleRemoteRepository(RemoteRepository repository) {
         requireNonNull(repository);
         checkClosed();
-        // BEGIN: workaround for Maven 4.0.0-rc-5 (only)
-        // IF: repoId is in form '[some string]-hex' (hex part is 40 char long; sha1)
-        // THEN: chop it off, and check if "some string" ID repo is already present
-        if (repository.getId().length() > 41
-                && repository
-                        .getId()
-                        .substring(repository.getId().length() - 41)
-                        .matches("-[0-9a-f]+")) {
-            // case1: snapshot deploy tries to download metadata to get build number; ignore this
-            if (repository.getPolicy(true).isEnabled()) {
-                return false;
+        if (mavenRuntimeInformation.isMavenVersion("[4.0.0-rc-5,4.0.0-rc-5]")) {
+            // BEGIN: workaround for Maven 4.0.0-rc-5 (only)
+            // IF: repoId is in form '[some string]-hex' (hex part is 40 char long; sha1)
+            // THEN: chop it off, and check if "some string" ID repo is already present
+            if (repository.getId().length() > 41
+                    && repository
+                            .getId()
+                            .substring(repository.getId().length() - 41)
+                            .matches("-[0-9a-f]+")) {
+                String id = repository.getId().substring(0, repository.getId().length() - 41);
+                return getSessionBoundStores().keySet().stream().noneMatch(r -> id.equals(r.getId()));
             }
-            // case2: release deploy tries to download metadata for merging; ignore if match found
-            String id = repository.getId().substring(0, repository.getId().length() - 41);
-            return getSessionBoundStores().keySet().stream().noneMatch(r -> id.equals(r.getId()));
+            // END: workaround for Maven 4.0.0-rc-5 (only)
         }
         return true;
     }

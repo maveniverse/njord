@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.maven.rtinfo.RuntimeInformation;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
@@ -140,6 +141,17 @@ public class PublisherTestSupport {
         HashMap<String, ArtifactStorePublisherFactory> publishers = new HashMap<>();
         publishers.put("sonatype-cp", c -> sonatypeCp());
         SessionFactory factory = new DefaultSessionFactory(
+                new RuntimeInformation() {
+                    @Override
+                    public String getMavenVersion() {
+                        return "3.9.11";
+                    }
+
+                    @Override
+                    public boolean isMavenVersion(String s) {
+                        return getMavenVersion().equals(s);
+                    }
+                },
                 new DefaultInternalArtifactStoreManagerFactory(checksumAlgorithmFactorySelector),
                 new DefaultArtifactStoreWriterFactory(),
                 new DefaultArtifactStoreMergerFactory(context.repositorySystem(), checksumAlgorithmFactorySelector),
