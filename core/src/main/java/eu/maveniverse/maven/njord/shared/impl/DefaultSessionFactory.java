@@ -21,10 +21,12 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.apache.maven.rtinfo.RuntimeInformation;
 
 @Singleton
 @Named
 public class DefaultSessionFactory implements SessionFactory {
+    private final RuntimeInformation mavenRuntimeInformation;
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
     private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
     private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
@@ -35,6 +37,7 @@ public class DefaultSessionFactory implements SessionFactory {
 
     @Inject
     public DefaultSessionFactory(
+            RuntimeInformation mavenRuntimeInformation,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
@@ -42,6 +45,7 @@ public class DefaultSessionFactory implements SessionFactory {
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
+        this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
         this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
         this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
@@ -55,6 +59,7 @@ public class DefaultSessionFactory implements SessionFactory {
     public DefaultSession create(SessionConfig sessionConfig) {
         return new DefaultSession(
                 sessionConfig,
+                mavenRuntimeInformation,
                 internalArtifactStoreManagerFactory,
                 artifactStoreWriterFactory,
                 artifactStoreMergerFactory,

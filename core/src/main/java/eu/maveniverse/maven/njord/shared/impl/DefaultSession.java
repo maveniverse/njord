@@ -40,12 +40,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
+import org.apache.maven.rtinfo.RuntimeInformation;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
-    private final String sessionBoundStoreKey;
+    private final RuntimeInformation mavenRuntimeInformation;
+    private final String sessionBoundStoresKey;
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
@@ -56,6 +58,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     public DefaultSession(
             SessionConfig sessionConfig,
+            RuntimeInformation mavenRuntimeInformation,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
             ArtifactStoreWriterFactory artifactStoreWriterFactory,
             ArtifactStoreMergerFactory artifactStoreMergerFactory,
@@ -64,7 +67,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
         super(sessionConfig);
-        this.sessionBoundStoreKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
+        this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
+        this.sessionBoundStoresKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
         this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
         this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
@@ -182,11 +186,33 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
+    public boolean handleRemoteRepository(RemoteRepository repository) {
+        requireNonNull(repository);
+        checkClosed();
+        if (mavenRuntimeInformation.isMavenVersion("[4.0.0-rc-5,4.0.0-rc-5]")) {
+            // BEGIN: workaround for Maven 4.0.0-rc-5 (only)
+            // IF: repoId is in form '[some string]-hex' (hex part is 40 char long; sha1)
+            // THEN: chop it off, and check if "some string" ID repo is already present
+            if (repository.getId().length() > 41
+                    && repository
+                            .getId()
+                            .substring(repository.getId().length() - 41)
+                            .matches("-[0-9a-f]+")) {
+                String id = repository.getId().substring(0, repository.getId().length() - 41);
+                return getSessionBoundStores().keySet().stream().noneMatch(r -> id.equals(r.getId()));
+            }
+            // END: workaround for Maven 4.0.0-rc-5 (only)
+        }
+        return true;
+    }
+
+    @Override
     public ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri) {
+        requireNonNull(repository);
         requireNonNull(uri);
         checkClosed();
-        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
-        String storeName = sessionBoundStore.computeIfAbsent(repository, k -> {
+        ConcurrentMap<RemoteRepository, String> sessionBoundStores = getSessionBoundStores();
+        String storeName = sessionBoundStores.computeIfAbsent(repository, r -> {
             try {
                 String artifactStoreName;
                 boolean isNewArtifactStore = true;
@@ -223,7 +249,9 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
                 }
-                logger.info("Created Njord artifact store {} for remote repository {}", artifactStoreName, repository);
+                if (isNewArtifactStore) {
+                    logger.info("Created Njord artifact store {} for remote repository {}", artifactStoreName, r);
+                }
                 return artifactStoreName;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -264,8 +292,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public int publishSessionArtifactStores() throws IOException {
         checkClosed();
-        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
-        if (sessionBoundStore.isEmpty()) {
+        ConcurrentMap<RemoteRepository, String> sessionBoundStores = getSessionBoundStores();
+        if (sessionBoundStores.isEmpty()) {
             return 0;
         }
         AtomicInteger result = new AtomicInteger(0);
@@ -275,7 +303,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             Optional<ArtifactStorePublisher> po = selectArtifactStorePublisher(publisherName);
             if (po.isPresent()) {
                 ArtifactStorePublisher p = po.orElseThrow(J8Utils.OET);
-                for (String storeName : sessionBoundStore.values()) {
+                for (String storeName : sessionBoundStores.values()) {
                     logger.info("Publishing {} with {}", storeName, publisherName);
                     try (ArtifactStore as = internalArtifactStoreManager
                             .selectArtifactStore(storeName)
@@ -300,12 +328,12 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public int dropSessionArtifactStores() {
         checkClosed();
-        ConcurrentMap<RemoteRepository, String> sessionBoundStore = getSessionBoundStore();
-        if (sessionBoundStore.isEmpty()) {
+        ConcurrentMap<RemoteRepository, String> sessionBoundStores = getSessionBoundStores();
+        if (sessionBoundStores.isEmpty()) {
             return 0;
         }
         AtomicInteger result = new AtomicInteger(0);
-        for (String storeName : sessionBoundStore.values()) {
+        for (String storeName : sessionBoundStores.values()) {
             try {
                 if (internalArtifactStoreManager.dropArtifactStore(storeName)) {
                     result.addAndGet(1);
@@ -326,8 +354,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
      * Returns map of "Njord URI" to "storeName" that were created in current session.
      */
     @SuppressWarnings("unchecked")
-    private ConcurrentMap<RemoteRepository, String> getSessionBoundStore() {
+    private ConcurrentMap<RemoteRepository, String> getSessionBoundStores() {
         return (ConcurrentHashMap<RemoteRepository, String>)
-                config.session().getData().computeIfAbsent(sessionBoundStoreKey, ConcurrentHashMap::new);
+                config.session().getData().computeIfAbsent(sessionBoundStoresKey, ConcurrentHashMap::new);
     }
 }

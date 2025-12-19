@@ -57,18 +57,20 @@ public class NjordRepositoryConnectorFactory implements RepositoryConnectorFacto
             Optional<Session> nso = NjordUtils.mayGetNjordSession(session);
             if (nso.isPresent()) {
                 Session ns = nso.orElseThrow(J8Utils.OET);
-                String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
-                if (url != null && url.startsWith(NAME + ":")) {
-                    RepositoryConnectorFactory basicRepositoryConnectorFactory = requireNonNull(
-                            repositoryConnectorFactories.get("basic").get(),
-                            "No basic repository connector factory found");
-                    ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(repository, url.substring(6));
-                    return new NjordRepositoryConnector(
-                            artifactStore,
-                            repository,
-                            basicRepositoryConnectorFactory.newInstance(
-                                    artifactStore.storeRepositorySession(session),
-                                    artifactStore.storeRemoteRepository()));
+                if (ns.handleRemoteRepository(repository)) {
+                    String url = ns.artifactPublisherRedirector().getRepositoryUrl(repository);
+                    if (url != null && url.startsWith(NAME + ":")) {
+                        RepositoryConnectorFactory basicRepositoryConnectorFactory = requireNonNull(
+                                repositoryConnectorFactories.get("basic").get(),
+                                "No basic repository connector factory found");
+                        ArtifactStore artifactStore = ns.getOrCreateSessionArtifactStore(repository, url.substring(6));
+                        return new NjordRepositoryConnector(
+                                artifactStore,
+                                repository,
+                                basicRepositoryConnectorFactory.newInstance(
+                                        artifactStore.storeRepositorySession(session),
+                                        artifactStore.storeRemoteRepository()));
+                    }
                 }
             }
         }
