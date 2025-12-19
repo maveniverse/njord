@@ -35,6 +35,7 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
 
     private final String releaseRepositoryName;
     private final String snapshotRepositoryName;
+    private final boolean tagConfigured;
     private final String tag;
     private final Duration connectTimeout;
     private final Duration requestTimeout;
@@ -51,9 +52,9 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
         // Optional: snapshot repository name
         this.snapshotRepositoryName =
                 ConfigUtils.getString(effectiveProperties, null, keyNames("snapshotRepositoryName"));
-        ;
 
         // Tag: check specific property first, then generic njord.tag, then compute default
+        boolean tagConfigured = false;
         String tagValue = ConfigUtils.getString(effectiveProperties, null, keyNames("tag"));
         if (tagValue == null && sessionConfig.currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
@@ -61,7 +62,10 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
             tagValue =
                     project.artifact().getGroupId() + "-" + project.artifact().getArtifactId() + "-"
                             + project.artifact().getVersion();
+        } else {
+            tagConfigured = true;
         }
+        this.tagConfigured = tagConfigured;
         this.tag = tagValue;
 
         // Timeouts with defaults
@@ -78,6 +82,10 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
 
     public String snapshotRepositoryName() {
         return snapshotRepositoryName;
+    }
+
+    public boolean isTagConfigured() {
+        return tagConfigured;
     }
 
     public String tag() {

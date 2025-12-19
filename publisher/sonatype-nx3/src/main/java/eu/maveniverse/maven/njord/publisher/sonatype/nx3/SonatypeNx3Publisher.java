@@ -160,8 +160,8 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
             // Check if server is Pro edition (for tagging support)
             boolean isProEdition = isNexusProEdition(httpClient, repository);
 
-            // Warn if tag is configured but server is OSS
-            if (publisherConfig.tag() != null && !isProEdition) {
+            // Warn only if tag is explicitly configured but server is OSS
+            if (publisherConfig.isTagConfigured() && !isProEdition) {
                 logger.warn(
                         "Tag '{}' is configured but Nexus Repository OSS does not support tagging. "
                                 + "Tagging is only available in Nexus Repository Pro. The tag will be omitted.",
