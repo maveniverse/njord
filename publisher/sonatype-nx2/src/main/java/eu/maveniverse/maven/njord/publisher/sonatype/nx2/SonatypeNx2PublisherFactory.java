@@ -10,7 +10,9 @@ package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
 import java.util.Map;
@@ -19,11 +21,11 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(SonatypeNx2PublisherFactory.NAME)
-public class SonatypeNx2PublisherFactory implements ArtifactStorePublisherFactory {
+public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySupport
+        implements ArtifactStorePublisherFactory {
     public static final String NAME = "sonatype-nx2";
 
     private final RepositorySystem repositorySystem;
@@ -38,25 +40,13 @@ public class SonatypeNx2PublisherFactory implements ArtifactStorePublisherFactor
     }
 
     @Override
-    public SonatypeNx2Publisher create(Session session) {
+    protected ArtifactStorePublisher doCreate(
+            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
         SonatypeNx2PublisherConfig config = new SonatypeNx2PublisherConfig(session.config());
-        RemoteRepository releasesRepository = config.releaseRepositoryId() != null
-                        && config.releaseRepositoryUrl() != null
-                ? new RemoteRepository.Builder(config.releaseRepositoryId(), "default", config.releaseRepositoryUrl())
-                        .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
-                        .build()
-                : null;
-        RemoteRepository snapshotsRepository = config.snapshotRepositoryId() != null
-                        && config.snapshotRepositoryUrl() != null
-                ? new RemoteRepository.Builder(config.snapshotRepositoryId(), "default", config.snapshotRepositoryUrl())
-                        .setReleasePolicy(new RepositoryPolicy(false, null, null))
-                        .build()
-                : null;
-
         ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
-        if (!ArtifactStoreRequirements.NONE.name().equals(config.getArtifactStoreRequirements())) {
+        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
             artifactStoreRequirements = artifactStoreRequirementsFactories
-                    .get(config.getArtifactStoreRequirements())
+                    .get(config.artifactStoreRequirements())
                     .create(session);
         }
 

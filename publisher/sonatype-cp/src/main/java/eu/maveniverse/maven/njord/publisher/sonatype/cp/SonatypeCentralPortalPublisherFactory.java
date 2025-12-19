@@ -12,7 +12,11 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.publisher.sonatype.central.SonatypeCentralRequirementsFactory;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -22,8 +26,13 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(SonatypeCentralPortalPublisherFactory.NAME)
-public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublisherFactory {
+public class SonatypeCentralPortalPublisherFactory extends ArtifactStorePublisherFactorySupport
+        implements MavenCentralPublisherFactory {
     public static final String NAME = "sonatype-cp";
+    public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
+    public static final String RELEASE_REPOSITORY_URL = "https://central.sonatype.com/api/v1/publisher/upload";
+    public static final String SNAPSHOT_REPOSITORY_ID = "sonatype-cp";
+    public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots/";
 
     private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
@@ -36,23 +45,25 @@ public class SonatypeCentralPortalPublisherFactory implements MavenCentralPublis
     }
 
     @Override
-    public ArtifactStorePublisher create(Session session) {
-        SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(session.config());
-        RemoteRepository releasesRepository =
-                cpConfig.releaseRepositoryId() != null && cpConfig.releaseRepositoryUrl() != null
-                        ? new RemoteRepository.Builder(
-                                        cpConfig.releaseRepositoryId(), "default", cpConfig.releaseRepositoryUrl())
-                                .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
-                                .build()
-                        : null;
-        RemoteRepository snapshotsRepository =
-                cpConfig.snapshotRepositoryId() != null && cpConfig.snapshotRepositoryUrl() != null
-                        ? new RemoteRepository.Builder(
-                                        cpConfig.snapshotRepositoryId(), "default", cpConfig.snapshotRepositoryUrl())
-                                .setReleasePolicy(new RepositoryPolicy(false, null, null))
-                                .build()
-                        : null;
+    protected Map<RepositoryMode, RemoteRepository> createRepositories(Session session) {
+        HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
+        result.put(
+                RepositoryMode.RELEASE,
+                new RemoteRepository.Builder(RELEASE_REPOSITORY_ID, "default", RELEASE_REPOSITORY_URL)
+                        .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
+                        .build());
+        result.put(
+                RepositoryMode.SNAPSHOT,
+                new RemoteRepository.Builder(SNAPSHOT_REPOSITORY_ID, "default", SNAPSHOT_REPOSITORY_URL)
+                        .setReleasePolicy(new RepositoryPolicy(false, "", ""))
+                        .build());
+        return result;
+    }
 
+    @Override
+    protected ArtifactStorePublisher doCreate(
+            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+        SonatypeCentralPortalPublisherConfig cpConfig = new SonatypeCentralPortalPublisherConfig(session.config());
         return new SonatypeCentralPortalPublisher(
                 session,
                 repositorySystem,

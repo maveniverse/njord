@@ -7,9 +7,8 @@
  */
 package eu.maveniverse.maven.njord.publisher.sonatype.nx3;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import java.time.Duration;
 import java.util.Map;
 
@@ -26,9 +25,10 @@ import java.util.Map;
  *     <li><code>njord.publisher.sonatype-nx3.tag</code> or <code>njord.tag</code> - tag to apply to components (defaults to ${groupId}-${artifactId}-${version})</li>
  *     <li><code>njord.publisher.sonatype-nx3.connectTimeout</code> - HTTP connect timeout (default: PT30S)</li>
  *     <li><code>njord.publisher.sonatype-nx3.requestTimeout</code> - HTTP request timeout (default: PT5M)</li>
+ *     <li><code>njord.publisher.sonatype-nx3.artifactStoreRequirements</code> - the requirements deployment must fulfil (defaults to NONE)</li>
  * </ul>
  */
-public final class SonatypeNx3PublisherConfig {
+public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
     private static final String DEFAULT_CONNECT_TIMEOUT = "PT30S";
     private static final String DEFAULT_REQUEST_TIMEOUT = "PT5M";
 
@@ -39,7 +39,7 @@ public final class SonatypeNx3PublisherConfig {
     private final Duration requestTimeout;
 
     public SonatypeNx3PublisherConfig(SessionConfig sessionConfig) {
-        requireNonNull(sessionConfig, "sessionConfig");
+        super(SonatypeNx3PublisherFactory.NAME, sessionConfig);
 
         Map<String, String> effectiveProperties = sessionConfig.effectiveProperties();
 
@@ -69,11 +69,6 @@ public final class SonatypeNx3PublisherConfig {
 
         String requestTimeoutStr = effectiveProperties.getOrDefault(keyName("requestTimeout"), DEFAULT_REQUEST_TIMEOUT);
         this.requestTimeout = Duration.parse(requestTimeoutStr);
-    }
-
-    private static String keyName(String property) {
-        requireNonNull(property);
-        return "njord.publisher." + SonatypeNx3PublisherFactory.NAME + "." + property;
     }
 
     public String releaseRepositoryName() {

@@ -1,3 +1,3 @@
 # Sonatype publisher support
 
-This module does not implements any publishers. It implements Central Requirements only.
+This module does not implement any publishers. It implements Central Requirements only.
