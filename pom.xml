@@ -134,12 +134,12 @@
       </dependency>
       <dependency>
         <groupId>eu.maveniverse.maven.shared</groupId>
-        <artifactId>plugin</artifactId>
+        <artifactId>extension</artifactId>
         <version>${version.maveniverseShared}</version>
       </dependency>
       <dependency>
         <groupId>eu.maveniverse.maven.shared</groupId>
-        <artifactId>extension</artifactId>
+        <artifactId>plugin</artifactId>
         <version>${version.maveniverseShared}</version>
       </dependency>
 
