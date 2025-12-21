@@ -179,7 +179,7 @@ public interface SessionConfig {
 
     /**
      * Whether to automatically drop session created stores IF {@link #autoPublish()} is {@code true}.
-     * Defaults to {@code false}.
+     * Defaults to {@code true}.
      *
      * @see #CONFIG_AUTO_DROP
      */
@@ -547,7 +547,7 @@ public interface SessionConfig {
                 this.autoPublish = Boolean.parseBoolean(
                         effectiveProperties.getOrDefault(CONFIG_AUTO_PUBLISH, Boolean.FALSE.toString()));
                 this.autoDrop = Boolean.parseBoolean(
-                        effectiveProperties.getOrDefault(CONFIG_AUTO_DROP, Boolean.FALSE.toString()));
+                        effectiveProperties.getOrDefault(CONFIG_AUTO_DROP, Boolean.TRUE.toString()));
 
                 String prefixString = effectiveProperties.get(CONFIG_PREFIX);
                 if (prefixString == null && currentProject != null) {
