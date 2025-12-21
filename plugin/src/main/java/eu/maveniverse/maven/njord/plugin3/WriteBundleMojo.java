@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -29,13 +30,13 @@ public class WriteBundleMojo extends NjordMojoSupport {
     /**
      * The name of the store to be written out.
      */
-    @Parameter(required = true, property = "store")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "store")
     private String store;
 
     /**
      * The directory to write out the bundle file.
      */
-    @Parameter(required = true, property = "directory")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "directory")
     private String directory;
 
     @Override

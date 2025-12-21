@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
@@ -34,7 +35,7 @@ public class MergeAllMojo extends NjordMojoSupport {
     /**
      * Fail if no store got merged, by default {@code true}.
      */
-    @Parameter(required = true, property = "failIfNothingDone", defaultValue = "true")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "failIfNothingDone", defaultValue = "true")
     private boolean failIfNothingDone;
 
     /**
@@ -42,7 +43,7 @@ public class MergeAllMojo extends NjordMojoSupport {
      * is not set (is left {@code null}), the first found origin project artifact will be used which is
      * usually what user wants.
      */
-    @Parameter(property = "originProjectGav")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "originProjectGav")
     private String originProjectGav;
 
     @Override

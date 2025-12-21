@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class ImportMojo extends NjordMojoSupport {
     /**
      * The bundle file to import.
      */
-    @Parameter(required = true, property = "file")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "file")
     private String file;
 
     @Override

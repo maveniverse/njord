@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
@@ -26,13 +27,13 @@ public class ValidateMojo extends PublisherSupportMojo {
     /**
      * Show detailed validation report.
      */
-    @Parameter(required = true, property = "details", defaultValue = "false")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "details", defaultValue = "false")
     private boolean details;
 
     /**
      * If showing details, show full validation report (even valid checks too).
      */
-    @Parameter(required = true, property = "full", defaultValue = "false")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "full", defaultValue = "false")
     private boolean full;
 
     @Override

@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
@@ -25,25 +26,25 @@ public class CompareMojo extends NjordMojoSupport {
     /**
      * The name of the first store to compare.
      */
-    @Parameter(required = true, property = "store1")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "store1")
     private String store1;
 
     /**
      * The name of the second store to compare.
      */
-    @Parameter(required = true, property = "store2")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "store2")
     private String store2;
 
     /**
      * The name of the comparator to use to compare.
      */
-    @Parameter(required = true, property = "comparator", defaultValue = "bitwise")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "comparator", defaultValue = "bitwise")
     private String comparator;
 
     /**
      * Show detailed validation report.
      */
-    @Parameter(required = true, property = "details", defaultValue = "false")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "details", defaultValue = "false")
     private boolean details;
 
     @Override

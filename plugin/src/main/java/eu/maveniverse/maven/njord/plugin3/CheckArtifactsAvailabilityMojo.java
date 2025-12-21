@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
@@ -61,19 +62,19 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     /**
      * If using {@link ArtifactStore} as artifact source, whether source store should be dropped after successful operation.
      */
-    @Parameter(required = true, property = "drop", defaultValue = "true")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "drop", defaultValue = "false")
     private boolean drop;
 
     /**
      * Should the mojo block/wait for artifacts to become available, or should just perform one-pass of check.
      */
-    @Parameter(required = true, property = "wait", defaultValue = "true")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "wait", defaultValue = "true")
     private boolean wait;
 
     /**
      * If mojo set to {@link #wait}, the total allowed wait duration (as {@link Duration} string).
      */
-    @Parameter(required = true, property = "waitTimeout", defaultValue = "PT1H")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitTimeout", defaultValue = "PT1H")
     private String waitTimeout;
 
     /**
@@ -81,13 +82,13 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
      * The {@link #waitTimeout} <em>does not include this delay</em>, so "worst case" total execution time of this
      * mojo when set to wait is {@code waitDelay + waitTimeout}.
      */
-    @Parameter(required = true, property = "waitDelay", defaultValue = "PT10M")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitDelay", defaultValue = "PT10M")
     private String waitDelay;
 
     /**
      * If mojo set to {@link #wait}, the sleep duration between checks (as {@link Duration} string).
      */
-    @Parameter(required = true, property = "waitSleep", defaultValue = "PT1M")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitSleep", defaultValue = "PT1M")
     private String waitSleep;
 
     /**
@@ -99,7 +100,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
      * in format above. The file may contain empty lines and lines starting with {@code #} (comments) that
      * are ignored.
      */
-    @Parameter(property = "artifacts")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "artifacts")
     private String artifacts;
 
     /**
@@ -107,7 +108,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
      * {@code id::url}. If this parameter is set, the mojo will use this remote repository instead to go for
      * {@link ArtifactStorePublisher} and get the URL from there.
      */
-    @Parameter(property = "remoteRepository")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "remoteRepository")
     private String remoteRepository;
 
     @Component

@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -28,7 +29,7 @@ public class ExportAllMojo extends NjordMojoSupport {
     /**
      * The path to export to. It may be an existing or non-existing directory (will be created).
      */
-    @Parameter(required = true, property = "path", defaultValue = ".")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "path", defaultValue = ".")
     private String path;
 
     @Override

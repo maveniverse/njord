@@ -33,7 +33,7 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      * project as well (validate and publish mojos does not require project), in such cases this parameter is
      * mandatory, as there will be no contextual information to choose store from.
      */
-    @Parameter(property = "store")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "store")
     protected String store;
 
     /**
@@ -44,7 +44,7 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      * project as well (validate and publish mojos does not require project), in such cases this parameter is
      * mandatory, as there will be no contextual information to choose publisher from.
      */
-    @Parameter(property = "publisher")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "publisher")
     protected String publisher;
 
     /**

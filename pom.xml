@@ -137,11 +137,6 @@
         <artifactId>extension</artifactId>
         <version>${version.maveniverseShared}</version>
       </dependency>
-      <dependency>
-        <groupId>eu.maveniverse.maven.shared</groupId>
-        <artifactId>plugin</artifactId>
-        <version>${version.maveniverseShared}</version>
-      </dependency>
 
       <!-- Logging (except API, runtime only) -->
       <dependency>
