@@ -70,7 +70,7 @@
     <requireRuntimeMavenVersion.range>[3.9,)</requireRuntimeMavenVersion.range>
 
     <!-- Dependency versions -->
-    <version.maveniverseShared>0.1.10</version.maveniverseShared>
+    <version.maveniverseShared>0.1.11</version.maveniverseShared>
     <version.maven>3.9.12</version.maven>
     <version.resolver>1.9.25</version.resolver>
     <version.mima>2.4.39</version.mima>
@@ -130,6 +130,11 @@
       <dependency>
         <groupId>eu.maveniverse.maven.shared</groupId>
         <artifactId>core</artifactId>
+        <version>${version.maveniverseShared}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.shared</groupId>
+        <artifactId>plugin</artifactId>
         <version>${version.maveniverseShared}</version>
       </dependency>
       <dependency>

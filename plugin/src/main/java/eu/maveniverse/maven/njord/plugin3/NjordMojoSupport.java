@@ -16,68 +16,29 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
+import eu.maveniverse.maven.shared.plugin.MojoSupport;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.maven.RepositoryUtils;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.util.ConfigUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public abstract class NjordMojoSupport extends AbstractMojo {
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    @Inject
-    protected MavenSession mavenSession;
-
+public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
     protected RepositorySystem repositorySystem;
 
     @Inject
     protected SessionFactory sessionFactory;
 
-    @Parameter(defaultValue = "${mojo}", readonly = true, required = true)
-    protected MojoExecution mojoExecution;
-
-    /**
-     * Plugin configuration to skip the Mojo. Each Mojo can also be skipped by user property {@code njord.$mojoName.skip} as well.
-     */
-    @Parameter(defaultValue = "false")
-    protected boolean skip;
-
     @Override
-    public final void execute() throws MojoExecutionException, MojoFailureException {
-        if (isSkipped()) {
-            skipMojo();
-            return;
-        }
-
-        executeMojo();
-    }
-
-    protected boolean isSkipped() {
-        if (skip) {
-            return true;
-        }
-        return ConfigUtils.getBoolean(
-                mavenSession.getRepositorySession(),
-                false,
-                SessionConfig.KEY_PREFIX + mojoExecution.getGoal() + ".skip");
-    }
-
-    protected void skipMojo() throws MojoExecutionException, MojoFailureException {
-        logger.info("Mojo '{}' skipped per user request.", mojoExecution.getGoal());
+    protected String skipPrefix() {
+        return SessionConfig.KEY_PREFIX;
     }
 
     protected void executeMojo() throws MojoExecutionException, MojoFailureException {
