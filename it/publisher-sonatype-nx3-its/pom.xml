@@ -24,7 +24,7 @@
 
   <properties>
     <!-- Must be Java 8 capable -->
-    <groovyVersion>4.0.29</groovyVersion>
+    <groovyVersion>5.0.3</groovyVersion>
 
     <!-- We need to skip this on Java lower than 17 (see profiles below) -->
     <mvn4-its-run.skip>true</mvn4-its-run.skip>
