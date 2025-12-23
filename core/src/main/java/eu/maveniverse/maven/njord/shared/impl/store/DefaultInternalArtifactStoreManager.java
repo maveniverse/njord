@@ -376,6 +376,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         }
         properties.put("created", Long.toString(created.toEpochMilli()));
         properties.put("repositoryMode", repositoryMode.name());
+        properties.put("allowRedeploy", Boolean.toString(writeMode.allowUpdate()));
         properties.put("writeMode", writeMode.name());
         properties.put(
                 "checksumAlgorithmFactories",
@@ -465,7 +466,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     private void changeWriteModeStore(Path basedir, WriteMode writeMode) throws IOException {
         Map<String, String> props = loadStoreProperties(basedir);
         props.put("writeMode", writeMode.name());
-        props.remove("allowRedeploy");
+        props.put("allowRedeploy", Boolean.toString(writeMode.allowUpdate()));
         saveStoreProperties(basedir, props);
     }
 }
