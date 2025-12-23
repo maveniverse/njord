@@ -54,6 +54,12 @@ public interface ArtifactStoreManager {
     boolean dropArtifactStore(String name) throws IOException;
 
     /**
+     * Changes write mode of existing store and returns {@code true} on successful operation. Opened store cannot
+     * be updated, as this operation requires exclusive lock on store.
+     */
+    boolean updateWriteModeArtifactStore(String name, WriteMode writeMode) throws IOException;
+
+    /**
      * Renumbers artifact stores.
      */
     void renumberArtifactStores() throws IOException;

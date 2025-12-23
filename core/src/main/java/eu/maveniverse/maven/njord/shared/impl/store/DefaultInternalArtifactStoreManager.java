@@ -90,7 +90,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public List<String> listArtifactStoreNamesForPrefix(String prefix) throws IOException {
+        requireNonNull(prefix);
         checkClosed();
+
         ArrayList<String> result = new ArrayList<>();
         for (String storeName : listArtifactStoreNames()) {
             if (storeName.startsWith(prefix)) { // simple check but more is needed
@@ -116,8 +118,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public ArtifactStoreTemplate defaultTemplate(RepositoryMode repositoryMode) {
-        checkClosed();
         requireNonNull(repositoryMode);
+        checkClosed();
 
         switch (repositoryMode) {
             case RELEASE:
@@ -171,7 +173,28 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
+    public boolean updateWriteModeArtifactStore(String name, WriteMode writeMode) throws IOException {
+        requireNonNull(name);
+        requireNonNull(writeMode);
+        checkClosed();
+
+        Path storeBaseDir = config.basedir().resolve(name);
+        if (Files.isDirectory(storeBaseDir)) {
+            DirectoryLocker.INSTANCE.lockDirectory(storeBaseDir, true);
+            try {
+                changeWriteModeStore(storeBaseDir, writeMode);
+                return true;
+            } finally {
+                DirectoryLocker.INSTANCE.unlockDirectory(storeBaseDir);
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void renumberArtifactStores() throws IOException {
+        checkClosed();
+
         ArrayList<String> names = new ArrayList<>(listArtifactStoreNames());
         names.sort(Comparator.naturalOrder());
         Map<ArtifactStoreTemplate, TreeSet<String>> stores = new HashMap<>();
@@ -437,5 +460,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (!basedir.getFileName().toString().equals(newName)) {
             Files.move(basedir, basedir.getParent().resolve(newName), StandardCopyOption.ATOMIC_MOVE);
         }
+    }
+
+    private void changeWriteModeStore(Path basedir, WriteMode writeMode) throws IOException {
+        Map<String, String> props = loadStoreProperties(basedir);
+        props.put("writeMode", writeMode.name());
+        props.remove("allowRedeploy");
+        saveStoreProperties(basedir, props);
     }
 }
