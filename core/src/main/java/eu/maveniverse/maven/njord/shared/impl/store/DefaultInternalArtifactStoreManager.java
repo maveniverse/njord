@@ -319,7 +319,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     private static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
             "aether.checksums.omitChecksumsForExtensions";
-    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
+    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore,.sigstore.json";
 
     private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
             throws IOException {
