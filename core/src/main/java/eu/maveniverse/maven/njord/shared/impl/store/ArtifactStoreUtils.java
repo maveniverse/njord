@@ -31,7 +31,7 @@ public final class ArtifactStoreUtils {
      */
     public static String validateName(String name) {
         requireNonNull(name);
-        if (name.trim().isEmpty() || !FS_FRIENDLY_NAME.matcher(name).matches()) {
+        if (name.trim().isEmpty() || name.contains("..") || !FS_FRIENDLY_NAME.matcher(name).matches()) {
             throw new IllegalArgumentException("Invalid name");
         }
         return name;

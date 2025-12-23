@@ -21,7 +21,10 @@ class ArtifactStoreUtilsTest {
         assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("  "));
         assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("a/b"));
         assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("a:b"));
+        assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("a..b.c"));
+        assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("a.B.c"));
         assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("A"));
+        assertThrows(IllegalArgumentException.class, () -> ArtifactStoreUtils.validateArtifactStoreName("a-B-c"));
 
         assertEquals("some", ArtifactStoreUtils.validateArtifactStoreName("some"));
         assertEquals("some-name", ArtifactStoreUtils.validateArtifactStoreName("some-name"));
