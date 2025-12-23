@@ -233,7 +233,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         requireNonNull(metadata);
         checkClosed();
         if (!writeMode.allowWrite()) {
-            throw new IllegalStateException("Store does not allow write operations.");
+            throw new IOException(String.format("Store %s: does not allow write operations.", name));
         }
 
         DirectoryLocker.INSTANCE.unlockDirectory(basedir);
@@ -243,13 +243,15 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                 .filter(a -> a.getFile() == null || !a.getFile().isFile())
                 .collect(Collectors.toList());
         if (!nfa.isEmpty()) {
-            throw new IllegalArgumentException("PUT Artifacts missing backing file: " + nfa);
+            throw new IllegalArgumentException(
+                    String.format("Store %s: PUT Artifacts missing backing file: %s", name, nfa));
         }
         List<Metadata> nfm = metadata.stream()
                 .filter(m -> m.getFile() == null || !m.getFile().isFile())
                 .collect(Collectors.toList());
         if (!nfm.isEmpty()) {
-            throw new IllegalArgumentException("PUT Metadata missing backing file: " + nfm);
+            throw new IllegalArgumentException(
+                    String.format("Store %s: PUT Metadata missing backing file: %s", name, nfm));
         }
         // check RepositoryMode (snapshot vs release)
         List<Artifact> mismatch;
@@ -257,8 +259,8 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                         .filter(repositoryMode().predicate().negate())
                         .collect(Collectors.toList()))
                 .isEmpty()) {
-            throw new IllegalArgumentException(
-                    "PUT Artifacts repository policy mismatch (release vs snapshot): " + mismatch);
+            throw new IllegalArgumentException(String.format(
+                    "Store %s: PUT Artifacts repository policy mismatch (release vs snapshot): %s", name, mismatch));
         }
         // check for redeploy (target already exists)
         List<Artifact> redeploys;
@@ -267,7 +269,8 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                                 .filter(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))
                                 .collect(Collectors.toList()))
                         .isEmpty()) {
-            throw new IllegalArgumentException("Update/redeploy is forbidden (artifacts already exists): " + redeploys);
+            throw new IllegalArgumentException(String.format(
+                    "Store %s: Update/redeploy is forbidden (artifacts already exists): %s", name, redeploys));
         }
 
         return new Operation() {

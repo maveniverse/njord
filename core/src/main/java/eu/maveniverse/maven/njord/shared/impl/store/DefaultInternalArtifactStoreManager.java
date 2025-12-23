@@ -283,12 +283,21 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
             Map<String, String> properties = loadStoreProperties(basedir);
+            ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
+            String writeModeString = properties.get("writeMode");
+            if (writeModeString == null) {
+                // fallback (this is old store)
+                writeModeString = Boolean.parseBoolean(
+                                properties.getOrDefault("allowRedeploy", Boolean.toString(template.allowRedeploy())))
+                        ? WriteMode.WRITE_MANY.name()
+                        : WriteMode.WRITE_ONCE.name();
+            }
             return new PathArtifactStore(
                     properties.get("name"),
-                    loadTemplateWithProperties(properties),
+                    template,
                     Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
                     RepositoryMode.valueOf(properties.get("repositoryMode")),
-                    WriteMode.valueOf(properties.get("writeMode")),
+                    WriteMode.valueOf(writeModeString),
                     checksumAlgorithmFactorySelector.selectList(Arrays.stream(
                                     properties.get("checksumAlgorithmFactories").split(","))
                             .filter(s -> !s.trim().isEmpty())
