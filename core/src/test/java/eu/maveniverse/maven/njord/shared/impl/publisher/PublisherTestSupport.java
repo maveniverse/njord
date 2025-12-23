@@ -273,6 +273,26 @@ public class PublisherTestSupport {
             public boolean isEmpty() {
                 return contents.isEmpty();
             }
+
+            @Override
+            public Collection<String> attachments() throws IOException {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public boolean attachmentPresent(String attachmentName) throws IOException {
+                return false;
+            }
+
+            @Override
+            public Optional<InputStream> attachmentContent(String attachmentName) throws IOException {
+                return Optional.empty();
+            }
+
+            @Override
+            public AttachmentOperation manageAttachment(String attachmentName) throws IOException {
+                throw new RuntimeException("not implemented");
+            }
         };
     }
 }

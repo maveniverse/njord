@@ -79,7 +79,7 @@ public abstract class ArtifactStoreComparatorSupport extends ComponentSupport im
     /**
      * Index "extraction": it "dries" out artifacts and sorts them. Basically, they are only coordinates.
      */
-    protected List<Artifact> extractIndex(ArtifactStore artifactStore) {
+    protected List<Artifact> extractIndex(ArtifactStore artifactStore) throws IOException {
         return artifactStore.artifacts().stream()
                 .map(INDEX_COMPARATOR_MAPPER)
                 .sorted(INDEX_COMPARATOR)

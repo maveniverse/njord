@@ -190,7 +190,7 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
     /**
      * Groups artifacts by their GAV coordinates (groupId:artifactId:version).
      */
-    private Map<String, List<Artifact>> groupArtifactsByGav(ArtifactStore artifactStore) {
+    private Map<String, List<Artifact>> groupArtifactsByGav(ArtifactStore artifactStore) throws IOException {
         Map<String, List<Artifact>> groups = new LinkedHashMap<>();
 
         for (Artifact artifact : artifactStore.artifacts()) {
