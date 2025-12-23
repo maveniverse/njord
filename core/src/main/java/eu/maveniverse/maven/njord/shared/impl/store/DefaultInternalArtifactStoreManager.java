@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.WriteMode;
 import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -287,7 +288,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                     loadTemplateWithProperties(properties),
                     Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
                     RepositoryMode.valueOf(properties.get("repositoryMode")),
-                    Boolean.parseBoolean(properties.get("allowRedeploy")),
+                    WriteMode.valueOf(properties.get("writeMode")),
                     checksumAlgorithmFactorySelector.selectList(Arrays.stream(
                                     properties.get("checksumAlgorithmFactories").split(","))
                             .filter(s -> !s.trim().isEmpty())
@@ -319,7 +320,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         Instant created = Instant.now();
         RepositoryMode repositoryMode = template.repositoryMode();
-        boolean allowRedeploy = template.allowRedeploy();
+        WriteMode writeMode = template.allowRedeploy() ? WriteMode.WRITE_MANY : WriteMode.WRITE_ONCE;
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = template.checksumAlgorithmFactories()
                         .isPresent()
                 ? checksumAlgorithmFactorySelector.selectList(
@@ -343,7 +344,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         }
         properties.put("created", Long.toString(created.toEpochMilli()));
         properties.put("repositoryMode", repositoryMode.name());
-        properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
+        properties.put("writeMode", writeMode.name());
         properties.put(
                 "checksumAlgorithmFactories",
                 checksumAlgorithmFactories.stream()
@@ -360,7 +361,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 template,
                 created,
                 repositoryMode,
-                allowRedeploy,
+                writeMode,
                 checksumAlgorithmFactories,
                 omitChecksumsForExtensions,
                 originProjectArtifact,

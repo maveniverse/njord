@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.WriteMode;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -49,7 +50,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     private final ArtifactStoreTemplate template;
     private final Instant created;
     private final RepositoryMode repositoryMode;
-    private final boolean allowRedeploy;
+    private final WriteMode writeMode;
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
     private final Artifact originProjectArtifact;
@@ -61,7 +62,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             ArtifactStoreTemplate template,
             Instant created,
             RepositoryMode repositoryMode,
-            boolean allowRedeploy,
+            WriteMode writeMode,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
             List<String> omitChecksumsForExtensions,
             Artifact originProjectArtifact, // nullable
@@ -70,7 +71,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         this.template = requireNonNull(template);
         this.created = requireNonNull(created);
         this.repositoryMode = requireNonNull(repositoryMode);
-        this.allowRedeploy = allowRedeploy;
+        this.writeMode = requireNonNull(writeMode);
         this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
         this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
         this.originProjectArtifact = originProjectArtifact;
@@ -104,8 +105,8 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
-    public boolean allowRedeploy() {
-        return allowRedeploy;
+    public WriteMode writeMode() {
+        return writeMode;
     }
 
     @Override
@@ -231,6 +232,9 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         requireNonNull(artifacts);
         requireNonNull(metadata);
         checkClosed();
+        if (!writeMode.allowWrite()) {
+            throw new IllegalStateException("Store does not allow write operations.");
+        }
 
         DirectoryLocker.INSTANCE.unlockDirectory(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
@@ -256,14 +260,14 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             throw new IllegalArgumentException(
                     "PUT Artifacts repository policy mismatch (release vs snapshot): " + mismatch);
         }
-        // check DeployMode (already exists)
+        // check for redeploy (target already exists)
         List<Artifact> redeploys;
-        if (!allowRedeploy()
+        if (!writeMode.allowUpdate()
                 && !(redeploys = artifacts.stream()
                                 .filter(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))
                                 .collect(Collectors.toList()))
                         .isEmpty()) {
-            throw new IllegalArgumentException("Redeployment is forbidden (artifacts already exists): " + redeploys);
+            throw new IllegalArgumentException("Update/redeploy is forbidden (artifacts already exists): " + redeploys);
         }
 
         return new Operation() {

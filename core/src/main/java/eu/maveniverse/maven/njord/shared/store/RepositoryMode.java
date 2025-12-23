@@ -13,6 +13,9 @@ import java.util.function.Predicate;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * Repository mode: release or snapshot.
+ */
 public enum RepositoryMode {
     RELEASE,
     SNAPSHOT;
