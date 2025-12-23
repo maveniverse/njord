@@ -7,22 +7,17 @@
  */
 package eu.maveniverse.maven.njord.publisher.deploy;
 
-import static java.util.Objects.requireNonNull;
-
 import eu.maveniverse.maven.njord.shared.Session;
-import eu.maveniverse.maven.njord.shared.SessionConfig;
-import eu.maveniverse.maven.njord.shared.impl.J8Utils;
-import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
-import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
  * The "deploy" publisher deploy as "Maven would do", but it operates on staged artifact store, no need to
@@ -40,42 +35,26 @@ import org.eclipse.aether.repository.RepositoryPolicy;
  */
 @Singleton
 @Named(DeployPublisherFactory.NAME)
-public class DeployPublisherFactory implements ArtifactStorePublisherFactory {
+public class DeployPublisherFactory extends ArtifactStorePublisherFactorySupport
+        implements ArtifactStorePublisherFactory {
     public static final String NAME = "deploy";
 
-    private static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
-
-    private final RepositorySystem repositorySystem;
-
     @Inject
-    public DeployPublisherFactory(RepositorySystem repositorySystem) {
-        this.repositorySystem = requireNonNull(repositorySystem);
+    public DeployPublisherFactory(
+            RepositorySystem repositorySystem,
+            Map<String, ArtifactStoreRequirementsFactory> artifactStoreRequirementsFactories) {
+        super(repositorySystem, artifactStoreRequirementsFactories);
     }
 
     @Override
-    public ArtifactStorePublisher create(Session session) {
-        requireNonNull(session);
-
-        RemoteRepository releasesRepository = null;
-        RemoteRepository snapshotsRepository = null;
-        if (session.config().effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
-            String altDeploymentRepository =
-                    session.config().effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY);
-            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(altDeploymentRepository);
-            releasesRepository = new RemoteRepository.Builder(bare)
-                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
-                    .build();
-            snapshotsRepository = new RemoteRepository.Builder(bare)
-                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
-                    .build();
-        } else if (session.config().currentProject().isPresent()) {
-            SessionConfig.CurrentProject project =
-                    session.config().currentProject().orElseThrow(J8Utils.OET);
-            releasesRepository = project.distributionManagementRepositories().get(RepositoryMode.RELEASE);
-            snapshotsRepository = project.distributionManagementRepositories().get(RepositoryMode.SNAPSHOT);
-        }
-
+    protected ArtifactStorePublisher doCreate(
+            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+        DeployPublisherConfig config = new DeployPublisherConfig(session.config());
         return new DeployPublisher(
-                session, repositorySystem, releasesRepository, snapshotsRepository, ArtifactStoreRequirements.NONE);
+                session,
+                repositorySystem,
+                releasesRepository,
+                snapshotsRepository,
+                createArtifactStoreRequirements(session, config));
     }
 }

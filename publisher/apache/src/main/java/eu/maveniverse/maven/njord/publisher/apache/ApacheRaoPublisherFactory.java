@@ -12,7 +12,13 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.publisher.sonatype.central.SonatypeCentralRequirementsFactory;
 import eu.maveniverse.maven.njord.publisher.sonatype.nx2.SonatypeNx2Publisher;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -22,37 +28,46 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(ApacheRaoPublisherFactory.NAME)
-public class ApacheRaoPublisherFactory implements MavenCentralPublisherFactory {
+public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupport
+        implements MavenCentralPublisherFactory {
     public static final String NAME = "apache-rao";
+    public static final String RELEASE_REPOSITORY_ID = "apache.releases.https";
+    public static final String RELEASE_REPOSITORY_URL =
+            "https://repository.apache.org/service/local/staging/deploy/maven2/";
+    public static final String SNAPSHOT_REPOSITORY_ID = "apache.snapshots.https";
+    public static final String SNAPSHOT_REPOSITORY_URL =
+            "https://repository.apache.org/content/repositories/snapshots/";
 
-    private final RepositorySystem repositorySystem;
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
     @Inject
     public ApacheRaoPublisherFactory(
             RepositorySystem repositorySystem, SonatypeCentralRequirementsFactory centralRequirementsFactory) {
-        this.repositorySystem = requireNonNull(repositorySystem);
+        super(
+                repositorySystem,
+                Collections.singletonMap(SonatypeCentralRequirementsFactory.NAME, centralRequirementsFactory));
         this.centralRequirementsFactory = requireNonNull(centralRequirementsFactory);
     }
 
     @Override
-    public SonatypeNx2Publisher create(Session session) {
-        ApachePublisherConfig raoConfig = new ApachePublisherConfig(session.config());
-        RemoteRepository releasesRepository =
-                raoConfig.releaseRepositoryId() != null && raoConfig.releaseRepositoryUrl() != null
-                        ? new RemoteRepository.Builder(
-                                        raoConfig.releaseRepositoryId(), "default", raoConfig.releaseRepositoryUrl())
-                                .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
-                                .build()
-                        : null;
-        RemoteRepository snapshotsRepository =
-                raoConfig.snapshotRepositoryId() != null && raoConfig.snapshotRepositoryUrl() != null
-                        ? new RemoteRepository.Builder(
-                                        raoConfig.snapshotRepositoryId(), "default", raoConfig.snapshotRepositoryUrl())
-                                .setReleasePolicy(new RepositoryPolicy(false, null, null))
-                                .build()
-                        : null;
+    protected Map<RepositoryMode, RemoteRepository> createRepositories(Session session) {
+        HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
+        result.put(
+                RepositoryMode.RELEASE,
+                new RemoteRepository.Builder(RELEASE_REPOSITORY_ID, "default", RELEASE_REPOSITORY_URL)
+                        .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
+                        .build());
+        result.put(
+                RepositoryMode.SNAPSHOT,
+                new RemoteRepository.Builder(SNAPSHOT_REPOSITORY_ID, "default", SNAPSHOT_REPOSITORY_URL)
+                        .setReleasePolicy(new RepositoryPolicy(false, "", ""))
+                        .build());
+        return result;
+    }
 
+    @Override
+    protected ArtifactStorePublisher doCreate(
+            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
         return new SonatypeNx2Publisher(
                 session,
                 repositorySystem,
