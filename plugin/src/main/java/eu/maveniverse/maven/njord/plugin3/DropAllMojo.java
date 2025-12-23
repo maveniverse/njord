@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -21,7 +22,7 @@ public class DropAllMojo extends NjordMojoSupport {
     /**
      * This property must be specified as "safety net" for this operation to succeed, as it is destructive.
      */
-    @Parameter(required = true, property = "yes")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "yes")
     private boolean yes;
 
     @Override

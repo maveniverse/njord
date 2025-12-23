@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.BufferedWriter;
@@ -30,7 +31,7 @@ public class ListContentMojo extends NjordMojoSupport {
     /**
      * The name of the store to have content listed.
      */
-    @Parameter(required = true, property = "store")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "store")
     private String store;
 
     /**
@@ -39,7 +40,7 @@ public class ListContentMojo extends NjordMojoSupport {
      *
      * @since 0.8.0
      */
-    @Parameter(property = "file")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "file")
     private String file;
 
     @Override

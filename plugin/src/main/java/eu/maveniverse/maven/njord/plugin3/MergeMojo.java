@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
@@ -23,19 +24,19 @@ public class MergeMojo extends NjordMojoSupport {
     /**
      * The name of the source store.
      */
-    @Parameter(required = true, property = "from")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "from")
     private String from;
 
     /**
      * The name of the target store.
      */
-    @Parameter(required = true, property = "to")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "to")
     private String to;
 
     /**
      * Whether source store should be dropped after successful operation.
      */
-    @Parameter(required = true, property = "drop", defaultValue = "true")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "drop", defaultValue = "false")
     private boolean drop;
 
     @Override

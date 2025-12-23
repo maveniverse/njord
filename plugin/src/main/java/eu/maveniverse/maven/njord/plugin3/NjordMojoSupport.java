@@ -23,30 +23,25 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.maven.RepositoryUtils;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 public abstract class NjordMojoSupport extends MojoSupport {
     @Inject
-    protected MavenSession mavenSession;
-
-    @Inject
     protected RepositorySystem repositorySystem;
 
     @Inject
-    private SessionFactory sessionFactory;
-
-    @Parameter(defaultValue = "${mojo}", readonly = true, required = true)
-    MojoExecution mojoExecution;
+    protected SessionFactory sessionFactory;
 
     @Override
-    public void executeMojo() throws MojoExecutionException, MojoFailureException {
+    protected String skipPrefix() {
+        return SessionConfig.KEY_PREFIX;
+    }
+
+    protected void executeMojo() throws MojoExecutionException, MojoFailureException {
         try {
             Optional<Session> njordSession = NjordUtils.mayGetNjordSession(mavenSession.getRepositorySession());
             if (!njordSession.isPresent()) {

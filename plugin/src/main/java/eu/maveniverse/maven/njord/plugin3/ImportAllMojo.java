@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class ImportAllMojo extends NjordMojoSupport {
     /**
      * The directory to import from, by default is current directory.
      */
-    @Parameter(required = true, property = "dir", defaultValue = ".")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "dir", defaultValue = ".")
     private String dir;
 
     @Override

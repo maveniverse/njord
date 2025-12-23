@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -20,7 +21,7 @@ public class DropMojo extends NjordMojoSupport {
     /**
      * The name of the store to drop. As operation is destructive, this parameter is mandatory.
      */
-    @Parameter(required = true, property = "store")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "store")
     private String store;
 
     @Override

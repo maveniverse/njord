@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.plugin3;
 
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
@@ -21,9 +22,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "publish", threadSafe = true, requiresProject = false, aggregator = true)
 public class PublishMojo extends PublisherSupportMojo {
     /**
-     * Whether source store should be dropped after successful operation.
+     * Whether source store should be dropped after successful operation. Defaults to {@code false}.
      */
-    @Parameter(required = true, property = "drop", defaultValue = "true")
+    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "drop", defaultValue = "false")
     private boolean drop;
 
     @Override
