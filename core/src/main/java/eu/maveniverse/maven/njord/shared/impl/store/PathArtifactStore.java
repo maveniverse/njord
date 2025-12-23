@@ -7,6 +7,8 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.store;
 
+import static eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreUtils.validateArtifactStoreName;
+import static eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreUtils.validateName;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -24,11 +26,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,7 +72,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             List<String> omitChecksumsForExtensions,
             Artifact originProjectArtifact, // nullable
             Path basedir) {
-        this.name = requireNonNull(name);
+        this.name = validateArtifactStoreName(name);
         this.template = requireNonNull(template);
         this.created = requireNonNull(created);
         this.repositoryMode = requireNonNull(repositoryMode);
@@ -125,7 +130,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
-    public Collection<Artifact> artifacts() {
+    public Collection<Artifact> artifacts() throws IOException {
         checkClosed();
         return readIndex("artifacts", l -> {
             String[] split = l.split("=");
@@ -135,7 +140,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
-    public Collection<Metadata> metadata() {
+    public Collection<Metadata> metadata() throws IOException {
         checkClosed();
         return readIndex("metadata", l -> {
             String[] split = l.split("=");
@@ -273,8 +278,120 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                     "Store %s: Update/redeploy is forbidden (artifacts already exists): %s", name, redeploys));
         }
 
+        final AtomicBoolean canceled = new AtomicBoolean(false);
+        final AtomicBoolean closed = new AtomicBoolean(false);
         return new Operation() {
-            private final AtomicBoolean canceled = new AtomicBoolean(false);
+            @Override
+            public void cancel() {
+                canceled.set(true);
+            }
+
+            @Override
+            public void close() throws IOException {
+                if (closed.compareAndSet(false, true)) {
+                    try {
+                        if (!canceled.get()) {
+                            appendIndex(
+                                    "artifacts",
+                                    artifacts,
+                                    a -> ArtifactIdUtils.toId(a) + "=" + storeLayout.artifactPath(a));
+                            appendIndex(
+                                    "metadata",
+                                    metadata,
+                                    m -> String.format(
+                                                    "%s:%s:%s:%s",
+                                                    m.getGroupId(), m.getArtifactId(), m.getVersion(), m.getType())
+                                            + "=" + storeLayout.metadataPath(m));
+                        }
+                    } finally {
+                        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+                        DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
+                    }
+                }
+            }
+        };
+    }
+
+    @Override
+    public boolean isEmpty() throws IOException {
+        return artifacts().isEmpty() && metadata().isEmpty();
+    }
+
+    @Override
+    public Collection<String> attachments() throws IOException {
+        checkClosed();
+
+        ArrayList<String> result = new ArrayList<>();
+        try (Stream<Path> paths = Files.list(attachmentsDir(false))) {
+            paths.filter(Files::isRegularFile)
+                    .map(Path::getFileName)
+                    .map(Objects::toString)
+                    .forEach(result::add);
+        }
+        return Collections.unmodifiableList(result);
+    }
+
+    @Override
+    public boolean attachmentPresent(String attachmentName) throws IOException {
+        validateName(attachmentName);
+        checkClosed();
+
+        Path attachment = attachmentsDir(false).resolve(attachmentName);
+        return Files.isRegularFile(attachment);
+    }
+
+    @Override
+    public Optional<InputStream> attachmentContent(String attachmentName) throws IOException {
+        validateName(attachmentName);
+        checkClosed();
+
+        Path attachment = attachmentsDir(false).resolve(attachmentName);
+        if (Files.isRegularFile(attachment)) {
+            return Optional.of(Files.newInputStream(attachment));
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public AttachmentOperation manageAttachment(String attachmentName) throws IOException {
+        validateName(attachmentName);
+        checkClosed();
+
+        if (!writeMode.allowWrite()) {
+            throw new IOException(String.format("Store %s: does not allow write operations.", name));
+        }
+        if (attachmentPresent(attachmentName)) {
+            throw new IllegalArgumentException(String.format(
+                    "Store %s: Update/redeploy is forbidden (attachment already exists): %s", name, attachmentName));
+        }
+        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+        DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
+
+        final Path attachmentPath = attachmentsDir(true).resolve(attachmentName);
+        final AtomicReference<InputStream> write = new AtomicReference<>(null);
+        final AtomicBoolean delete = new AtomicBoolean(false);
+        final AtomicBoolean canceled = new AtomicBoolean(false);
+        final AtomicBoolean closed = new AtomicBoolean(false);
+        return new AttachmentOperation() {
+            @Override
+            public void write(InputStream inputStream) throws IOException {
+                if (canceled.get() || delete.get()) {
+                    throw new IOException("Operation canceled or delete already invoked");
+                }
+                if (!write.compareAndSet(null, inputStream)) {
+                    throw new IOException("Operation write may be invoked only once");
+                }
+            }
+
+            @Override
+            public void delete() throws IOException {
+                if (canceled.get() || write.get() != null) {
+                    throw new IOException("Operation canceled or write already invoked");
+                }
+                if (!delete.compareAndSet(false, true)) {
+                    throw new IOException("Operation delete may be invoked only once");
+                }
+            }
 
             @Override
             public void cancel() {
@@ -283,31 +400,22 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
 
             @Override
             public void close() throws IOException {
-                try {
-                    if (!canceled.get()) {
-                        appendIndex(
-                                "artifacts",
-                                artifacts,
-                                a -> ArtifactIdUtils.toId(a) + "=" + storeLayout.artifactPath(a));
-                        appendIndex(
-                                "metadata",
-                                metadata,
-                                m -> String.format(
-                                                "%s:%s:%s:%s",
-                                                m.getGroupId(), m.getArtifactId(), m.getVersion(), m.getType())
-                                        + "=" + storeLayout.metadataPath(m));
+                if (closed.compareAndSet(false, true)) {
+                    try {
+                        if (!canceled.get()) {
+                            if (delete.get()) {
+                                Files.delete(attachmentPath);
+                            } else if (write.get() != null) {
+                                FileUtils.writeFile(attachmentPath, p -> Files.copy(write.get(), p));
+                            }
+                        }
+                    } finally {
+                        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+                        DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
                     }
-                } finally {
-                    DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-                    DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
                 }
             }
         };
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return artifacts().isEmpty() && metadata().isEmpty();
     }
 
     @Override
@@ -325,24 +433,34 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                     "%s%s(%s, %s, %s, closed)",
                     name(), origin, created(), repositoryMode().name(), template.name());
         } else {
-            return String.format(
-                    "%s%s(%s, %s, %s, %s artifacts)",
-                    name(),
-                    origin,
-                    created(),
-                    repositoryMode().name(),
-                    template.name(),
-                    artifacts().size());
+            try {
+                return String.format(
+                        "%s%s(%s, %s, %s, %s artifacts)",
+                        name(),
+                        origin,
+                        created(),
+                        repositoryMode().name(),
+                        template.name(),
+                        artifacts().size());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
-    private <E> Collection<E> readIndex(String what, Function<String, E> transform) {
+    private Path attachmentsDir(boolean write) throws IOException {
+        Path attachmentsPath = basedir.resolve(".attachments");
+        if (write) {
+            Files.createDirectories(attachmentsPath);
+        }
+        return attachmentsPath;
+    }
+
+    private <E> Collection<E> readIndex(String what, Function<String, E> transform) throws IOException {
         Path index = basedir.resolve(".meta").resolve(what);
         if (Files.isRegularFile(index)) {
             try (Stream<String> lines = Files.readAllLines(index, StandardCharsets.UTF_8).stream()) {
                 return lines.map(transform).collect(Collectors.toSet());
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
         } else {
             return Collections.emptySet();

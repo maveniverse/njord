@@ -65,12 +65,12 @@ public interface ArtifactStore extends Closeable {
     /**
      * Index of artifacts in this store (except checksums), never {@code null}.
      */
-    Collection<Artifact> artifacts();
+    Collection<Artifact> artifacts() throws IOException;
 
     /**
      * Index of metadata in this store (except checksums), never {@code null}.
      */
-    Collection<Metadata> metadata();
+    Collection<Metadata> metadata() throws IOException;
 
     /**
      * Returns {@code true} if exists.
@@ -133,5 +133,43 @@ public interface ArtifactStore extends Closeable {
      * @see #metadata()
      * @since 0.8.7
      */
-    boolean isEmpty();
+    boolean isEmpty() throws IOException;
+
+    /**
+     * Index of attachments of this store, never {@code null}.
+     */
+    Collection<String> attachments() throws IOException;
+
+    /**
+     * Returns {@code true} if attachment with given name exists.
+     */
+    boolean attachmentPresent(String attachmentName) throws IOException;
+
+    /**
+     * Returns the content to the attachment with given name, if exists.
+     */
+    Optional<InputStream> attachmentContent(String attachmentName) throws IOException;
+
+    /**
+     * Attachment modifying operation handle. Caller must close this instance, even if operation is canceled.
+     */
+    interface AttachmentOperation extends Operation {
+        /**
+         * Writes out the attachment, may be invoked only once on operation instance. Fails if {@link #delete()}
+         * or {@link #cancel()} already invoked. The {@link InputStream} must be kept open as long as this instance is
+         * kept open.
+         */
+        void write(InputStream inputStream) throws IOException;
+
+        /**
+         * Deletes the attachment, may be invoked only once on operation instance. Fails if {@link #write(InputStream)}
+         * or {@link #cancel()} already invoked.
+         */
+        void delete() throws IOException;
+    }
+
+    /**
+     * Manages an attachment to store.
+     */
+    AttachmentOperation manageAttachment(String attachmentName) throws IOException;
 }

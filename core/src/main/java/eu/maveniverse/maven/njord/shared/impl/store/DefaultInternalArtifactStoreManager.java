@@ -7,6 +7,7 @@
  */
 package eu.maveniverse.maven.njord.shared.impl.store;
 
+import static eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreUtils.validateArtifactStoreName;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -110,7 +111,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public Optional<ArtifactStore> selectArtifactStore(String name) throws IOException {
-        requireNonNull(name);
+        validateArtifactStoreName(name);
         checkClosed();
 
         return Optional.ofNullable(loadExistingArtifactStore(name));
@@ -149,7 +150,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public boolean dropArtifactStore(String name) throws IOException {
-        requireNonNull(name);
+        validateArtifactStoreName(name);
         checkClosed();
 
         Path basedir = config.basedir().resolve(name);
@@ -174,7 +175,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public boolean updateWriteModeArtifactStore(String name, WriteMode writeMode) throws IOException {
-        requireNonNull(name);
+        validateArtifactStoreName(name);
         requireNonNull(writeMode);
         checkClosed();
 
