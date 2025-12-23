@@ -43,10 +43,9 @@ public interface ArtifactStore extends Closeable {
     RepositoryMode repositoryMode();
 
     /**
-     * Is redeploy (artifact overwrite) allowed? Makes sense for release mode only, as since Maven 3 no snapshot is
-     * overwritten.
+     * Store write mode, never {@code null}.
      */
-    boolean allowRedeploy();
+    WriteMode writeMode();
 
     /**
      * The checksum algorithm factories this store uses.
@@ -124,7 +123,7 @@ public interface ArtifactStore extends Closeable {
 
     /**
      * Prepares artifact and metadata writes/puts and returns the handle. After write, caller must close the handle
-     * to apply changes.
+     * to apply changes. If store is not allowing writes at all, this method throws {@link IOException}.
      */
     Operation put(Collection<Artifact> artifacts, Collection<Metadata> metadata) throws IOException;
 

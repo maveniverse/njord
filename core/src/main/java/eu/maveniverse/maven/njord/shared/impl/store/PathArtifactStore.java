@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.WriteMode;
 import eu.maveniverse.maven.shared.core.component.CloseableSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -49,7 +50,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     private final ArtifactStoreTemplate template;
     private final Instant created;
     private final RepositoryMode repositoryMode;
-    private final boolean allowRedeploy;
+    private final WriteMode writeMode;
     private final List<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
     private final List<String> omitChecksumsForExtensions;
     private final Artifact originProjectArtifact;
@@ -61,7 +62,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             ArtifactStoreTemplate template,
             Instant created,
             RepositoryMode repositoryMode,
-            boolean allowRedeploy,
+            WriteMode writeMode,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
             List<String> omitChecksumsForExtensions,
             Artifact originProjectArtifact, // nullable
@@ -70,7 +71,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         this.template = requireNonNull(template);
         this.created = requireNonNull(created);
         this.repositoryMode = requireNonNull(repositoryMode);
-        this.allowRedeploy = allowRedeploy;
+        this.writeMode = requireNonNull(writeMode);
         this.checksumAlgorithmFactories = requireNonNull(checksumAlgorithmFactories);
         this.omitChecksumsForExtensions = requireNonNull(omitChecksumsForExtensions);
         this.originProjectArtifact = originProjectArtifact;
@@ -104,8 +105,8 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     }
 
     @Override
-    public boolean allowRedeploy() {
-        return allowRedeploy;
+    public WriteMode writeMode() {
+        return writeMode;
     }
 
     @Override
@@ -231,6 +232,9 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         requireNonNull(artifacts);
         requireNonNull(metadata);
         checkClosed();
+        if (!writeMode.allowWrite()) {
+            throw new IOException(String.format("Store %s: does not allow write operations.", name));
+        }
 
         DirectoryLocker.INSTANCE.unlockDirectory(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
@@ -239,13 +243,15 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                 .filter(a -> a.getFile() == null || !a.getFile().isFile())
                 .collect(Collectors.toList());
         if (!nfa.isEmpty()) {
-            throw new IllegalArgumentException("PUT Artifacts missing backing file: " + nfa);
+            throw new IllegalArgumentException(
+                    String.format("Store %s: PUT Artifacts missing backing file: %s", name, nfa));
         }
         List<Metadata> nfm = metadata.stream()
                 .filter(m -> m.getFile() == null || !m.getFile().isFile())
                 .collect(Collectors.toList());
         if (!nfm.isEmpty()) {
-            throw new IllegalArgumentException("PUT Metadata missing backing file: " + nfm);
+            throw new IllegalArgumentException(
+                    String.format("Store %s: PUT Metadata missing backing file: %s", name, nfm));
         }
         // check RepositoryMode (snapshot vs release)
         List<Artifact> mismatch;
@@ -253,17 +259,18 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                         .filter(repositoryMode().predicate().negate())
                         .collect(Collectors.toList()))
                 .isEmpty()) {
-            throw new IllegalArgumentException(
-                    "PUT Artifacts repository policy mismatch (release vs snapshot): " + mismatch);
+            throw new IllegalArgumentException(String.format(
+                    "Store %s: PUT Artifacts repository policy mismatch (release vs snapshot): %s", name, mismatch));
         }
-        // check DeployMode (already exists)
+        // check for redeploy (target already exists)
         List<Artifact> redeploys;
-        if (!allowRedeploy()
+        if (!writeMode.allowUpdate()
                 && !(redeploys = artifacts.stream()
                                 .filter(a -> Files.isRegularFile(basedir.resolve(storeLayout.artifactPath(a))))
                                 .collect(Collectors.toList()))
                         .isEmpty()) {
-            throw new IllegalArgumentException("Redeployment is forbidden (artifacts already exists): " + redeploys);
+            throw new IllegalArgumentException(String.format(
+                    "Store %s: Update/redeploy is forbidden (artifacts already exists): %s", name, redeploys));
         }
 
         return new Operation() {

@@ -25,6 +25,7 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.WriteMode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -192,8 +193,8 @@ public class PublisherTestSupport {
             }
 
             @Override
-            public boolean allowRedeploy() {
-                return false;
+            public WriteMode writeMode() {
+                return WriteMode.WRITE_ONCE;
             }
 
             @Override

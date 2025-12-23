@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import eu.maveniverse.maven.njord.shared.store.WriteMode;
 import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
 import eu.maveniverse.maven.shared.core.fs.DirectoryLocker;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
@@ -89,7 +90,9 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public List<String> listArtifactStoreNamesForPrefix(String prefix) throws IOException {
+        requireNonNull(prefix);
         checkClosed();
+
         ArrayList<String> result = new ArrayList<>();
         for (String storeName : listArtifactStoreNames()) {
             if (storeName.startsWith(prefix)) { // simple check but more is needed
@@ -115,8 +118,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     @Override
     public ArtifactStoreTemplate defaultTemplate(RepositoryMode repositoryMode) {
-        checkClosed();
         requireNonNull(repositoryMode);
+        checkClosed();
 
         switch (repositoryMode) {
             case RELEASE:
@@ -170,7 +173,28 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     }
 
     @Override
+    public boolean updateWriteModeArtifactStore(String name, WriteMode writeMode) throws IOException {
+        requireNonNull(name);
+        requireNonNull(writeMode);
+        checkClosed();
+
+        Path storeBaseDir = config.basedir().resolve(name);
+        if (Files.isDirectory(storeBaseDir)) {
+            DirectoryLocker.INSTANCE.lockDirectory(storeBaseDir, true);
+            try {
+                changeWriteModeStore(storeBaseDir, writeMode);
+                return true;
+            } finally {
+                DirectoryLocker.INSTANCE.unlockDirectory(storeBaseDir);
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void renumberArtifactStores() throws IOException {
+        checkClosed();
+
         ArrayList<String> names = new ArrayList<>(listArtifactStoreNames());
         names.sort(Comparator.naturalOrder());
         Map<ArtifactStoreTemplate, TreeSet<String>> stores = new HashMap<>();
@@ -282,12 +306,21 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
             Map<String, String> properties = loadStoreProperties(basedir);
+            ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
+            String writeModeString = properties.get("writeMode");
+            if (writeModeString == null) {
+                // fallback (this is old store)
+                writeModeString = Boolean.parseBoolean(
+                                properties.getOrDefault("allowRedeploy", Boolean.toString(template.allowRedeploy())))
+                        ? WriteMode.WRITE_MANY.name()
+                        : WriteMode.WRITE_ONCE.name();
+            }
             return new PathArtifactStore(
                     properties.get("name"),
-                    loadTemplateWithProperties(properties),
+                    template,
                     Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
                     RepositoryMode.valueOf(properties.get("repositoryMode")),
-                    Boolean.parseBoolean(properties.get("allowRedeploy")),
+                    WriteMode.valueOf(writeModeString),
                     checksumAlgorithmFactorySelector.selectList(Arrays.stream(
                                     properties.get("checksumAlgorithmFactories").split(","))
                             .filter(s -> !s.trim().isEmpty())
@@ -309,7 +342,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     private static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
             "aether.checksums.omitChecksumsForExtensions";
-    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
+    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore,.sigstore.json";
 
     private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
             throws IOException {
@@ -319,7 +352,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         Instant created = Instant.now();
         RepositoryMode repositoryMode = template.repositoryMode();
-        boolean allowRedeploy = template.allowRedeploy();
+        WriteMode writeMode = template.allowRedeploy() ? WriteMode.WRITE_MANY : WriteMode.WRITE_ONCE;
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = template.checksumAlgorithmFactories()
                         .isPresent()
                 ? checksumAlgorithmFactorySelector.selectList(
@@ -343,7 +376,8 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         }
         properties.put("created", Long.toString(created.toEpochMilli()));
         properties.put("repositoryMode", repositoryMode.name());
-        properties.put("allowRedeploy", Boolean.toString(allowRedeploy));
+        properties.put("allowRedeploy", Boolean.toString(writeMode.allowUpdate()));
+        properties.put("writeMode", writeMode.name());
         properties.put(
                 "checksumAlgorithmFactories",
                 checksumAlgorithmFactories.stream()
@@ -360,7 +394,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
                 template,
                 created,
                 repositoryMode,
-                allowRedeploy,
+                writeMode,
                 checksumAlgorithmFactories,
                 omitChecksumsForExtensions,
                 originProjectArtifact,
@@ -427,5 +461,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         if (!basedir.getFileName().toString().equals(newName)) {
             Files.move(basedir, basedir.getParent().resolve(newName), StandardCopyOption.ATOMIC_MOVE);
         }
+    }
+
+    private void changeWriteModeStore(Path basedir, WriteMode writeMode) throws IOException {
+        Map<String, String> props = loadStoreProperties(basedir);
+        props.put("writeMode", writeMode.name());
+        props.put("allowRedeploy", Boolean.toString(writeMode.allowUpdate()));
+        saveStoreProperties(basedir, props);
     }
 }
