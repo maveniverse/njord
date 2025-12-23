@@ -321,14 +321,19 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     public Collection<String> attachments() throws IOException {
         checkClosed();
 
-        ArrayList<String> result = new ArrayList<>();
-        try (Stream<Path> paths = Files.list(attachmentsDir(false))) {
-            paths.filter(Files::isRegularFile)
-                    .map(Path::getFileName)
-                    .map(Objects::toString)
-                    .forEach(result::add);
+        Path attachmentsDir = attachmentsDir(false);
+        if (Files.isDirectory(attachmentsDir)) {
+            ArrayList<String> result = new ArrayList<>();
+            try (Stream<Path> paths = Files.list(attachmentsDir)) {
+                paths.filter(Files::isRegularFile)
+                        .map(Path::getFileName)
+                        .map(Objects::toString)
+                        .forEach(result::add);
+            }
+            return Collections.unmodifiableList(result);
+        } else {
+            return Collections.emptyList();
         }
-        return Collections.unmodifiableList(result);
     }
 
     @Override
