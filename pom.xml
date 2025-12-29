@@ -19,7 +19,7 @@
 
   <groupId>eu.maveniverse.maven.njord</groupId>
   <artifactId>njord</artifactId>
-  <version>0.9.1</version>
+  <version>0.9.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -45,7 +45,7 @@
   <scm>
     <connection>scm:git:git@github.com:maveniverse/njord.git</connection>
     <developerConnection>scm:git:git@github.com:maveniverse/njord.git</developerConnection>
-    <tag>release-0.9.1</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/maveniverse/njord</url>
   </scm>
 
@@ -60,7 +60,7 @@
   </ciManagement>
 
   <properties>
-    <project.build.outputTimestamp>2025-12-29T20:35:01Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2025-12-29T20:35:05Z</project.build.outputTimestamp>
 
     <!--
     Build time: latest stable Maven and Java 21+
