@@ -43,12 +43,18 @@ public class BlackHolePublisherFactory extends ArtifactStorePublisherFactorySupp
         HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
         result.put(
                 RepositoryMode.RELEASE,
-                new RemoteRepository.Builder(NAME + "-release", "default", "irrelevant")
+                new RemoteRepository.Builder(
+                                repositoryId(session.config(), RepositoryMode.RELEASE, NAME + "-release"),
+                                "default",
+                                "irrelevant")
                         .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
                         .build());
         result.put(
                 RepositoryMode.SNAPSHOT,
-                new RemoteRepository.Builder(NAME + "-snapshot", "default", "irrelevant")
+                new RemoteRepository.Builder(
+                                repositoryId(session.config(), RepositoryMode.SNAPSHOT, NAME + "-snapshot"),
+                                "default",
+                                "irrelevant")
                         .setReleasePolicy(new RepositoryPolicy(false, "", ""))
                         .build());
         return result;

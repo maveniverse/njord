@@ -81,6 +81,22 @@ public abstract class ArtifactStorePublisherFactorySupport extends ComponentSupp
         return result;
     }
 
+    protected static String repositoryId(SessionConfig sessionConfig, RepositoryMode mode, String defaultRepositoryId) {
+        requireNonNull(sessionConfig);
+        requireNonNull(mode);
+        if (sessionConfig.currentProject().isPresent()) {
+            RemoteRepository repository = sessionConfig
+                    .currentProject()
+                    .orElseThrow(J8Utils.OET)
+                    .distributionManagementRepositories()
+                    .get(mode);
+            if (repository != null) {
+                return repository.getId();
+            }
+        }
+        return defaultRepositoryId;
+    }
+
     protected ArtifactStoreRequirements createArtifactStoreRequirements(
             Session session, PublisherConfigSupport config) {
         ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
