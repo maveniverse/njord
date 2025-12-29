@@ -8,7 +8,7 @@ Requirements:
 * Java 8+
 * Maven 3.9+ (tested with 3.9.11 and 4.0.0-rc-4)
 
-Note: this code has a lot of To-Be-Done parts and is intentionally kept simple as possible.
+Used by Maveniverse itself (dogfood) but also many other projects like Mojohaus, Codehaus-Plexus and Quarkus.
 
 Goal: Provides non-intrusive Artifact publishing and local staging functionality.
 
