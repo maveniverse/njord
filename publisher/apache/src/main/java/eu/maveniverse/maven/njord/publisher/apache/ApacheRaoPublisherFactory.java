@@ -54,12 +54,18 @@ public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupp
         HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
         result.put(
                 RepositoryMode.RELEASE,
-                new RemoteRepository.Builder(RELEASE_REPOSITORY_ID, "default", RELEASE_REPOSITORY_URL)
+                new RemoteRepository.Builder(
+                                repositoryId(session.config(), RepositoryMode.RELEASE, RELEASE_REPOSITORY_ID),
+                                "default",
+                                RELEASE_REPOSITORY_URL)
                         .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
                         .build());
         result.put(
                 RepositoryMode.SNAPSHOT,
-                new RemoteRepository.Builder(SNAPSHOT_REPOSITORY_ID, "default", SNAPSHOT_REPOSITORY_URL)
+                new RemoteRepository.Builder(
+                                repositoryId(session.config(), RepositoryMode.RELEASE, SNAPSHOT_REPOSITORY_ID),
+                                "default",
+                                SNAPSHOT_REPOSITORY_URL)
                         .setReleasePolicy(new RepositoryPolicy(false, "", ""))
                         .build());
         return result;
