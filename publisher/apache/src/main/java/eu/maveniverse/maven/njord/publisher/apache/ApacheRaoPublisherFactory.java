@@ -63,7 +63,7 @@ public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupp
         result.put(
                 RepositoryMode.SNAPSHOT,
                 new RemoteRepository.Builder(
-                                repositoryId(session.config(), RepositoryMode.RELEASE, SNAPSHOT_REPOSITORY_ID),
+                                repositoryId(session.config(), RepositoryMode.SNAPSHOT, SNAPSHOT_REPOSITORY_ID),
                                 "default",
                                 SNAPSHOT_REPOSITORY_URL)
                         .setReleasePolicy(new RepositoryPolicy(false, "", ""))
