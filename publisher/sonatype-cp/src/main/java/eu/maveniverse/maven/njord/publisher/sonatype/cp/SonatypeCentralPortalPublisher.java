@@ -16,7 +16,6 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
-import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
@@ -55,8 +54,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
     public SonatypeCentralPortalPublisher(
             Session session,
             RepositorySystem repositorySystem,
-            RemoteRepository releasesRepository,
-            RemoteRepository snapshotsRepository,
+            RemoteRepository targetReleaseRepository,
+            RemoteRepository targetSnapshotRepository,
+            RemoteRepository serviceReleaseRepository,
+            RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
             SonatypeCentralPortalPublisherConfig publisherConfig) {
         super(
@@ -64,10 +65,10 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 repositorySystem,
                 SonatypeCentralPortalPublisherFactory.NAME,
                 "Publishes to Sonatype Central Portal",
-                MavenCentralPublisherFactory.CENTRAL,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                targetReleaseRepository,
+                targetSnapshotRepository,
+                serviceReleaseRepository,
+                serviceSnapshotRepository,
                 artifactStoreRequirements);
         this.publisherConfig = requireNonNull(publisherConfig);
         this.mhc4 = new MavenHttpClient4FactoryImpl(repositorySystem);
@@ -75,7 +76,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
         if (session.config().dryRun()) {
             logger.info(
                     "Dry run; not publishing '{}' to '{}' service at {}",

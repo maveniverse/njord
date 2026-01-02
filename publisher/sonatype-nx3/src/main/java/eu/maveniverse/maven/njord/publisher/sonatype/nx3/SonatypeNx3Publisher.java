@@ -107,7 +107,7 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
         if (repository == null) {
             throw new IllegalStateException("No repository configured for " + artifactStore.repositoryMode() + " mode");
         }

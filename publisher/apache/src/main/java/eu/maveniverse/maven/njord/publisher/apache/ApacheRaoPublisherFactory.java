@@ -15,28 +15,17 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.MavenCentralPublisherFactory;
-import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
 
 @Singleton
 @Named(ApacheRaoPublisherFactory.NAME)
 public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupport
         implements MavenCentralPublisherFactory {
     public static final String NAME = "apache-rao";
-    public static final String RELEASE_REPOSITORY_ID = "apache.releases.https";
-    public static final String RELEASE_REPOSITORY_URL =
-            "https://repository.apache.org/service/local/staging/deploy/maven2/";
-    public static final String SNAPSHOT_REPOSITORY_ID = "apache.snapshots.https";
-    public static final String SNAPSHOT_REPOSITORY_URL =
-            "https://repository.apache.org/content/repositories/snapshots/";
 
     private final SonatypeCentralRequirementsFactory centralRequirementsFactory;
 
@@ -50,39 +39,17 @@ public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupp
     }
 
     @Override
-    protected Map<RepositoryMode, RemoteRepository> createRepositories(Session session) {
-        HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
-        result.put(
-                RepositoryMode.RELEASE,
-                new RemoteRepository.Builder(
-                                repositoryId(session.config(), RepositoryMode.RELEASE, RELEASE_REPOSITORY_ID),
-                                "default",
-                                RELEASE_REPOSITORY_URL)
-                        .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
-                        .build());
-        result.put(
-                RepositoryMode.SNAPSHOT,
-                new RemoteRepository.Builder(
-                                repositoryId(session.config(), RepositoryMode.SNAPSHOT, SNAPSHOT_REPOSITORY_ID),
-                                "default",
-                                SNAPSHOT_REPOSITORY_URL)
-                        .setReleasePolicy(new RepositoryPolicy(false, "", ""))
-                        .build());
-        return result;
-    }
-
-    @Override
-    protected ArtifactStorePublisher doCreate(
-            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+    protected ArtifactStorePublisher doCreate(Session session) {
+        ApacheRaoPublisherConfig config = new ApacheRaoPublisherConfig(session.config());
         return new SonatypeNx2Publisher(
                 session,
                 repositorySystem,
                 NAME,
                 "Publishes to ASF RAO",
                 CENTRAL,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                config.targetSnapshotRepository(),
+                config.serviceReleaseRepository(),
+                config.serviceSnapshotRepository(),
                 centralRequirementsFactory.create(session));
     }
 }

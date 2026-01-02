@@ -5,35 +5,27 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.shared.publisher.blackhole;
+package eu.maveniverse.maven.njord.publisher.apache;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Black Hole publisher config.
- * <p>
- * Properties supported:
- * <ul>
- *     <li><code>njord.publisher.black-hole.artifactStoreRequirements</code> - the artifact store requirements to apply</li>
- *     <li><code>njord.publisher.black-hole.fail</code> - to fail on publishing</li>
- * </ul>
+ * Apache RAO publisher config.
  */
-public final class BlackHolePublisherConfig extends PublisherConfigSupport {
-    public static final String RELEASE_REPOSITORY_ID = "blackhole-releases";
-    public static final String RELEASE_REPOSITORY_URL = "blackhole";
-    public static final String SNAPSHOT_REPOSITORY_ID = "blackhole-snapshots";
-    public static final String SNAPSHOT_REPOSITORY_URL = "blackhole";
+public final class ApacheRaoPublisherConfig extends PublisherConfigSupport {
+    public static final String RELEASE_REPOSITORY_ID = "apache.releases.https";
+    public static final String RELEASE_REPOSITORY_URL =
+            "https://repository.apache.org/service/local/staging/deploy/maven2/";
+    public static final String SNAPSHOT_REPOSITORY_ID = "apache.snapshots.https";
+    public static final String SNAPSHOT_REPOSITORY_URL =
+            "https://repository.apache.org/content/repositories/snapshots/";
 
-    private final boolean fail;
-
-    public BlackHolePublisherConfig(SessionConfig sessionConfig) {
-        super(BlackHolePublisherFactory.NAME, sessionConfig);
-        this.fail = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("fail"));
+    public ApacheRaoPublisherConfig(SessionConfig sessionConfig) {
+        super(ApacheRaoPublisherFactory.NAME, sessionConfig);
     }
 
     @Override
@@ -70,9 +62,5 @@ public final class BlackHolePublisherConfig extends PublisherConfigSupport {
                     .build();
         }
         return result;
-    }
-
-    public boolean fail() {
-        return fail;
     }
 }

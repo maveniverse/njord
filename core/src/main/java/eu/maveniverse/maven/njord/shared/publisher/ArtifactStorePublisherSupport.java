@@ -63,7 +63,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
 
     @Override
     public boolean isConfigured() {
-        return serviceReleaseRepository != null || targetReleaseRepository != null;
+        return serviceReleaseRepository != null || serviceSnapshotRepository != null;
     }
 
     @Override
@@ -119,7 +119,7 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
 
     protected abstract void doPublish(ArtifactStore artifactStore) throws IOException;
 
-    protected RemoteRepository selectRemoteRepositoryFor(ArtifactStore artifactStore) {
+    protected RemoteRepository selectServiceRemoteRepositoryFor(ArtifactStore artifactStore) {
         RemoteRepository repository = artifactStore.repositoryMode() == RepositoryMode.RELEASE
                 ? serviceReleaseRepository
                 : serviceSnapshotRepository;

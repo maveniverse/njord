@@ -10,15 +10,43 @@ package eu.maveniverse.maven.njord.shared.publisher;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.ResolverUtils;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Publisher config support class.
  */
 public abstract class PublisherConfigSupport {
+    /**
+     * The Maven deploy option to override deployment repository. To be used by those publishers that can
+     * support it. It is NOT supported by all publishers.
+     */
+    protected static final String PROP_ALT_DEPLOYMENT_REPOSITORY = "altDeploymentRepository";
+
+    /**
+     * The Maven deploy option to override release deployment repository. To be used by those publishers that can
+     * support it. It is NOT supported by all publishers.
+     */
+    protected static final String PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY = "altReleaseDeploymentRepository";
+
+    /**
+     * The Maven deploy option to override snapshot deployment repository. To be used by those publishers that can
+     * support it. It is NOT supported by all publishers.
+     */
+    protected static final String PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY = "altSnapshotDeploymentRepository";
+
     protected final String name;
     protected final SessionConfig sessionConfig;
     protected final String artifactStoreRequirements;
+
+    protected final RemoteRepository targetReleaseRepository;
+    protected final RemoteRepository targetSnapshotRepository;
+    protected final RemoteRepository serviceReleaseRepository;
+    protected final RemoteRepository serviceSnapshotRepository;
 
     public PublisherConfigSupport(String name, SessionConfig sessionConfig) {
         this.name = requireNonNull(name);
@@ -27,6 +55,11 @@ public abstract class PublisherConfigSupport {
                 sessionConfig.effectiveProperties(),
                 ArtifactStoreRequirements.NONE.name(),
                 keyNames("artifactStoreRequirements"));
+
+        this.targetReleaseRepository = createTargetReleaseRepository();
+        this.targetSnapshotRepository = createTargetSnapshotRepository();
+        this.serviceReleaseRepository = createServiceReleaseRepository();
+        this.serviceSnapshotRepository = createServiceSnapshotRepository();
     }
 
     protected String keyName(String property) {
@@ -38,7 +71,91 @@ public abstract class PublisherConfigSupport {
         return new String[] {keyName(property), SessionConfig.KEY_PREFIX + property};
     }
 
+    protected String repositoryId(RepositoryMode mode, String defaultRepositoryId) {
+        requireNonNull(mode);
+        if (sessionConfig.currentProject().isPresent()) {
+            RemoteRepository repository = sessionConfig
+                    .currentProject()
+                    .orElseThrow(J8Utils.OET)
+                    .distributionManagementRepositories()
+                    .get(mode);
+            if (repository != null) {
+                return repository.getId();
+            }
+        }
+        String property = mode == RepositoryMode.RELEASE ? "releaseRepositoryId" : "snapshotRepositoryId";
+        return ConfigUtils.getString(sessionConfig.effectiveProperties(), defaultRepositoryId, keyName(property));
+    }
+
+    protected final RemoteRepository createTargetReleaseRepository() {
+        RemoteRepository releaseRepository = null;
+        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
+                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
+            releaseRepository = new RemoteRepository.Builder(bare)
+                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY)) {
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
+                    sessionConfig.effectiveProperties().get(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY));
+            releaseRepository = new RemoteRepository.Builder(bare)
+                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else if (sessionConfig.currentProject().isPresent()) {
+            SessionConfig.CurrentProject project =
+                    sessionConfig.currentProject().orElseThrow(J8Utils.OET);
+            releaseRepository = project.distributionManagementRepositories().get(RepositoryMode.RELEASE);
+        }
+        return releaseRepository;
+    }
+
+    protected final RemoteRepository createTargetSnapshotRepository() {
+        RemoteRepository snapshotRepository = null;
+        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
+                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
+            snapshotRepository = new RemoteRepository.Builder(bare)
+                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY)) {
+            RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
+                    sessionConfig.effectiveProperties().get(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY));
+            snapshotRepository = new RemoteRepository.Builder(bare)
+                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else if (sessionConfig.currentProject().isPresent()) {
+            SessionConfig.CurrentProject project =
+                    sessionConfig.currentProject().orElseThrow(J8Utils.OET);
+            snapshotRepository = project.distributionManagementRepositories().get(RepositoryMode.SNAPSHOT);
+        }
+        return snapshotRepository;
+    }
+
+    protected RemoteRepository createServiceReleaseRepository() {
+        return targetReleaseRepository;
+    }
+
+    protected RemoteRepository createServiceSnapshotRepository() {
+        return targetSnapshotRepository;
+    }
+
     public String artifactStoreRequirements() {
         return artifactStoreRequirements;
+    }
+
+    public RemoteRepository targetReleaseRepository() {
+        return targetReleaseRepository;
+    }
+
+    public RemoteRepository targetSnapshotRepository() {
+        return targetSnapshotRepository;
+    }
+
+    public RemoteRepository serviceReleaseRepository() {
+        return serviceReleaseRepository;
+    }
+
+    public RemoteRepository serviceSnapshotRepository() {
+        return serviceSnapshotRepository;
     }
 }

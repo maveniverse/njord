@@ -9,12 +9,15 @@ package eu.maveniverse.maven.njord.publisher.sonatype.cp;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -37,6 +40,11 @@ import org.eclipse.aether.util.ConfigUtils;
  * Note: publishingType, waitForStatesWaitStates and waitForStatesFailureStates are case-insensitive (are converted to required case).
  */
 public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigSupport {
+    public static final String RELEASE_REPOSITORY_ID = "sonatype-cp";
+    public static final String RELEASE_REPOSITORY_URL = "https://central.sonatype.com/api/v1/publisher/upload";
+    public static final String SNAPSHOT_REPOSITORY_ID = "sonatype-cp";
+    public static final String SNAPSHOT_REPOSITORY_URL = "https://central.sonatype.com/repository/maven-snapshots/";
+
     private final String bundleName;
     private final String publishingType;
     private final boolean waitForStates;
@@ -85,6 +93,42 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 sessionConfig.effectiveProperties(), "failed", keyNames("waitForStatesFailureStates"))
                         .toLowerCase(Locale.ENGLISH))));
+    }
+
+    @Override
+    protected RemoteRepository createServiceReleaseRepository() {
+        RemoteRepository result;
+        if (targetReleaseRepository == null) {
+            result = new RemoteRepository.Builder(
+                            repositoryId(RepositoryMode.RELEASE, RELEASE_REPOSITORY_ID),
+                            "default",
+                            RELEASE_REPOSITORY_URL)
+                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else {
+            result = new RemoteRepository.Builder(targetReleaseRepository.getId(), "default", RELEASE_REPOSITORY_URL)
+                    .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        }
+        return result;
+    }
+
+    @Override
+    protected RemoteRepository createServiceSnapshotRepository() {
+        RemoteRepository result;
+        if (targetSnapshotRepository == null) {
+            result = new RemoteRepository.Builder(
+                            repositoryId(RepositoryMode.SNAPSHOT, SNAPSHOT_REPOSITORY_ID),
+                            "default",
+                            SNAPSHOT_REPOSITORY_URL)
+                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        } else {
+            result = new RemoteRepository.Builder(targetSnapshotRepository.getId(), "default", SNAPSHOT_REPOSITORY_URL)
+                    .setReleasePolicy(new RepositoryPolicy(false, null, null))
+                    .build();
+        }
+        return result;
     }
 
     public Optional<String> bundleName() {
