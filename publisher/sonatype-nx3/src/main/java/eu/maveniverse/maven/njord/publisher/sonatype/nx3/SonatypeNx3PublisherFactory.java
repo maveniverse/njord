@@ -47,7 +47,6 @@ public class SonatypeNx3PublisherFactory extends ArtifactStorePublisherFactorySu
 
     @Override
     protected ArtifactStorePublisher doCreate(Session session) {
-        // Create NXRM3-specific config
         SonatypeNx3PublisherConfig config = new SonatypeNx3PublisherConfig(session.config());
         return new SonatypeNx3Publisher(
                 session,
