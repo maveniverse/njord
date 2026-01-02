@@ -9,14 +9,12 @@ package eu.maveniverse.maven.njord.shared.impl.publisher.signature;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.impl.publisher.ValidatorSupport;
 import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureType;
 import eu.maveniverse.maven.njord.shared.publisher.spi.signature.SignatureValidator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,27 +78,22 @@ public class ArtifactSignatureValidator extends ValidatorSupport {
                     chkCollector.addInfo("PRESENT (not validated) " + signatureType.name());
                 } else {
                     for (SignatureValidator signatureValidator : typeSignatureValidator) {
-                        try (InputStream artifactContent =
-                                        artifactStore.artifactContent(artifact).orElseThrow(J8Utils.OET);
-                                InputStream signatureContent =
-                                        artifactStore.artifactContent(signature).orElseThrow(J8Utils.OET)) {
-                            SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
-                                    artifactStore,
-                                    artifact,
-                                    signature,
-                                    artifactContent,
-                                    signatureContent,
-                                    chkCollector);
-                            if (outcome == SignatureValidator.Outcome.VALID) {
-                                chkCollector.addInfo(
-                                        "VALID " + signatureValidator.type().name());
-                            } else if (outcome == SignatureValidator.Outcome.INVALID) {
-                                chkCollector.addError(
-                                        "INVALID " + signatureValidator.type().name());
-                            } else {
-                                chkCollector.addInfo("PRESENT (not validated by validator) "
-                                        + signatureValidator.type().name());
-                            }
+                        SignatureValidator.Outcome outcome = signatureValidator.verifySignature(
+                                artifactStore,
+                                artifact,
+                                signature,
+                                () -> artifactStore.artifactContent(artifact),
+                                () -> artifactStore.artifactContent(signature),
+                                chkCollector);
+                        if (outcome == SignatureValidator.Outcome.VALID) {
+                            chkCollector.addInfo(
+                                    "VALID " + signatureValidator.type().name());
+                        } else if (outcome == SignatureValidator.Outcome.INVALID) {
+                            chkCollector.addError(
+                                    "INVALID " + signatureValidator.type().name());
+                        } else {
+                            chkCollector.addInfo("PRESENT (not validated by validator) "
+                                    + signatureValidator.type().name());
                         }
                     }
                 }

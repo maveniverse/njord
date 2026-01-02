@@ -12,6 +12,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import org.eclipse.aether.artifact.Artifact;
 
 public interface SignatureValidator extends Closeable {
@@ -26,6 +27,11 @@ public interface SignatureValidator extends Closeable {
         INVALID
     }
 
+    @FunctionalInterface
+    interface IOSupplier<E> {
+        E get() throws IOException;
+    }
+
     /**
      * Verifies received content against received signature. May perform much more, like fetching key and so on.
      * If it returns {@code true}, then and only then is signature accepted as "verified".
@@ -34,8 +40,8 @@ public interface SignatureValidator extends Closeable {
             ArtifactStore artifactStore,
             Artifact artifact,
             Artifact signatureArtifact,
-            InputStream artifactContent,
-            InputStream signatureContent,
+            IOSupplier<Optional<InputStream>> artifactContent,
+            IOSupplier<Optional<InputStream>> signatureContent,
             ValidationContext collector)
             throws IOException;
 }

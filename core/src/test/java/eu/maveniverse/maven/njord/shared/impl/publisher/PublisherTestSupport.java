@@ -16,7 +16,6 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.DefaultSessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreMergerFactory;
-import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.store.DefaultInternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
@@ -142,6 +141,7 @@ public class PublisherTestSupport {
         HashMap<String, ArtifactStorePublisherFactory> publishers = new HashMap<>();
         publishers.put("sonatype-cp", c -> sonatypeCp());
         SessionFactory factory = new DefaultSessionFactory(
+                context.repositorySystem(),
                 new RuntimeInformation() {
                     @Override
                     public String getMavenVersion() {
@@ -154,9 +154,7 @@ public class PublisherTestSupport {
                     }
                 },
                 new DefaultInternalArtifactStoreManagerFactory(checksumAlgorithmFactorySelector),
-                new DefaultArtifactStoreWriterFactory(),
                 new DefaultArtifactStoreMergerFactory(context.repositorySystem(), checksumAlgorithmFactorySelector),
-                new DefaultArtifactPublisherRedirectorFactory(context.repositorySystem()),
                 publishers,
                 Collections.emptyMap(),
                 new MavenModelReader(context).getImpl());

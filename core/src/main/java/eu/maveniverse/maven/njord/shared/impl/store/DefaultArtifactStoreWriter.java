@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
-import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
@@ -23,12 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class DefaultArtifactStoreWriter extends ComponentSupport implements ArtifactStoreWriter {
-    private final SessionConfig sessionConfig;
-
-    public DefaultArtifactStoreWriter(SessionConfig sessionConfig) {
-        this.sessionConfig = requireNonNull(sessionConfig);
-    }
-
     @Override
     public Path writeAsDirectory(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
         requireNonNull(artifactStore);
