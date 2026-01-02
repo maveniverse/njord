@@ -52,6 +52,8 @@ public class SonatypeNx3PublisherFactory extends ArtifactStorePublisherFactorySu
         return new SonatypeNx3Publisher(
                 session,
                 repositorySystem,
+                NAME,
+                "Publishes to Sonatype Nexus Repository 3 using Components API",
                 config.targetReleaseRepository(),
                 config.targetSnapshotRepository(),
                 config.serviceReleaseRepository(),

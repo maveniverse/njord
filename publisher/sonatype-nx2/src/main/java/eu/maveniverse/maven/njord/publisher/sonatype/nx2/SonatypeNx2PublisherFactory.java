@@ -38,7 +38,7 @@ public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySu
                 session,
                 repositorySystem,
                 NAME,
-                "Publishes to Sonatype Nx2",
+                "Publishes to Sonatype Nexus Repository 2",
                 config.targetReleaseRepository(),
                 config.targetSnapshotRepository(),
                 config.serviceReleaseRepository(),

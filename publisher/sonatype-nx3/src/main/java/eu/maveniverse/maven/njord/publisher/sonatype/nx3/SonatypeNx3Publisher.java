@@ -54,6 +54,8 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
     public SonatypeNx3Publisher(
             Session session,
             RepositorySystem repositorySystem,
+            String serviceName,
+            String serviceDescription,
             RemoteRepository targetReleaseRepository,
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
@@ -63,8 +65,8 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
         super(
                 session,
                 repositorySystem,
-                SonatypeNx3PublisherFactory.NAME,
-                "Publishes to Nexus Repository 3 using Components API",
+                serviceName,
+                serviceDescription,
                 targetReleaseRepository,
                 targetSnapshotRepository,
                 serviceReleaseRepository,
