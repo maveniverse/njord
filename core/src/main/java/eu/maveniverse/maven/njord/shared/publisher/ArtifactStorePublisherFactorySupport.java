@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystem;
 
 public abstract class ArtifactStorePublisherFactorySupport extends ComponentSupport
@@ -36,10 +37,20 @@ public abstract class ArtifactStorePublisherFactorySupport extends ComponentSupp
     protected ArtifactStoreRequirements createArtifactStoreRequirements(
             Session session, PublisherConfigSupport config) {
         ArtifactStoreRequirements artifactStoreRequirements = ArtifactStoreRequirements.NONE;
-        if (!ArtifactStoreRequirements.NONE.name().equals(config.artifactStoreRequirements())) {
-            artifactStoreRequirements = artifactStoreRequirementsFactories
-                    .get(config.artifactStoreRequirements())
-                    .create(session);
+        String asr = config.artifactStoreRequirements();
+        if (asr != null && !ArtifactStoreRequirements.NONE.name().equals(asr)) {
+            ArtifactStoreRequirementsFactory factory = artifactStoreRequirementsFactories.get(asr);
+            if (factory != null) {
+                return factory.create(session);
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "Unknown artifact store requirement: '%s', supported ones are: %s and '%s'",
+                        asr,
+                        artifactStoreRequirementsFactories.keySet().stream()
+                                .map(n -> "'" + n + "'")
+                                .collect(Collectors.joining(",")),
+                        ArtifactStoreRequirements.NONE.name()));
+            }
         }
         return artifactStoreRequirements;
     }
