@@ -12,7 +12,6 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.mima.extensions.mmr.internal.MavenModelReaderImpl;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
-import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreWriter;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import java.util.Map;
@@ -28,6 +27,7 @@ public class DefaultSessionFactory implements SessionFactory {
     private final RepositorySystem repositorySystem;
     private final RuntimeInformation mavenRuntimeInformation;
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
+    private final InternalArtifactStoreWriterFactory internalArtifactStoreWriterFactory;
     private final InternalArtifactStoreMergerFactory internalArtifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
@@ -38,6 +38,7 @@ public class DefaultSessionFactory implements SessionFactory {
             RepositorySystem repositorySystem,
             RuntimeInformation mavenRuntimeInformation,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
+            InternalArtifactStoreWriterFactory internalArtifactStoreWriterFactory,
             InternalArtifactStoreMergerFactory internalArtifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
@@ -45,6 +46,7 @@ public class DefaultSessionFactory implements SessionFactory {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
+        this.internalArtifactStoreWriterFactory = requireNonNull(internalArtifactStoreWriterFactory);
         this.internalArtifactStoreMergerFactory = requireNonNull(internalArtifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
@@ -59,7 +61,7 @@ public class DefaultSessionFactory implements SessionFactory {
                 repositorySystem,
                 mavenRuntimeInformation,
                 internalArtifactStoreManagerFactory.create(sessionConfig),
-                new DefaultArtifactStoreWriter(),
+                internalArtifactStoreWriterFactory.create(sessionConfig),
                 internalArtifactStoreMergerFactory.create(sessionConfig),
                 artifactStorePublisherFactories,
                 artifactStoreComparatorFactories,

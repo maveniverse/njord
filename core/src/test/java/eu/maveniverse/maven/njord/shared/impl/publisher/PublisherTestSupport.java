@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.DefaultSessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreMergerFactory;
+import eu.maveniverse.maven.njord.shared.impl.store.DefaultArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.impl.store.DefaultInternalArtifactStoreManagerFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
@@ -154,6 +155,7 @@ public class PublisherTestSupport {
                     }
                 },
                 new DefaultInternalArtifactStoreManagerFactory(checksumAlgorithmFactorySelector),
+                new DefaultArtifactStoreWriterFactory(),
                 new DefaultArtifactStoreMergerFactory(context.repositorySystem(), checksumAlgorithmFactorySelector),
                 publishers,
                 Collections.emptyMap(),
