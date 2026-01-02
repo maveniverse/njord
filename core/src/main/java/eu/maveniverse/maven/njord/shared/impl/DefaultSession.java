@@ -31,6 +31,8 @@ import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,8 +54,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
     private final ArtifactPublisherRedirector artifactPublisherRedirector;
-    private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
-    private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final Map<String, ArtifactStorePublisher> artifactStorePublishers;
+    private final Map<String, ArtifactStoreComparator> artifactStoreComparators;
     private final MavenModelReaderImpl mavenModelReader;
 
     public DefaultSession(
@@ -74,8 +76,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
         this.artifactPublisherRedirector =
                 requireNonNull(artifactPublisherRedirectorFactory).create(this);
-        this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
-        this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        requireNonNull(artifactStorePublisherFactories);
+        Map<String, ArtifactStorePublisher> ap = new HashMap<>();
+        for (Map.Entry<String, ArtifactStorePublisherFactory> entry : artifactStorePublisherFactories.entrySet()) {
+            ap.put(entry.getKey(), entry.getValue().create(this));
+        }
+        this.artifactStorePublishers = Collections.unmodifiableMap(ap);
+        Map<String, ArtifactStoreComparator> ac = new HashMap<>();
+        for (Map.Entry<String, ArtifactStoreComparatorFactory> entry : artifactStoreComparatorFactories.entrySet()) {
+            ac.put(entry.getKey(), entry.getValue().create(this));
+        }
+        this.artifactStoreComparators = Collections.unmodifiableMap(ac);
         this.mavenModelReader = requireNonNull(mavenModelReader);
 
         logger.info("Njord {} session created", sessionConfig.version());
@@ -113,17 +124,13 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
-        return artifactStorePublisherFactories.values().stream()
-                .map(f -> f.create(this))
-                .collect(Collectors.toList());
+        return artifactStorePublishers.values();
     }
 
     @Override
     public Collection<ArtifactStoreComparator> availableComparators() {
         checkClosed();
-        return artifactStoreComparatorFactories.values().stream()
-                .map(f -> f.create(this))
-                .collect(Collectors.toList());
+        return artifactStoreComparators.values();
     }
 
     @Override
