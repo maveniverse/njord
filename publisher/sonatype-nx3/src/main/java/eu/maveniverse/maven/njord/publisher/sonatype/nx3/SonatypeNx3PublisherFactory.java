@@ -54,6 +54,8 @@ public class SonatypeNx3PublisherFactory extends ArtifactStorePublisherFactorySu
                 repositorySystem,
                 config.targetReleaseRepository(),
                 config.targetSnapshotRepository(),
+                config.serviceReleaseRepository(),
+                config.serviceSnapshotRepository(),
                 config,
                 createArtifactStoreRequirements(session, config));
     }

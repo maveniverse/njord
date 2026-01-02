@@ -54,8 +54,10 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
     public SonatypeNx3Publisher(
             Session session,
             RepositorySystem repositorySystem,
-            RemoteRepository releasesRepository,
-            RemoteRepository snapshotsRepository,
+            RemoteRepository targetReleaseRepository,
+            RemoteRepository targetSnapshotRepository,
+            RemoteRepository serviceReleaseRepository,
+            RemoteRepository serviceSnapshotRepository,
             SonatypeNx3PublisherConfig publisherConfig,
             ArtifactStoreRequirements artifactStoreRequirements) {
         super(
@@ -63,10 +65,10 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
                 repositorySystem,
                 SonatypeNx3PublisherFactory.NAME,
                 "Publishes to Nexus Repository 3 using Components API",
-                releasesRepository,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                targetReleaseRepository,
+                targetSnapshotRepository,
+                serviceReleaseRepository,
+                serviceSnapshotRepository,
                 artifactStoreRequirements);
         this.publisherConfig = requireNonNull(publisherConfig);
         this.mhc4 = new MavenHttpClient4FactoryImpl(repositorySystem);

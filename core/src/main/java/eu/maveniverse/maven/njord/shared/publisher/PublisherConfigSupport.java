@@ -18,7 +18,12 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Publisher config support class.
+ * Publisher config support class. The basic support for all publisher configuration, supports artifact store requirements
+ * and target and service repositories. Target repositories are those configured by user explicitly or via project.
+ * Service repositories are those where actual publishing happens. In some cases these two are completely equal (are same)
+ * like in case of deploy, but in some cases, like Sonatype CP they are different: to publish to central (one URL)
+ * you in fact use some other service URL. The target repository IDs play important role, as they are used to source
+ * auth, so they are reused when service repositories are being altered.
  */
 public abstract class PublisherConfigSupport {
     /**
