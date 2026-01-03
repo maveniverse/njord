@@ -34,10 +34,6 @@
 
     <maven.install.skip>true</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>
-
-    <!-- Maven versions we run the ITs with -->
-    <maven39Version>3.9.12</maven39Version>
-    <maven4Version>4.0.0-rc-5</maven4Version>
   </properties>
 
   <profiles>
