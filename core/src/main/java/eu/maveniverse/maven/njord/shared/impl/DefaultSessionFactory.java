@@ -12,44 +12,42 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.mima.extensions.mmr.internal.MavenModelReaderImpl;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.apache.maven.rtinfo.RuntimeInformation;
+import org.eclipse.aether.RepositorySystem;
 
 @Singleton
 @Named
 public class DefaultSessionFactory implements SessionFactory {
+    private final RepositorySystem repositorySystem;
     private final RuntimeInformation mavenRuntimeInformation;
     private final InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory;
-    private final ArtifactStoreWriterFactory artifactStoreWriterFactory;
-    private final ArtifactStoreMergerFactory artifactStoreMergerFactory;
-    private final ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory;
+    private final InternalArtifactStoreWriterFactory internalArtifactStoreWriterFactory;
+    private final InternalArtifactStoreMergerFactory internalArtifactStoreMergerFactory;
     private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
     private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
     private final MavenModelReaderImpl mavenModelReader;
 
     @Inject
     public DefaultSessionFactory(
+            RepositorySystem repositorySystem,
             RuntimeInformation mavenRuntimeInformation,
             InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
-            ArtifactStoreWriterFactory artifactStoreWriterFactory,
-            ArtifactStoreMergerFactory artifactStoreMergerFactory,
-            ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
+            InternalArtifactStoreWriterFactory internalArtifactStoreWriterFactory,
+            InternalArtifactStoreMergerFactory internalArtifactStoreMergerFactory,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
+        this.repositorySystem = requireNonNull(repositorySystem);
         this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
         this.internalArtifactStoreManagerFactory = requireNonNull(internalArtifactStoreManagerFactory);
-        this.artifactStoreWriterFactory = requireNonNull(artifactStoreWriterFactory);
-        this.artifactStoreMergerFactory = requireNonNull(artifactStoreMergerFactory);
-        this.artifactPublisherRedirectorFactory = requireNonNull(artifactPublisherRedirectorFactory);
+        this.internalArtifactStoreWriterFactory = requireNonNull(internalArtifactStoreWriterFactory);
+        this.internalArtifactStoreMergerFactory = requireNonNull(internalArtifactStoreMergerFactory);
         this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
         this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
         this.mavenModelReader = requireNonNull(mavenModelReader);
@@ -57,13 +55,14 @@ public class DefaultSessionFactory implements SessionFactory {
 
     @Override
     public DefaultSession create(SessionConfig sessionConfig) {
+        requireNonNull(sessionConfig);
         return new DefaultSession(
                 sessionConfig,
+                repositorySystem,
                 mavenRuntimeInformation,
-                internalArtifactStoreManagerFactory,
-                artifactStoreWriterFactory,
-                artifactStoreMergerFactory,
-                artifactPublisherRedirectorFactory,
+                internalArtifactStoreManagerFactory.create(sessionConfig),
+                internalArtifactStoreWriterFactory.create(sessionConfig),
+                internalArtifactStoreMergerFactory.create(sessionConfig),
                 artifactStorePublisherFactories,
                 artifactStoreComparatorFactories,
                 mavenModelReader);

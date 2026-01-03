@@ -12,15 +12,11 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactorySupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirementsFactory;
-import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
-import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
  * Black hole publisher (or like {@code /dev/null} device) factory.
@@ -39,37 +35,16 @@ public class BlackHolePublisherFactory extends ArtifactStorePublisherFactorySupp
     }
 
     @Override
-    protected Map<RepositoryMode, RemoteRepository> createRepositories(Session session) {
-        HashMap<RepositoryMode, RemoteRepository> result = new HashMap<>();
-        result.put(
-                RepositoryMode.RELEASE,
-                new RemoteRepository.Builder(
-                                repositoryId(session.config(), RepositoryMode.RELEASE, NAME + "-release"),
-                                "default",
-                                "irrelevant")
-                        .setSnapshotPolicy(new RepositoryPolicy(false, "", ""))
-                        .build());
-        result.put(
-                RepositoryMode.SNAPSHOT,
-                new RemoteRepository.Builder(
-                                repositoryId(session.config(), RepositoryMode.SNAPSHOT, NAME + "-snapshot"),
-                                "default",
-                                "irrelevant")
-                        .setReleasePolicy(new RepositoryPolicy(false, "", ""))
-                        .build());
-        return result;
-    }
-
-    @Override
-    protected ArtifactStorePublisher doCreate(
-            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+    protected ArtifactStorePublisher doCreate(Session session) {
         BlackHolePublisherConfig config = new BlackHolePublisherConfig(session.config());
 
         return new BlackHolePublisher(
                 session,
                 repositorySystem,
-                releasesRepository,
-                snapshotsRepository,
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
+                config.serviceReleaseRepository(),
+                config.serviceSnapshotRepository(),
                 createArtifactStoreRequirements(session, config),
                 config.fail());
     }

@@ -12,11 +12,6 @@ import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 
 /**
  * Deploy publisher config.
- * <p>
- * Properties supported:
- * <ul>
- *     <li><code>njord.publisher.deploy.artifactStoreRequirements</code> - the requirements deployment must fulfil (defaults to NONE)</li>
- * </ul>
  */
 public final class DeployPublisherConfig extends PublisherConfigSupport {
     public DeployPublisherConfig(SessionConfig sessionConfig) {

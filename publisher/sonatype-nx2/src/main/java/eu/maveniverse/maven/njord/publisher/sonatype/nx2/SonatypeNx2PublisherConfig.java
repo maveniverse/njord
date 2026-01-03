@@ -12,11 +12,6 @@ import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 
 /**
  * Sonatype NX2 config.
- * <p>
- * Properties supported (note: at least the URLs must be provided as defaults are most probably wrong):
- * <ul>
- *     <li><code>njord.publisher.sonatype-nx2.artifactStoreRequirements</code> - the requirements deployment must fulfil (defaults to NONE)</li>
- * </ul>
  */
 public final class SonatypeNx2PublisherConfig extends PublisherConfigSupport {
     public SonatypeNx2PublisherConfig(SessionConfig sessionConfig) {

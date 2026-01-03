@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * The "deploy" publisher deploy as "Maven would do", but it operates on staged artifact store, no need to
@@ -47,14 +46,13 @@ public class DeployPublisherFactory extends ArtifactStorePublisherFactorySupport
     }
 
     @Override
-    protected ArtifactStorePublisher doCreate(
-            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+    protected ArtifactStorePublisher doCreate(Session session) {
         DeployPublisherConfig config = new DeployPublisherConfig(session.config());
         return new DeployPublisher(
                 session,
                 repositorySystem,
-                releasesRepository,
-                snapshotsRepository,
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
                 createArtifactStoreRequirements(session, config));
     }
 }

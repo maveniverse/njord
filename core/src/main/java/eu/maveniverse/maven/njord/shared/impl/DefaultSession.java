@@ -14,8 +14,8 @@ import eu.maveniverse.maven.mima.extensions.mmr.ModelResponse;
 import eu.maveniverse.maven.mima.extensions.mmr.internal.MavenModelReaderImpl;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.publisher.DefaultArtifactPublisherRedirector;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirectorFactory;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
@@ -23,14 +23,14 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparator;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreComparatorFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreManager;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreTemplate;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import eu.maveniverse.maven.shared.core.component.CloseableConfigSupport;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.rtinfo.RuntimeInformation;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -52,30 +53,38 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
     private final ArtifactPublisherRedirector artifactPublisherRedirector;
-    private final Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories;
-    private final Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories;
+    private final Map<String, ArtifactStorePublisher> artifactStorePublishers;
+    private final Map<String, ArtifactStoreComparator> artifactStoreComparators;
     private final MavenModelReaderImpl mavenModelReader;
 
     public DefaultSession(
             SessionConfig sessionConfig,
+            RepositorySystem repositorySystem,
             RuntimeInformation mavenRuntimeInformation,
-            InternalArtifactStoreManagerFactory internalArtifactStoreManagerFactory,
-            ArtifactStoreWriterFactory artifactStoreWriterFactory,
-            ArtifactStoreMergerFactory artifactStoreMergerFactory,
-            ArtifactPublisherRedirectorFactory artifactPublisherRedirectorFactory,
+            InternalArtifactStoreManager internalArtifactStoreManager,
+            ArtifactStoreWriter artifactStoreWriter,
+            ArtifactStoreMerger artifactStoreMerger,
             Map<String, ArtifactStorePublisherFactory> artifactStorePublisherFactories,
             Map<String, ArtifactStoreComparatorFactory> artifactStoreComparatorFactories,
             MavenModelReaderImpl mavenModelReader) {
         super(sessionConfig);
+        requireNonNull(repositorySystem);
         this.mavenRuntimeInformation = requireNonNull(mavenRuntimeInformation);
         this.sessionBoundStoresKey = Session.class.getName() + "." + ArtifactStore.class + "." + UUID.randomUUID();
-        this.internalArtifactStoreManager = internalArtifactStoreManagerFactory.create(sessionConfig);
-        this.artifactStoreWriter = requireNonNull(artifactStoreWriterFactory).create(sessionConfig);
-        this.artifactStoreMerger = requireNonNull(artifactStoreMergerFactory).create(sessionConfig);
-        this.artifactPublisherRedirector =
-                requireNonNull(artifactPublisherRedirectorFactory).create(this);
-        this.artifactStorePublisherFactories = requireNonNull(artifactStorePublisherFactories);
-        this.artifactStoreComparatorFactories = requireNonNull(artifactStoreComparatorFactories);
+        this.internalArtifactStoreManager = requireNonNull(internalArtifactStoreManager);
+        this.artifactStoreWriter = requireNonNull(artifactStoreWriter);
+        this.artifactStoreMerger = requireNonNull(artifactStoreMerger);
+        this.artifactPublisherRedirector = new DefaultArtifactPublisherRedirector(this, repositorySystem);
+        Map<String, ArtifactStorePublisher> ap = new HashMap<>();
+        for (Map.Entry<String, ArtifactStorePublisherFactory> entry : artifactStorePublisherFactories.entrySet()) {
+            ap.put(entry.getKey(), entry.getValue().create(this));
+        }
+        this.artifactStorePublishers = Collections.unmodifiableMap(ap);
+        Map<String, ArtifactStoreComparator> ac = new HashMap<>();
+        for (Map.Entry<String, ArtifactStoreComparatorFactory> entry : artifactStoreComparatorFactories.entrySet()) {
+            ac.put(entry.getKey(), entry.getValue().create(this));
+        }
+        this.artifactStoreComparators = Collections.unmodifiableMap(ac);
         this.mavenModelReader = requireNonNull(mavenModelReader);
 
         logger.info("Njord {} session created", sessionConfig.version());
@@ -113,17 +122,13 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public Collection<ArtifactStorePublisher> availablePublishers() {
         checkClosed();
-        return artifactStorePublisherFactories.values().stream()
-                .map(f -> f.create(this))
-                .collect(Collectors.toList());
+        return artifactStorePublishers.values();
     }
 
     @Override
     public Collection<ArtifactStoreComparator> availableComparators() {
         checkClosed();
-        return artifactStoreComparatorFactories.values().stream()
-                .map(f -> f.create(this))
-                .collect(Collectors.toList());
+        return artifactStoreComparators.values();
     }
 
     @Override

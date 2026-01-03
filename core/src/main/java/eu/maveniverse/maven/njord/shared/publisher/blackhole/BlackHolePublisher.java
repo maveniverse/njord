@@ -25,8 +25,10 @@ public class BlackHolePublisher extends ArtifactStorePublisherSupport {
     public BlackHolePublisher(
             Session session,
             RepositorySystem repositorySystem,
-            RemoteRepository releasesRepository,
-            RemoteRepository snapshotsRepository,
+            RemoteRepository targetReleasesRepository,
+            RemoteRepository targetSnapshotsRepository,
+            RemoteRepository serviceReleasesRepository,
+            RemoteRepository serviceSnapshotsRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
             boolean fail) {
         super(
@@ -34,17 +36,17 @@ public class BlackHolePublisher extends ArtifactStorePublisherSupport {
                 repositorySystem,
                 BlackHolePublisherFactory.NAME,
                 "Publishes to /dev/null (for testing purposes)",
-                releasesRepository,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                targetReleasesRepository,
+                targetSnapshotsRepository,
+                serviceReleasesRepository,
+                serviceSnapshotsRepository,
                 artifactStoreRequirements);
         this.fail = fail;
     }
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
         if (session.config().dryRun()) {
             logger.info(
                     "Dry run; not publishing '{}' to '{}' service at {}",

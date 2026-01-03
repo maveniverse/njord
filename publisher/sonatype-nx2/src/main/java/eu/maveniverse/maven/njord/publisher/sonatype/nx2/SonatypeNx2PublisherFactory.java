@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.repository.RemoteRepository;
 
 @Singleton
 @Named(SonatypeNx2PublisherFactory.NAME)
@@ -33,18 +32,17 @@ public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySu
     }
 
     @Override
-    protected ArtifactStorePublisher doCreate(
-            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
+    protected ArtifactStorePublisher doCreate(Session session) {
         SonatypeNx2PublisherConfig config = new SonatypeNx2PublisherConfig(session.config());
         return new SonatypeNx2Publisher(
                 session,
                 repositorySystem,
                 NAME,
-                "Publishes to Sonatype Nx2",
-                releasesRepository,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                "Publishes to Sonatype Nexus Repository 2",
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
+                config.serviceReleaseRepository(),
+                config.serviceSnapshotRepository(),
                 createArtifactStoreRequirements(session, config));
     }
 }

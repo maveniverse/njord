@@ -39,7 +39,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
         if (session.config().dryRun()) {
             logger.info(
                     "Dry run; not publishing '{}' to '{}' service at {}",

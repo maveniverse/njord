@@ -8,16 +8,16 @@
 package eu.maveniverse.maven.njord.shared.impl.store;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreWriterFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriter;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreWriterFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
 @Named
-public class DefaultArtifactStoreWriterFactory implements ArtifactStoreWriterFactory {
+public class DefaultArtifactStoreWriterFactory implements InternalArtifactStoreWriterFactory {
     @Override
     public ArtifactStoreWriter create(SessionConfig sessionConfig) {
-        return new DefaultArtifactStoreWriter(sessionConfig);
+        return new DefaultArtifactStoreWriter();
     }
 }

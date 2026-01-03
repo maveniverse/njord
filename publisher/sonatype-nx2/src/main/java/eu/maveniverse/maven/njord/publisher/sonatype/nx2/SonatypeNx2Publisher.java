@@ -43,7 +43,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
-        RemoteRepository repository = selectRemoteRepositoryFor(artifactStore);
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
         if (session.config().dryRun()) {
             logger.info(
                     "Dry run; not publishing '{}' to '{}' service at {}",
@@ -54,15 +54,17 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
         }
         // handle auth redirection, if needed and
         // deploy as m-deploy-p would
-        RemoteRepository publishingRepository =
-                session.artifactPublisherRedirector().getPublishingRepository(repository, true);
-        logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, publishingRepository);
-        new ArtifactStoreDeployer(
-                        repositorySystem,
-                        new DefaultRepositorySystemSession(session.config().session())
-                                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        publishingRepository,
-                        true)
-                .deploy(artifactStore);
+        try (ArtifactStore store = artifactStore) {
+            RemoteRepository publishingRepository =
+                    session.artifactPublisherRedirector().getPublishingRepository(repository, true);
+            logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, publishingRepository);
+            new ArtifactStoreDeployer(
+                            repositorySystem,
+                            new DefaultRepositorySystemSession(session.config().session())
+                                    .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                            publishingRepository,
+                            true)
+                    .deploy(store);
+        }
     }
 }

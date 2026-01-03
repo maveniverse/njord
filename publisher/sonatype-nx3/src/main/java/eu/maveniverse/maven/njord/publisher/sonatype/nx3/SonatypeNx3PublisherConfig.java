@@ -26,7 +26,6 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-nx3.tag</code> or <code>njord.tag</code> - tag to apply to components (defaults to ${groupId}-${artifactId}-${version})</li>
  *     <li><code>njord.publisher.sonatype-nx3.connectTimeout</code> - HTTP connect timeout (default: PT30S)</li>
  *     <li><code>njord.publisher.sonatype-nx3.requestTimeout</code> - HTTP request timeout (default: PT5M)</li>
- *     <li><code>njord.publisher.sonatype-nx3.artifactStoreRequirements</code> - the requirements deployment must fulfil (defaults to NONE)</li>
  * </ul>
  */
 public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
@@ -69,10 +68,12 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
         this.tag = tagValue;
 
         // Timeouts with defaults
-        String connectTimeoutStr = effectiveProperties.getOrDefault(keyName("connectTimeout"), DEFAULT_CONNECT_TIMEOUT);
+        String connectTimeoutStr =
+                ConfigUtils.getString(effectiveProperties, DEFAULT_CONNECT_TIMEOUT, keyNames("connectTimeout"));
         this.connectTimeout = Duration.parse(connectTimeoutStr);
 
-        String requestTimeoutStr = effectiveProperties.getOrDefault(keyName("requestTimeout"), DEFAULT_REQUEST_TIMEOUT);
+        String requestTimeoutStr =
+                ConfigUtils.getString(effectiveProperties, DEFAULT_REQUEST_TIMEOUT, keyNames("requestTimeout"));
         this.requestTimeout = Duration.parse(requestTimeoutStr);
     }
 

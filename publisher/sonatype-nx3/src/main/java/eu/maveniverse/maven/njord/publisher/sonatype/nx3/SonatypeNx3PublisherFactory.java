@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * The "sonatype-nx3" publisher publishes to Nexus Repository 3 using the Components API.
@@ -47,15 +46,17 @@ public class SonatypeNx3PublisherFactory extends ArtifactStorePublisherFactorySu
     }
 
     @Override
-    protected ArtifactStorePublisher doCreate(
-            Session session, RemoteRepository releasesRepository, RemoteRepository snapshotsRepository) {
-        // Create NXRM3-specific config
+    protected ArtifactStorePublisher doCreate(Session session) {
         SonatypeNx3PublisherConfig config = new SonatypeNx3PublisherConfig(session.config());
         return new SonatypeNx3Publisher(
                 session,
                 repositorySystem,
-                releasesRepository,
-                snapshotsRepository,
+                NAME,
+                "Publishes to Sonatype Nexus Repository 3 using Components API",
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
+                config.serviceReleaseRepository(),
+                config.serviceSnapshotRepository(),
                 config,
                 createArtifactStoreRequirements(session, config));
     }

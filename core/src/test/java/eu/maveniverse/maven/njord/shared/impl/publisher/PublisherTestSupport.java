@@ -142,6 +142,7 @@ public class PublisherTestSupport {
         HashMap<String, ArtifactStorePublisherFactory> publishers = new HashMap<>();
         publishers.put("sonatype-cp", c -> sonatypeCp());
         SessionFactory factory = new DefaultSessionFactory(
+                context.repositorySystem(),
                 new RuntimeInformation() {
                     @Override
                     public String getMavenVersion() {
@@ -156,7 +157,6 @@ public class PublisherTestSupport {
                 new DefaultInternalArtifactStoreManagerFactory(checksumAlgorithmFactorySelector),
                 new DefaultArtifactStoreWriterFactory(),
                 new DefaultArtifactStoreMergerFactory(context.repositorySystem(), checksumAlgorithmFactorySelector),
-                new DefaultArtifactPublisherRedirectorFactory(context.repositorySystem()),
                 publishers,
                 Collections.emptyMap(),
                 new MavenModelReader(context).getImpl());

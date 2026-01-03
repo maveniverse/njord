@@ -10,8 +10,8 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.InternalArtifactStoreMergerFactory;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
-import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMergerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -20,7 +20,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelecto
 
 @Singleton
 @Named
-public class DefaultArtifactStoreMergerFactory implements ArtifactStoreMergerFactory {
+public class DefaultArtifactStoreMergerFactory implements InternalArtifactStoreMergerFactory {
     private final RepositorySystem repositorySystem;
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 

@@ -11,6 +11,7 @@ import eu.maveniverse.maven.njord.shared.publisher.spi.ValidationContext;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import org.eclipse.aether.artifact.Artifact;
 
 public class SigstoreSignatureValidator extends SignatureValidatorSupport {
@@ -23,8 +24,8 @@ public class SigstoreSignatureValidator extends SignatureValidatorSupport {
             ArtifactStore artifactStore,
             Artifact artifact,
             Artifact signatureArtifact,
-            InputStream artifactContent,
-            InputStream signatureContent,
+            IOSupplier<Optional<InputStream>> artifactContent,
+            IOSupplier<Optional<InputStream>> signatureContent,
             ValidationContext collector)
             throws IOException {
         return Outcome.SKIPPED; // TODO
