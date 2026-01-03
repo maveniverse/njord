@@ -11,6 +11,5 @@ jobs:
     name: Verify
     uses: maveniverse/parent/.github/workflows/ci.yml@release-49
     with:
-      maven-matrix: '[ "3.9.12" ]' # IT does the mvn matrix
       maven-test: './mvnw clean verify -e -B -V -P run-its -f it'
 
