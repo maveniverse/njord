@@ -22,11 +22,6 @@
 
   <name>${project.groupId}:${project.artifactId}</name>
 
-  <properties>
-    <!-- We need to skip this on Java lower than 17 (see profiles below) -->
-    <mvn4-its-run.skip>true</mvn4-its-run.skip>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
@@ -43,37 +38,6 @@
       <id>run-its</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare-maven-distro</id>
-                <goals>
-                  <goal>unpack</goal>
-                </goals>
-                <phase>generate-test-resources</phase>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>org.apache.maven</groupId>
-                      <artifactId>apache-maven</artifactId>
-                      <version>${maven39Version}</version>
-                      <classifier>bin</classifier>
-                      <type>zip</type>
-                    </artifactItem>
-                    <artifactItem>
-                      <groupId>org.apache.maven</groupId>
-                      <artifactId>apache-maven</artifactId>
-                      <version>${maven4Version}</version>
-                      <classifier>bin</classifier>
-                      <type>zip</type>
-                    </artifactItem>
-                  </artifactItems>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
@@ -113,39 +77,13 @@
                 </configuration>
               </execution>
               <execution>
-                <id>mvn39-its-run</id>
+                <id>mvn-its-run</id>
                 <goals>
                   <goal>run</goal>
                 </goals>
                 <phase>integration-test</phase>
                 <configuration>
-                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven39Version}</mavenHome>
-                  <cloneProjectsTo>${project.build.directory}/mvn39-it</cloneProjectsTo>
-                  <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
-                  <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
-                  <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
-                  <cloneClean>true</cloneClean>
-                  <pomIncludes>
-                    <pomInclude>*/pom.xml</pomInclude>
-                  </pomIncludes>
-                  <scriptVariables>
-                    <projectVersion>${project.version}</projectVersion>
-                  </scriptVariables>
-                  <preBuildHookScript>setup</preBuildHookScript>
-                  <postBuildHookScript>verify</postBuildHookScript>
-                  <addTestClassPath>false</addTestClassPath>
-                </configuration>
-              </execution>
-              <execution>
-                <id>mvn4-its-run</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <phase>integration-test</phase>
-                <configuration>
-                  <skipInvocation>${mvn4-its-run.skip}</skipInvocation>
-                  <mavenHome>${project.build.directory}/dependency/apache-maven-${maven4Version}</mavenHome>
-                  <cloneProjectsTo>${project.build.directory}/mvn4-it</cloneProjectsTo>
+                  <cloneProjectsTo>${project.build.directory}/mvn-it</cloneProjectsTo>
                   <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                   <settingsFile>${project.build.directory}/it-user/.m2/settings.xml</settingsFile>
                   <mavenOpts>-Duser.home=${project.build.directory}/it-user</mavenOpts>
@@ -165,15 +103,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>maven4-capable-jdk</id>
-      <activation>
-        <jdk>[17,)</jdk>
-      </activation>
-      <properties>
-        <mvn4-its-run.skip>false</mvn4-its-run.skip>
-      </properties>
     </profile>
   </profiles>
 </project>
