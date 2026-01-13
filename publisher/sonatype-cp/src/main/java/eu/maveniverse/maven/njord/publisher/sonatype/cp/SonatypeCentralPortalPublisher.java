@@ -215,16 +215,13 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         } else { // snapshot
             // handle auth redirection, if needed and
             // just deploy to snapshots as m-deploy-p would
-            try (ArtifactStore store = artifactStore) {
-                new ArtifactStoreDeployer(
-                                repositorySystem,
-                                new DefaultRepositorySystemSession(
-                                                session.config().session())
-                                        .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                                session.artifactPublisherRedirector().getPublishingRepository(repository, true),
-                                true)
-                        .deploy(store);
-            }
+            new ArtifactStoreDeployer(
+                            repositorySystem,
+                            new DefaultRepositorySystemSession(session.config().session())
+                                    .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                            session.artifactPublisherRedirector().getPublishingRepository(repository, true),
+                            true)
+                    .deploy(artifactStore);
         }
     }
 

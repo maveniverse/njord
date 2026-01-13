@@ -89,6 +89,10 @@ public class IpfsPublisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        if (session.config().dryRun()) {
+            logger.info("Dry run; not publishing '{}' to IPFS", artifactStore.name());
+            return;
+        }
         Optional<IPFS> ipfsOptional = connect();
         if (!ipfsOptional.isPresent()) {
             throw new IOException(String.format("Could not connect to IPFS node at address '%s'", config.multiaddr()));
