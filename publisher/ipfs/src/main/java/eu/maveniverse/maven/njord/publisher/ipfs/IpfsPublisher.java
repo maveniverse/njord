@@ -98,7 +98,7 @@ public class IpfsPublisher extends ArtifactStorePublisherSupport {
             throw new IOException(String.format("Could not connect to IPFS node at address '%s'", config.multiaddr()));
         }
         IPFS ipfs = ipfsOptional.orElseThrow(J8Utils.OET);
-        URI root = URI.create("ipfs:///").resolve(config.prefix());
+        URI root = URI.create("ipfs:///").resolve(config.filesPrefix());
         Optional<String> oldPathCid = getFilesPathCid(ipfs, root.getPath());
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = artifactStore.checksumAlgorithmFactories();
         int artifactCount = 0;
@@ -130,15 +130,17 @@ public class IpfsPublisher extends ArtifactStorePublisherSupport {
                 artifactCount + metadataCount,
                 oldPathCid.orElse("n/a"),
                 newPathCid);
-        if (config.isPublish()) {
-            logger.info("Publishing IPNS entry...");
-            Optional<KeyInfo> keyInfo = getOrCreateKey(ipfs, config.publishKeyName(), config.isPublishKeyCreate());
+        if (config.isPublishIPNS()) {
+            logger.info("Publishing IPNS...");
+            Optional<KeyInfo> keyInfo =
+                    getOrCreateKey(ipfs, config.publishIPNSKeyName(), config.isPublishIPNSKeyCreate());
             if (keyInfo.isPresent()) {
                 Map publish = ipfs.name.publish(
                         Multihash.decode(newPathCid), Optional.of(keyInfo.orElseThrow(J8Utils.OET).name));
                 logger.info("Published {} (pointing to {})", publish.get("Name"), publish.get("Value"));
             } else {
-                logger.info("Not published: key '{}' not available nor allowed to create it", config.publishKeyName());
+                logger.info(
+                        "Not published: key '{}' not available nor allowed to create it", config.publishIPNSKeyName());
             }
         }
     }

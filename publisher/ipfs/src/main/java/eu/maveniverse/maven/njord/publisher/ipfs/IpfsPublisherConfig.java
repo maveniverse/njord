@@ -16,42 +16,46 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public final class IpfsPublisherConfig extends PublisherConfigSupport {
     private final String multiaddr;
-    private final String prefix;
-    private final boolean publish;
-    private final String publishKeyName;
-    private final boolean publishKeyCreate;
+    private final String filesPrefix;
+    private final boolean publishIPNS;
+    private final String publishIPNSKeyName;
+    private final boolean publishIPNSKeyCreate;
 
     public IpfsPublisherConfig(SessionConfig sessionConfig) {
         super(IpfsPublisherFactory.NAME, sessionConfig);
 
         this.multiaddr = ConfigUtils.getString(
                 sessionConfig.effectiveProperties(), "/ip4/127.0.0.1/tcp/5001", keyNames("multiaddr"));
-        this.prefix = ConfigUtils.getString(
-                sessionConfig.effectiveProperties(), "/publish/eu.maveniverse/", keyNames("prefix"));
-        this.publish = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), true, keyNames("publish"));
-        this.publishKeyName =
-                ConfigUtils.getString(sessionConfig.effectiveProperties(), "self", keyNames("publishKeyName"));
-        this.publishKeyCreate =
-                ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), true, keyNames("publishKeyCreate"));
+        String filesPrefixInput = ConfigUtils.getString(
+                sessionConfig.effectiveProperties(), "/publish/repository/", keyNames("filesPrefix"));
+        if (!filesPrefixInput.endsWith("/")) {
+            filesPrefixInput += "/";
+        }
+        this.filesPrefix = filesPrefixInput;
+        this.publishIPNS = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), true, keyNames("publishIPNS"));
+        this.publishIPNSKeyName =
+                ConfigUtils.getString(sessionConfig.effectiveProperties(), "self", keyNames("publishIPNSKeyName"));
+        this.publishIPNSKeyCreate =
+                ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), true, keyNames("publishIPNSKeyCreate"));
     }
 
     public String multiaddr() {
         return multiaddr;
     }
 
-    public String prefix() {
-        return prefix;
+    public String filesPrefix() {
+        return filesPrefix;
     }
 
-    public boolean isPublish() {
-        return publish;
+    public boolean isPublishIPNS() {
+        return publishIPNS;
     }
 
-    public String publishKeyName() {
-        return publishKeyName;
+    public String publishIPNSKeyName() {
+        return publishIPNSKeyName;
     }
 
-    public boolean isPublishKeyCreate() {
-        return publishKeyCreate;
+    public boolean isPublishIPNSKeyCreate() {
+        return publishIPNSKeyCreate;
     }
 }
