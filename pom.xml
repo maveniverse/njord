@@ -107,6 +107,11 @@
       </dependency>
       <dependency>
         <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>ipfs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
         <artifactId>sonatype-central</artifactId>
         <version>${project.version}</version>
       </dependency>
