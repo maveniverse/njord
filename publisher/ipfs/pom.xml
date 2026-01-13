@@ -21,6 +21,13 @@
 
   <name>${project.groupId}:${project.artifactId}</name>
 
+  <properties>
+    <!--
+    Run time: Java 11; IPFS client
+    -->
+    <maven.compiler.release>11</maven.compiler.release>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.github.ipfs</groupId>
