@@ -88,6 +88,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         this.mavenModelReader = requireNonNull(mavenModelReader);
 
         logger.info("Njord {} session created", sessionConfig.version());
+        if (logger.isDebugEnabled()) {
+            logger.debug(
+                    "Running on Java {} {}",
+                    System.getProperty("java.version", "n/a"),
+                    System.getProperty("java.vendor", "n/a"));
+            logger.debug("Running in Maven {}", this.mavenRuntimeInformation.getMavenVersion());
+            logger.debug("Loaded publishers");
+            this.artifactStorePublishers.keySet().forEach(k -> logger.debug("* {}", k));
+            logger.debug("Loaded comparators");
+            this.artifactStoreComparators.keySet().forEach(k -> logger.debug("* {}", k));
+        }
     }
 
     @Override
