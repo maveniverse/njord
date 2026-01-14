@@ -55,13 +55,11 @@ public class BlackHolePublisher extends ArtifactStorePublisherSupport {
                     repository.getUrl());
             return;
         }
-        try (ArtifactStore store = artifactStore) {
-            RemoteRepository publishingRepository =
-                    session.artifactPublisherRedirector().getPublishingRepository(repository, true);
-            logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, publishingRepository);
-            if (fail) {
-                throw new IOException(name + " is set to fail");
-            }
+        RemoteRepository publishingRepository =
+                session.artifactPublisherRedirector().getPublishingRepository(repository, true);
+        logger.debug("Publishing '{}' to '{}' service at {}", artifactStore.name(), name, publishingRepository);
+        if (fail) {
+            throw new IOException(name + " is set to fail");
         }
     }
 }

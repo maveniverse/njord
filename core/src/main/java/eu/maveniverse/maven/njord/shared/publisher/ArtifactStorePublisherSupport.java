@@ -114,7 +114,9 @@ public abstract class ArtifactStorePublisherSupport extends ComponentSupport imp
     public void publish(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
 
-        doPublish(artifactStore);
+        try (ArtifactStore as = artifactStore) {
+            doPublish(as);
+        }
     }
 
     protected abstract void doPublish(ArtifactStore artifactStore) throws IOException;
