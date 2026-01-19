@@ -36,10 +36,6 @@
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>ipfs</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>sonatype-cp</artifactId>
     </dependency>
     <dependency>

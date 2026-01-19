@@ -30,7 +30,6 @@
     <module>sonatype-nx2</module>
     <module>sonatype-nx3</module>
     <module>apache</module>
-    <module>ipfs</module>
   </modules>
 
   <build>

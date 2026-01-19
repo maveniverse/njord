@@ -20,7 +20,6 @@
     <!-- If extension3 loaded, it owns publishers as well -->
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:deploy</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:apache</exportedArtifact>
-    <exportedArtifact>eu.maveniverse.maven.njord.publisher:ipfs</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-central</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-cp</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-nx2</exportedArtifact>
