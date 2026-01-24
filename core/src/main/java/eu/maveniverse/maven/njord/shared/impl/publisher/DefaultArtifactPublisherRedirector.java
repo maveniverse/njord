@@ -13,8 +13,10 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -200,8 +202,39 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                                 "Server '%s' contains unknown publisher '%s'", originServerId, publisher));
                     }
                 }
-                throw new IllegalArgumentException("Name '" + name
-                        + "' is not a name of known publisher nor is server ID with configured publisher");
+                // Log detailed diagnostic information
+                Collection<ArtifactStorePublisher> availablePublishers = session.availablePublishers();
+                Map<String, Map<String, String>> serverConfigs =
+                        session.config().serverConfigurations();
+
+                logger.error("Failed to resolve publisher name '{}'", name);
+                logger.error("Available publishers:");
+                if (availablePublishers.isEmpty()) {
+                    logger.error("  (none found)");
+                } else {
+                    for (ArtifactStorePublisher pub : availablePublishers) {
+                        logger.error("  - {}", pub.name());
+                    }
+                }
+
+                logger.error("Server IDs with publisher configuration:");
+                boolean foundConfigured = false;
+                for (Map.Entry<String, Map<String, String>> entry : serverConfigs.entrySet()) {
+                    String serverId = entry.getKey();
+                    Map<String, String> serverConfig = entry.getValue();
+                    String publisherName = serverConfig.get(SessionConfig.CONFIG_PUBLISHER);
+                    if (publisherName != null) {
+                        logger.error("  - {} (publisher: {})", serverId, publisherName);
+                        foundConfigured = true;
+                    }
+                }
+                if (!foundConfigured) {
+                    logger.error("  (none found)");
+                }
+
+                throw new IllegalArgumentException("Failed to resolve publisher name '" + name
+                        + "'. Check the logs for available publishers and server configurations, "
+                        + "or verify your settings.xml configuration");
             }
         }
         return getArtifactStorePublisherName();
