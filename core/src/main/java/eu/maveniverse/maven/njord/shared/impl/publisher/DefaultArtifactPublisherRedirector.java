@@ -167,8 +167,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             .orElseThrow(J8Utils.OET)
                             .repositoryMode());
             if (distributionRepository != null && distributionRepository.getId() != null) {
-                logger.debug(
-                        "Trying current project distribution management repository ID {}",
+                logger.info(
+                        "'{}' property not given, deriving publisher from project's distribution management repository ID '{}'",
+                        SessionConfig.CONFIG_PUBLISHER,
                         distributionRepository.getId());
                 return getArtifactStorePublisherName(distributionRepository.getId());
             }
@@ -217,7 +218,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                     }
                 }
 
-                logger.error("Server IDs with publisher configuration:");
+                logger.error("Server IDs with publisher configuration (can also be set via project properties):");
                 boolean foundConfigured = false;
                 for (Map.Entry<String, Map<String, String>> entry : serverConfigs.entrySet()) {
                     String serverId = entry.getKey();
