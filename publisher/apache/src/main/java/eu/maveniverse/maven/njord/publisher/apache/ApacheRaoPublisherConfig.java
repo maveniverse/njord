@@ -8,8 +8,10 @@
 package eu.maveniverse.maven.njord.publisher.apache;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
+import java.util.Locale;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.ConfigUtils;
@@ -25,16 +27,20 @@ public final class ApacheRaoPublisherConfig extends PublisherConfigSupport {
     public static final String SNAPSHOT_REPOSITORY_URL =
             "https://repository.apache.org/content/repositories/snapshots/";
 
-    private final boolean silent;
+    private final NjordRepositoryListener.Mode listenerMode;
 
     public ApacheRaoPublisherConfig(SessionConfig sessionConfig) {
         super(ApacheRaoPublisherFactory.NAME, sessionConfig);
 
-        this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
+        this.listenerMode = NjordRepositoryListener.Mode.valueOf(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        NjordRepositoryListener.Mode.AGGREGATED.name(),
+                        keyNames("listenerMode"))
+                .toUpperCase(Locale.ROOT));
     }
 
-    public boolean isSilent() {
-        return silent;
+    public NjordRepositoryListener.Mode listenerMode() {
+        return listenerMode;
     }
 
     @Override

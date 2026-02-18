@@ -41,7 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.rtinfo.RuntimeInformation;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -150,8 +149,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
         try {
             ModelResponse response = mavenModelReader.readModel(
-                    new DefaultRepositorySystemSession(config.session())
-                            .setTransferListener(new NjordTransferListener(true)),
+                    config.session(),
                     ModelRequest.builder()
                             .setArtifact(artifact)
                             .setRepositories(remoteRepositories)

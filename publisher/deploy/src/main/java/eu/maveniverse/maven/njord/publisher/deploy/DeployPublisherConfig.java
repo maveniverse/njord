@@ -8,22 +8,28 @@
 package eu.maveniverse.maven.njord.publisher.deploy;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import java.util.Locale;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Deploy publisher config.
  */
 public final class DeployPublisherConfig extends PublisherConfigSupport {
-    private final boolean silent;
+    private final NjordRepositoryListener.Mode listenerMode;
 
     public DeployPublisherConfig(SessionConfig sessionConfig) {
         super(DeployPublisherFactory.NAME, sessionConfig);
 
-        this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
+        this.listenerMode = NjordRepositoryListener.Mode.valueOf(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        NjordRepositoryListener.Mode.AGGREGATED.name(),
+                        keyNames("listenerMode"))
+                .toUpperCase(Locale.ROOT));
     }
 
-    public boolean isSilent() {
-        return silent;
+    public NjordRepositoryListener.Mode listenerMode() {
+        return listenerMode;
     }
 }

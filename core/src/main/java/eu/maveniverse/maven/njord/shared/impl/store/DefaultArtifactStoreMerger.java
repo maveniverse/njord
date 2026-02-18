@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -57,7 +58,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             sessionConfig.session(),
-                            true,
+                            NjordRepositoryListener.Mode.PER_EVENT_SILENT,
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from);
@@ -108,7 +109,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             sessionConfig.session(),
-                            true,
+                            NjordRepositoryListener.Mode.PER_EVENT_SILENT,
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from, toBeWritten);

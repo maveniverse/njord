@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
 
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
@@ -19,7 +20,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
-    private final boolean silent;
+    private final NjordRepositoryListener.Mode listenerMode;
 
     public SonatypeNx2Publisher(
             Session session,
@@ -31,7 +32,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
             ArtifactStoreRequirements artifactStoreRequirements,
-            boolean silent) {
+            NjordRepositoryListener.Mode listenerMode) {
         super(
                 session,
                 repositorySystem,
@@ -42,7 +43,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                 serviceReleaseRepository,
                 serviceSnapshotRepository,
                 artifactStoreRequirements);
-        this.silent = silent;
+        this.listenerMode = listenerMode;
     }
 
     @Override
@@ -65,7 +66,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        silent,
+                        listenerMode,
                         publishingRepository,
                         true)
                 .deploy(artifactStore);

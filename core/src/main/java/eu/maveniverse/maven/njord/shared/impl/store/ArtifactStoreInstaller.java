@@ -30,13 +30,15 @@ import org.eclipse.aether.installation.InstallationException;
 public class ArtifactStoreInstaller extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
-    private final boolean silent;
+    private final NjordRepositoryListener.Mode listenerMode;
 
     public ArtifactStoreInstaller(
-            RepositorySystem repositorySystem, RepositorySystemSession repositorySystemSession, boolean silent) {
+            RepositorySystem repositorySystem,
+            RepositorySystemSession repositorySystemSession,
+            NjordRepositoryListener.Mode listenerMode) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
-        this.silent = silent;
+        this.listenerMode = requireNonNull(listenerMode);
     }
 
     /**
@@ -60,11 +62,11 @@ public class ArtifactStoreInstaller extends ComponentSupport {
         InstallRequest installRequest = new InstallRequest();
         installRequest.setArtifacts(artifacts);
         installRequest.setTrace(new RequestTrace(artifactStore));
-        try {
+        try (NjordRepositoryListener repositoryListener = new NjordRepositoryListener(listenerMode)) {
             repositorySystem.install(
                     new DefaultRepositorySystemSession(repositorySystemSession)
                             .setTransferListener(null)
-                            .setRepositoryListener(new NjordRepositoryListener(silent)),
+                            .setRepositoryListener(repositoryListener),
                     installRequest);
         } catch (InstallationException e) {
             throw new IOException(e);

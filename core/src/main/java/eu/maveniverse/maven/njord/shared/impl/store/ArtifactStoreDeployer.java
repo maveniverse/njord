@@ -31,19 +31,19 @@ import org.eclipse.aether.repository.RemoteRepository;
 public class ArtifactStoreDeployer extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
-    private final boolean silent;
+    private final NjordRepositoryListener.Mode listenerMode;
     private final RemoteRepository repository;
     private final boolean repositoryPrepared;
 
     public ArtifactStoreDeployer(
             RepositorySystem repositorySystem,
             RepositorySystemSession repositorySystemSession,
-            boolean silent,
+            NjordRepositoryListener.Mode listenerMode,
             RemoteRepository repository,
             boolean repositoryPrepared) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
-        this.silent = silent;
+        this.listenerMode = requireNonNull(listenerMode);
         this.repository = requireNonNull(repository);
         this.repositoryPrepared = repositoryPrepared;
     }
@@ -79,11 +79,11 @@ public class ArtifactStoreDeployer extends ComponentSupport {
                     deployRequest.getRepository().getId());
         }
         deployRequest.setTrace(new RequestTrace(artifactStore));
-        try {
+        try (NjordRepositoryListener repositoryListener = new NjordRepositoryListener(listenerMode)) {
             repositorySystem.deploy(
                     new DefaultRepositorySystemSession(repositorySystemSession)
                             .setTransferListener(null)
-                            .setRepositoryListener(new NjordRepositoryListener(silent)),
+                            .setRepositoryListener(repositoryListener),
                     deployRequest);
         } catch (DeploymentException e) {
             throw new IOException(e);

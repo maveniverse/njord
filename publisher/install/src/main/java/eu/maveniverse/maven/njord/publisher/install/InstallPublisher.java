@@ -52,7 +52,7 @@ public class InstallPublisher extends ArtifactStorePublisherSupport {
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        config.isSilent())
+                        config.listenerMode())
                 .install(artifactStore);
     }
 }
