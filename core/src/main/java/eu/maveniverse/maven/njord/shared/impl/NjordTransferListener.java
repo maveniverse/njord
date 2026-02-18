@@ -26,18 +26,34 @@ import org.slf4j.LoggerFactory;
 public class NjordTransferListener extends AbstractTransferListener {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private final boolean silent;
+
+    public NjordTransferListener(boolean silent) {
+        this.silent = silent;
+    }
+
     @Override
     public void transferSucceeded(TransferEvent event) {
         String action = (event.getRequestType() == TransferEvent.RequestType.PUT ? "Uploaded" : "Downloaded");
         String direction = event.getRequestType() == TransferEvent.RequestType.PUT ? "to" : "from";
         TransferResource resource = event.getResource();
-        logger.debug(
-                "{} {} {}: {}{}",
-                action,
-                direction,
-                resource.getRepositoryId(),
-                resource.getRepositoryUrl(),
-                resource.getResourceName());
+        if (silent) {
+            logger.debug(
+                    "{} {} {}: {}{}",
+                    action,
+                    direction,
+                    resource.getRepositoryId(),
+                    resource.getRepositoryUrl(),
+                    resource.getResourceName());
+        } else {
+            logger.info(
+                    "{} {} {}: {}{}",
+                    action,
+                    direction,
+                    resource.getRepositoryId(),
+                    resource.getRepositoryUrl(),
+                    resource.getResourceName());
+        }
     }
 
     @Override
@@ -48,13 +64,23 @@ public class NjordTransferListener extends AbstractTransferListener {
         // if we are called here without exception = bug in resolver/maven
         Exception exception = requireNonNull(event.getException());
         if (event.getRequestType() != TransferEvent.RequestType.PUT && exception instanceof ArtifactNotFoundException) {
-            logger.debug(
-                    "Failed {} {} {}: {}{}; not found",
-                    action,
-                    direction,
-                    resource.getRepositoryId(),
-                    resource.getRepositoryUrl(),
-                    resource.getResourceName());
+            if (silent) {
+                logger.debug(
+                        "Failed {} {} {}: {}{}; not found",
+                        action,
+                        direction,
+                        resource.getRepositoryId(),
+                        resource.getRepositoryUrl(),
+                        resource.getResourceName());
+            } else {
+                logger.info(
+                        "Failed {} {} {}: {}{}; not found",
+                        action,
+                        direction,
+                        resource.getRepositoryId(),
+                        resource.getRepositoryUrl(),
+                        resource.getResourceName());
+            }
         } else {
             logger.warn(
                     "Failed {} {} {}: {}{}; {}",

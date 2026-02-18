@@ -59,7 +59,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             new DefaultRepositorySystemSession(sessionConfig.session())
-                                    .setTransferListener(new NjordTransferListener()),
+                                    .setTransferListener(new NjordTransferListener(true)),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from);
@@ -110,7 +110,7 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
             new ArtifactStoreDeployer(
                             repositorySystem,
                             new DefaultRepositorySystemSession(sessionConfig.session())
-                                    .setTransferListener(new NjordTransferListener()),
+                                    .setTransferListener(new NjordTransferListener(true)),
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from, toBeWritten);
