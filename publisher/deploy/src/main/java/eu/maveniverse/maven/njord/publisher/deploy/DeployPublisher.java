@@ -7,6 +7,8 @@
  */
 package eu.maveniverse.maven.njord.publisher.deploy;
 
+import static java.util.Objects.requireNonNull;
+
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreDeployer;
@@ -19,22 +21,24 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class DeployPublisher extends ArtifactStorePublisherSupport {
+    private final DeployPublisherConfig config;
+
     public DeployPublisher(
             Session session,
             RepositorySystem repositorySystem,
-            RemoteRepository releasesRepository,
-            RemoteRepository snapshotsRepository,
+            DeployPublisherConfig config,
             ArtifactStoreRequirements artifactStoreRequirements) {
         super(
                 session,
                 repositorySystem,
                 DeployPublisherFactory.NAME,
                 "Publishes to any repository just like maven-deploy-plugin would",
-                releasesRepository,
-                snapshotsRepository,
-                releasesRepository,
-                snapshotsRepository,
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
+                config.targetReleaseRepository(),
+                config.targetSnapshotRepository(),
                 artifactStoreRequirements);
+        this.config = requireNonNull(config);
     }
 
     @Override
@@ -57,6 +61,7 @@ public class DeployPublisher extends ArtifactStorePublisherSupport {
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                        config.isSilent(),
                         publishingRepository,
                         true)
                 .deploy(artifactStore);

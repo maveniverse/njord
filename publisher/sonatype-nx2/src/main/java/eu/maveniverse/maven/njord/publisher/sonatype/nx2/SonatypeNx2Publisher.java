@@ -19,6 +19,8 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
 public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
+    private final boolean silent;
+
     public SonatypeNx2Publisher(
             Session session,
             RepositorySystem repositorySystem,
@@ -28,7 +30,8 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
             RemoteRepository targetSnapshotRepository,
             RemoteRepository serviceReleaseRepository,
             RemoteRepository serviceSnapshotRepository,
-            ArtifactStoreRequirements artifactStoreRequirements) {
+            ArtifactStoreRequirements artifactStoreRequirements,
+            boolean silent) {
         super(
                 session,
                 repositorySystem,
@@ -39,6 +42,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                 serviceReleaseRepository,
                 serviceSnapshotRepository,
                 artifactStoreRequirements);
+        this.silent = silent;
     }
 
     @Override
@@ -61,6 +65,7 @@ public class SonatypeNx2Publisher extends ArtifactStorePublisherSupport {
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
                                 .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                        silent,
                         publishingRepository,
                         true)
                 .deploy(artifactStore);

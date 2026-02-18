@@ -37,6 +37,7 @@ public class InstallPublisherFactory extends ArtifactStorePublisherFactorySuppor
 
     @Override
     protected ArtifactStorePublisher doCreate(Session session) {
-        return new InstallPublisher(session, repositorySystem);
+        InstallPublisherConfig config = new InstallPublisherConfig(session.config());
+        return new InstallPublisher(session, repositorySystem, config);
     }
 }

@@ -52,6 +52,7 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
     private final Duration waitForStatesSleep;
     private final Set<String> waitForStatesWaitStates;
     private final Set<String> waitForStatesFailureStates;
+    private final boolean silent;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(SonatypeCentralPortalPublisherFactory.NAME, sessionConfig);
@@ -93,6 +94,8 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 sessionConfig.effectiveProperties(), "failed", keyNames("waitForStatesFailureStates"))
                         .toLowerCase(Locale.ENGLISH))));
+
+        this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
     }
 
     @Override
@@ -161,5 +164,9 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
 
     public Set<String> waitForStatesFailureStates() {
         return waitForStatesFailureStates;
+    }
+
+    public boolean isSilent() {
+        return silent;
     }
 }

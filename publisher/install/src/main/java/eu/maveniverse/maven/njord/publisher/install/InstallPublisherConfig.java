@@ -5,20 +5,20 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
+package eu.maveniverse.maven.njord.publisher.install;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Sonatype NX2 config.
+ * Install publisher config.
  */
-public final class SonatypeNx2PublisherConfig extends PublisherConfigSupport {
+public final class InstallPublisherConfig extends PublisherConfigSupport {
     private final boolean silent;
 
-    public SonatypeNx2PublisherConfig(SessionConfig sessionConfig) {
-        super(SonatypeNx2PublisherFactory.NAME, sessionConfig);
+    public InstallPublisherConfig(SessionConfig sessionConfig) {
+        super(InstallPublisherFactory.NAME, sessionConfig);
 
         this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
     }

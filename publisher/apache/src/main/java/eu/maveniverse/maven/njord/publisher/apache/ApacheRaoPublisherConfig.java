@@ -12,6 +12,7 @@ import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Apache RAO publisher config.
@@ -24,8 +25,16 @@ public final class ApacheRaoPublisherConfig extends PublisherConfigSupport {
     public static final String SNAPSHOT_REPOSITORY_URL =
             "https://repository.apache.org/content/repositories/snapshots/";
 
+    private final boolean silent;
+
     public ApacheRaoPublisherConfig(SessionConfig sessionConfig) {
         super(ApacheRaoPublisherFactory.NAME, sessionConfig);
+
+        this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
+    }
+
+    public boolean isSilent() {
+        return silent;
     }
 
     @Override

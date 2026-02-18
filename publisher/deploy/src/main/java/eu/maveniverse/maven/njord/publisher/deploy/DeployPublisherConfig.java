@@ -9,12 +9,21 @@ package eu.maveniverse.maven.njord.publisher.deploy;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Deploy publisher config.
  */
 public final class DeployPublisherConfig extends PublisherConfigSupport {
+    private final boolean silent;
+
     public DeployPublisherConfig(SessionConfig sessionConfig) {
         super(DeployPublisherFactory.NAME, sessionConfig);
+
+        this.silent = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("silent"));
+    }
+
+    public boolean isSilent() {
+        return silent;
     }
 }

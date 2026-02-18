@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Njord specific transfer listener: it is silent (as logs to DEBUG) but user can still make output visible
+ * Njord specific transfer listener: it may be silent (using DEBUG) but user can still make output visible
  * by using debug (-X) of Maven. This listener shows message(s) only in some case of problem.
  * <p>
  * If debug logging is enabled, this class will emit visible (DEBUG) messages of successful transfers and warnings

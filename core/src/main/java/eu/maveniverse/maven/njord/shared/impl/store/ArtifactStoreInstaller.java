@@ -9,11 +9,13 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -28,10 +30,13 @@ import org.eclipse.aether.installation.InstallationException;
 public class ArtifactStoreInstaller extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
+    private final boolean silent;
 
-    public ArtifactStoreInstaller(RepositorySystem repositorySystem, RepositorySystemSession repositorySystemSession) {
+    public ArtifactStoreInstaller(
+            RepositorySystem repositorySystem, RepositorySystemSession repositorySystemSession, boolean silent) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
+        this.silent = silent;
     }
 
     /**
@@ -56,7 +61,11 @@ public class ArtifactStoreInstaller extends ComponentSupport {
         installRequest.setArtifacts(artifacts);
         installRequest.setTrace(new RequestTrace(artifactStore));
         try {
-            repositorySystem.install(repositorySystemSession, installRequest);
+            repositorySystem.install(
+                    new DefaultRepositorySystemSession(repositorySystemSession)
+                            .setTransferListener(null)
+                            .setRepositoryListener(new NjordRepositoryListener(silent)),
+                    installRequest);
         } catch (InstallationException e) {
             throw new IOException(e);
         }

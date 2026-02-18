@@ -9,11 +9,13 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -29,16 +31,19 @@ import org.eclipse.aether.repository.RemoteRepository;
 public class ArtifactStoreDeployer extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
+    private final boolean silent;
     private final RemoteRepository repository;
     private final boolean repositoryPrepared;
 
     public ArtifactStoreDeployer(
             RepositorySystem repositorySystem,
             RepositorySystemSession repositorySystemSession,
+            boolean silent,
             RemoteRepository repository,
             boolean repositoryPrepared) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
+        this.silent = silent;
         this.repository = requireNonNull(repository);
         this.repositoryPrepared = repositoryPrepared;
     }
@@ -75,7 +80,11 @@ public class ArtifactStoreDeployer extends ComponentSupport {
         }
         deployRequest.setTrace(new RequestTrace(artifactStore));
         try {
-            repositorySystem.deploy(repositorySystemSession, deployRequest);
+            repositorySystem.deploy(
+                    new DefaultRepositorySystemSession(repositorySystemSession)
+                            .setTransferListener(null)
+                            .setRepositoryListener(new NjordRepositoryListener(silent)),
+                    deployRequest);
         } catch (DeploymentException e) {
             throw new IOException(e);
         }

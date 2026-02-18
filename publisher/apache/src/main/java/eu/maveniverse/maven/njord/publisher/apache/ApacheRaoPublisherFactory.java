@@ -50,6 +50,7 @@ public class ApacheRaoPublisherFactory extends ArtifactStorePublisherFactorySupp
                 config.targetSnapshotRepository(),
                 config.serviceReleaseRepository(),
                 config.serviceSnapshotRepository(),
-                centralRequirementsFactory.create(session));
+                centralRequirementsFactory.create(session),
+                config.isSilent());
     }
 }
