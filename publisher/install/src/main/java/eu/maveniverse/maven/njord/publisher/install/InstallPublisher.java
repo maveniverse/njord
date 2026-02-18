@@ -18,6 +18,7 @@ import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.repository.LocalRepository;
 
 public class InstallPublisher extends ArtifactStorePublisherSupport {
     private final InstallPublisherConfig config;
@@ -48,11 +49,13 @@ public class InstallPublisher extends ArtifactStorePublisherSupport {
             return;
         }
         logger.debug("Publishing '{}' to local repository", artifactStore.name());
-        new ArtifactStoreInstaller(
-                        repositorySystem,
-                        new DefaultRepositorySystemSession(session.config().session())
-                                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
-                        config.listenerMode())
-                .install(artifactStore);
+        DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession(
+                        session.config().session())
+                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true);
+        if (config.target().isPresent()) {
+            newSession.setLocalRepositoryManager(repositorySystem.newLocalRepositoryManager(
+                    newSession, new LocalRepository(config.target().get().toFile())));
+        }
+        new ArtifactStoreInstaller(repositorySystem, newSession, config.listenerMode()).install(artifactStore);
     }
 }
