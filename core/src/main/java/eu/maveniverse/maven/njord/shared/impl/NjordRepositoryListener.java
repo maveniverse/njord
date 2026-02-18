@@ -61,9 +61,9 @@ public class NjordRepositoryListener extends AbstractRepositoryListener implemen
                 List<Artifact> artifacts = entry.getValue();
                 total += artifacts.size();
                 if (mode.silent) {
-                    logger.debug("Published {} artifact(s) to {}", artifacts.size(), repository.getId());
+                    logger.debug("Published {} artifact(s) to {} repository", artifacts.size(), repository.getId());
                 } else {
-                    logger.info("Published {} artifact(s) to {}", artifacts.size(), repository.getId());
+                    logger.info("Published {} artifact(s) to {} repository", artifacts.size(), repository.getId());
                 }
             }
             if (events.size() > 1) {
