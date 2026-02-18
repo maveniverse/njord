@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v20.html
  */
-package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
+package eu.maveniverse.maven.njord.publisher.install;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
@@ -14,13 +14,13 @@ import java.util.Locale;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Sonatype NX2 config.
+ * Install publisher config.
  */
-public final class SonatypeNx2PublisherConfig extends PublisherConfigSupport {
+public final class InstallPublisherConfig extends PublisherConfigSupport {
     private final NjordRepositoryListener.Mode listenerMode;
 
-    public SonatypeNx2PublisherConfig(SessionConfig sessionConfig) {
-        super(SonatypeNx2PublisherFactory.NAME, sessionConfig);
+    public InstallPublisherConfig(SessionConfig sessionConfig) {
+        super(InstallPublisherFactory.NAME, sessionConfig);
 
         this.listenerMode = NjordRepositoryListener.Mode.valueOf(ConfigUtils.getString(
                         sessionConfig.effectiveProperties(),

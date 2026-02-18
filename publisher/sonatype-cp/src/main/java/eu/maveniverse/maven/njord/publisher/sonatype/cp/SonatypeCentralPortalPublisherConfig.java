@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.publisher.sonatype.cp;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import java.time.Duration;
@@ -52,6 +53,7 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
     private final Duration waitForStatesSleep;
     private final Set<String> waitForStatesWaitStates;
     private final Set<String> waitForStatesFailureStates;
+    private final NjordRepositoryListener.Mode listenerMode;
 
     public SonatypeCentralPortalPublisherConfig(SessionConfig sessionConfig) {
         super(SonatypeCentralPortalPublisherFactory.NAME, sessionConfig);
@@ -93,6 +95,12 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
                 new HashSet<>(ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
                                 sessionConfig.effectiveProperties(), "failed", keyNames("waitForStatesFailureStates"))
                         .toLowerCase(Locale.ENGLISH))));
+
+        this.listenerMode = NjordRepositoryListener.Mode.valueOf(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        NjordRepositoryListener.Mode.AGGREGATED.name(),
+                        keyNames("listenerMode"))
+                .toUpperCase(Locale.ROOT));
     }
 
     @Override
@@ -161,5 +169,9 @@ public final class SonatypeCentralPortalPublisherConfig extends PublisherConfigS
 
     public Set<String> waitForStatesFailureStates() {
         return waitForStatesFailureStates;
+    }
+
+    public NjordRepositoryListener.Mode listenerMode() {
+        return listenerMode;
     }
 }

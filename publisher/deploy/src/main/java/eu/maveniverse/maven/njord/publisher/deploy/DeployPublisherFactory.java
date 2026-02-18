@@ -48,11 +48,6 @@ public class DeployPublisherFactory extends ArtifactStorePublisherFactorySupport
     @Override
     protected ArtifactStorePublisher doCreate(Session session) {
         DeployPublisherConfig config = new DeployPublisherConfig(session.config());
-        return new DeployPublisher(
-                session,
-                repositorySystem,
-                config.targetReleaseRepository(),
-                config.targetSnapshotRepository(),
-                createArtifactStoreRequirements(session, config));
+        return new DeployPublisher(session, repositorySystem, config, createArtifactStoreRequirements(session, config));
     }
 }

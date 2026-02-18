@@ -7,6 +7,8 @@
  */
 package eu.maveniverse.maven.njord.publisher.install;
 
+import static java.util.Objects.requireNonNull;
+
 import eu.maveniverse.maven.njord.shared.NjordUtils;
 import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreInstaller;
@@ -18,7 +20,9 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 
 public class InstallPublisher extends ArtifactStorePublisherSupport {
-    public InstallPublisher(Session session, RepositorySystem repositorySystem) {
+    private final InstallPublisherConfig config;
+
+    public InstallPublisher(Session session, RepositorySystem repositorySystem, InstallPublisherConfig config) {
         super(
                 session,
                 repositorySystem,
@@ -29,6 +33,7 @@ public class InstallPublisher extends ArtifactStorePublisherSupport {
                 null,
                 null,
                 ArtifactStoreRequirements.NONE);
+        this.config = requireNonNull(config);
     }
 
     @Override
@@ -46,7 +51,8 @@ public class InstallPublisher extends ArtifactStorePublisherSupport {
         new ArtifactStoreInstaller(
                         repositorySystem,
                         new DefaultRepositorySystemSession(session.config().session())
-                                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true))
+                                .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                        config.listenerMode())
                 .install(artifactStore);
     }
 }

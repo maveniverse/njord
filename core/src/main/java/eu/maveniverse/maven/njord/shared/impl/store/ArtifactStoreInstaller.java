@@ -9,11 +9,13 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -28,10 +30,15 @@ import org.eclipse.aether.installation.InstallationException;
 public class ArtifactStoreInstaller extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
+    private final NjordRepositoryListener.Mode listenerMode;
 
-    public ArtifactStoreInstaller(RepositorySystem repositorySystem, RepositorySystemSession repositorySystemSession) {
+    public ArtifactStoreInstaller(
+            RepositorySystem repositorySystem,
+            RepositorySystemSession repositorySystemSession,
+            NjordRepositoryListener.Mode listenerMode) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
+        this.listenerMode = requireNonNull(listenerMode);
     }
 
     /**
@@ -55,8 +62,12 @@ public class ArtifactStoreInstaller extends ComponentSupport {
         InstallRequest installRequest = new InstallRequest();
         installRequest.setArtifacts(artifacts);
         installRequest.setTrace(new RequestTrace(artifactStore));
-        try {
-            repositorySystem.install(repositorySystemSession, installRequest);
+        try (NjordRepositoryListener repositoryListener = new NjordRepositoryListener(listenerMode)) {
+            repositorySystem.install(
+                    new DefaultRepositorySystemSession(repositorySystemSession)
+                            .setTransferListener(null)
+                            .setRepositoryListener(repositoryListener),
+                    installRequest);
         } catch (InstallationException e) {
             throw new IOException(e);
         }

@@ -219,6 +219,7 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                             repositorySystem,
                             new DefaultRepositorySystemSession(session.config().session())
                                     .setConfigProperty(NjordUtils.RESOLVER_SESSION_CONNECTOR_SKIP, true),
+                            publisherConfig.listenerMode(),
                             session.artifactPublisherRedirector().getPublishingRepository(repository, true),
                             true)
                     .deploy(artifactStore);

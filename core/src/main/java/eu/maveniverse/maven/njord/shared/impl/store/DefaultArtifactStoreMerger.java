@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
-import eu.maveniverse.maven.njord.shared.impl.NjordTransferListener;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStoreMerger;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -58,8 +57,8 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
         try (ArtifactStore from = source) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            new DefaultRepositorySystemSession(sessionConfig.session())
-                                    .setTransferListener(new NjordTransferListener(true)),
+                            sessionConfig.session(),
+                            NjordRepositoryListener.Mode.PER_EVENT_SILENT,
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from);
@@ -109,8 +108,8 @@ public class DefaultArtifactStoreMerger extends ComponentSupport implements Arti
         try (ArtifactStore from = source) {
             new ArtifactStoreDeployer(
                             repositorySystem,
-                            new DefaultRepositorySystemSession(sessionConfig.session())
-                                    .setTransferListener(new NjordTransferListener(true)),
+                            sessionConfig.session(),
+                            NjordRepositoryListener.Mode.PER_EVENT_SILENT,
                             new RemoteRepository.Builder(targetName, "default", "njord:store:" + targetName).build(),
                             true)
                     .deploy(from, toBeWritten);
