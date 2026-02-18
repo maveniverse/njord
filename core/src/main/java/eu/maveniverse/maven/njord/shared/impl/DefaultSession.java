@@ -151,7 +151,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
         try {
             ModelResponse response = mavenModelReader.readModel(
                     new DefaultRepositorySystemSession(config.session())
-                            .setTransferListener(new NjordTransferListener()),
+                            .setTransferListener(new NjordTransferListener(true)),
                     ModelRequest.builder()
                             .setArtifact(artifact)
                             .setRepositories(remoteRepositories)

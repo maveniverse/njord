@@ -31,11 +31,15 @@
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>apache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
       <artifactId>deploy</artifactId>
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-      <artifactId>apache</artifactId>
+      <artifactId>install</artifactId>
     </dependency>
     <dependency>
       <groupId>eu.maveniverse.maven.njord.publisher</groupId>

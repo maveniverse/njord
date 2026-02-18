@@ -23,7 +23,8 @@ import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Helper class.
+ * Helper class, that uses {@link RepositorySystem#deploy(RepositorySystemSession, DeployRequest)} calls to perform
+ * deploys "just like maven-deploy-plugin would".
  */
 public class ArtifactStoreDeployer extends ComponentSupport {
     private final RepositorySystem repositorySystem;
@@ -42,6 +43,9 @@ public class ArtifactStoreDeployer extends ComponentSupport {
         this.repositoryPrepared = repositoryPrepared;
     }
 
+    /**
+     * Deploys all artifacts from the store.
+     */
     public void deploy(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
         deploy(
@@ -51,6 +55,9 @@ public class ArtifactStoreDeployer extends ComponentSupport {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Deploys given artifacts from the store. This is useful when we need to deploy only a subset of the store.
+     */
     public void deploy(ArtifactStore artifactStore, Collection<Artifact> artifacts) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(artifacts);

@@ -90,6 +90,7 @@
                   <cloneClean>true</cloneClean>
                   <pomIncludes>
                     <pomInclude>*/pom.xml</pomInclude>
+                    <pomInclude>*/fake-pom.xml</pomInclude>
                   </pomIncludes>
                   <scriptVariables>
                     <projectVersion>${project.version}</projectVersion>
