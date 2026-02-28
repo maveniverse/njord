@@ -23,7 +23,6 @@
     </breadcrumbs>
 
     <menu name="Plugin Documentation" >
-      <item name="njord:status" href="./status-mojo.html" />
       <item name="njord:list" href="./list-mojo.html" />
       <item name="njord:list-content" href="./list-content-mojo.html" />
       <item name="njord:validate" href="./validate-mojo.html" />
@@ -32,6 +31,7 @@
       <item name="njord:drop-all" href="./drop-all-mojo.html" />
       <item name="njord:compare" href="./compare-mojo.html" />
       <item name="njord:redeploy" href="./redeploy-mojo.html" />
+      <item name="njord:status" href="./status-mojo.html" />
 
       <item name="Advanced" >
         <item name="njord:check-artifacts-availability" href="./check-artifacts-availability-mojo.html" />
@@ -43,11 +43,19 @@
         <item name="njord:merge-all" href="./merge-all-mojo.html" />
         <item name="njord:write" href="./write-mojo.html" />
         <item name="njord:write-bundle" href="./write-bundle-mojo.html" />
+      </item>
+      <item name="Config" >
         <item name="njord:list-comparators" href="./list-comparators-mojo.html" />
         <item name="njord:list-publishers" href="./list-publishers-mojo.html" />
         <item name="njord:list-templates" href="./list-templates-mojo.html" />
+        <item name="njord:set-write-mode" href="./set-write-mode-mojo.html" />
       </item>
-
+      <item name="Attachment" >
+        <item name="njord:attachment-delete" href="./attachment-delete-mojo.html" />
+        <item name="njord:attachment-from-file" href="./attachment-from-file-mojo.html" />
+        <item name="njord:attachment-list" href="./attachment-list-mojo.html" />
+        <item name="njord:attachment-to-file" href="./attachment-to-file-mojo.html" />
+      </item>
       <item name="njord:help" href="./help-mojo.html" />
     </menu>
     <menu ref="reports" />
