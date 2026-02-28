@@ -45,16 +45,16 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
- * A mojo that checks availability for all artifacts on given remote repository. The mojo by default blocks/waits
+ * A goal that checks availability for all artifacts on given remote repository. The goal by default blocks/waits
  * for configured time and polls remote repository at given intervals, but can be used for "one pass" checks as well.
  * <p>
- * By default, the mojo will use {@link ArtifactStore} as "artifacts source" and
+ * By default, the goal will use {@link ArtifactStore} as "artifacts source" and
  * {@link ArtifactStorePublisher#targetReleaseRepository()} or {@link ArtifactStorePublisher#targetSnapshotRepository()}
  * as source of remote repository, but user can configure list of artifacts and remote repository directly as well.
  * <p>
- * This Mojo is useful in complex workflows/scenarios, where something (fx a build) should happen after publishing done.
- * While some services do provide status of (non-atomic) publishing, this mojo checks the "real thing": when it
- * succeeds, the artifacts can be resolved 100% by builds from given remote repository. Hence, this mojo
+ * This goal is useful in complex workflows/scenarios, where something (fx a build) should happen after publishing done.
+ * While some services do provide status of (non-atomic) publishing, this goal checks the "real thing": when it
+ * succeeds, the artifacts can be resolved 100% by builds from given remote repository. Hence, this goal
  * can work with all publishers available out there, and even with in-house MRMs solutions as well.
  */
 @Mojo(name = "check-artifacts-availability", threadSafe = true, requiresProject = false, aggregator = true)
@@ -66,33 +66,33 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     private boolean drop;
 
     /**
-     * Should the mojo block/wait for artifacts to become available, or should just perform one-pass of check.
+     * Should the goal block/wait for artifacts to become available, or should just perform one-pass of check.
      */
     @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "wait", defaultValue = "true")
     private boolean wait;
 
     /**
-     * If mojo set to {@link #wait}, the total allowed wait duration (as {@link Duration} string).
+     * If goal set to {@link #wait}, the total allowed wait duration (as {@link Duration} string).
      */
     @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitTimeout", defaultValue = "PT1H")
     private String waitTimeout;
 
     /**
-     * If mojo set to {@link #wait}, the delay duration before the first check happens (as {@link Duration} string).
+     * If goal set to {@link #wait}, the delay duration before the first check happens (as {@link Duration} string).
      * The {@link #waitTimeout} <em>does not include this delay</em>, so "worst case" total execution time of this
-     * mojo when set to wait is {@code waitDelay + waitTimeout}.
+     * goal when set to wait is {@code waitDelay + waitTimeout}.
      */
     @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitDelay", defaultValue = "PT10M")
     private String waitDelay;
 
     /**
-     * If mojo set to {@link #wait}, the sleep duration between checks (as {@link Duration} string).
+     * If goal set to {@link #wait}, the sleep duration between checks (as {@link Duration} string).
      */
     @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "waitSleep", defaultValue = "PT1M")
     private String waitSleep;
 
     /**
-     * The comma separated list of artifacts to check availability for. If this parameter is set, the mojo
+     * The comma separated list of artifacts to check availability for. If this parameter is set, the goal
      * will use this list instead to go for {@link ArtifactStore}. The comma separated list should contain
      * artifacts in form of {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}.
      * <p>
@@ -105,7 +105,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
 
     /**
      * The string representing remote repository where to check availability from in form of usual
-     * {@code id::url}. If this parameter is set, the mojo will use this remote repository instead to go for
+     * {@code id::url}. If this parameter is set, the goal will use this remote repository instead to go for
      * {@link ArtifactStorePublisher} and get the URL from there.
      */
     @Parameter(property = SessionConfig.KEY_PREFIX + "remoteRepository")
@@ -120,7 +120,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
             try {
                 Path artifactsFile = Paths.get(artifacts);
                 if (Files.exists(artifactsFile) && !Files.isDirectory(artifactsFile)) {
-                    logger.debug("Mojo parameter artifacts points to an existing file; loading it up");
+                    logger.debug("Goal parameter artifacts points to an existing file; loading it up");
                     this.artifacts = Files.readAllLines(artifactsFile).stream()
                             .map(String::trim)
                             .filter(l -> !l.isEmpty())
