@@ -25,10 +25,10 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 /**
  * Merges all stores onto one store, dropping all merged stores.
  * <p>
- * This is a special Mojo meant to be used in automation mostly. It assumes that Njord contains two or more
- * stores (probably imported) and all of them were created using same template. This mojo will gather all those stores
+ * This is a special goal meant to be used in automation mostly. It assumes that Njord contains two or more
+ * stores (probably imported) and all of them were created using same template. This goal will gather all those stores
  * and merge them into one, resetting store name, so user will end up with one (merged) store named as
- * <pre>prefix-00001</pre>. In any other case, this mojo will fail and report error.
+ * <pre>prefix-00001</pre>. In any other case, this goal will fail and report error.
  */
 @Mojo(name = "merge-all", threadSafe = true, requiresProject = false, aggregator = true)
 public class MergeAllMojo extends NjordMojoSupport {
