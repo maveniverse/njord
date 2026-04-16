@@ -47,13 +47,13 @@
             <id>deploy-release-service</id>
             <name>Project Release Target</name>
             <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
-            <url>file:${basedir}/target/releases</url>
+            <url>file:${basedir}/releases-repo</url>
         </repository>
         <snapshotRepository>
-            <id>deploy-release-service</id>
+            <id>deploy-snapshot-service</id>
             <name>Project Snapshot Target</name>
             <!-- This URL can be any url supported by Resolver and able to work with maven-deploy-plugin -->
-            <url>file:${basedir}/target/snapshots</url>
+            <url>file:${basedir}/snapshots-repo</url>
         </snapshotRepository>
     </distributionManagement>
 
