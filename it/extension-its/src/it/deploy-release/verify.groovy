@@ -27,6 +27,7 @@ var log5 = log5f.text
 
 // Lets make strict assertion
 // Also, consider Maven 3 vs 4 diff: they resolve differently; do not assert counts
+def artifactCount = mavenVersion.startsWith("3.") ? "8" : "10"
 
 // first run:
 assert log1.contains("[INFO] Njord ${projectVersion} session created")
@@ -34,7 +35,7 @@ assert log1.contains("[INFO] Njord ${projectVersion} session created")
 // second run:
 assert log2.contains("[INFO] Njord ${projectVersion} session created")
 assert log2.contains("[INFO] Publishing deploy-release-00001 ")
-assert log2.contains("[INFO] Published 8 artifact(s) to deploy-release-service repository")
+assert log2.contains("[INFO] Published ${artifactCount} artifact(s) to deploy-release-service repository")
 assert new File( basedir, "releases-repo").isDirectory()
 
 // third run:
@@ -46,5 +47,5 @@ assert log4.contains("[INFO] Njord ${projectVersion} session created")
 // fifth run:
 assert log5.contains("[INFO] Njord ${projectVersion} session created")
 assert log5.contains("[INFO] Publishing deploy-release-00002 ")
-assert log5.contains("[INFO] Published 8 artifact(s) to deploy-snapshot-service repository")
+assert log5.contains("[INFO] Published ${artifactCount} artifact(s) to deploy-snapshot-service repository")
 assert new File( basedir, "snapshots-repo").isDirectory()

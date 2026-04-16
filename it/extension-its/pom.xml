@@ -94,6 +94,7 @@
                   </pomIncludes>
                   <scriptVariables>
                     <projectVersion>${project.version}</projectVersion>
+                    <mavenVersion>${maven.version}</mavenVersion>
                   </scriptVariables>
                   <preBuildHookScript>setup</preBuildHookScript>
                   <postBuildHookScript>verify</postBuildHookScript>
