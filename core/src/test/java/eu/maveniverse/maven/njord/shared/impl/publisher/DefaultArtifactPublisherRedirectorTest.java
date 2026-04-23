@@ -87,6 +87,38 @@ public class DefaultArtifactPublisherRedirectorTest extends PublisherTestSupport
     }
 
     @Test
+    void unconfiguredPublisherProvidesHelpfulMessage() throws IOException {
+        Runtime runtime = Runtimes.INSTANCE.getRuntime();
+        try (Context context = runtime.create(ContextOverrides.create()
+                .withUserSettings(true)
+                .withUserSettingsXmlOverride(
+                        Paths.get("src/test/settings/smoke.xml").toAbsolutePath())
+                .build())) {
+            Session session = createSession(
+                    context,
+                    SessionConfig.defaults(context.repositorySystemSession(), context.remoteRepositories())
+                            .basedir(cwd())
+                            .build());
+            DefaultArtifactPublisherRedirector subject =
+                    new DefaultArtifactPublisherRedirector(session, context.repositorySystem());
+
+            IllegalArgumentException exception = Assertions.assertThrows(
+                    IllegalArgumentException.class, () -> subject.getArtifactStorePublisherName("unconfigured"));
+
+            String message = exception.getMessage();
+            // Verify the error message contains helpful information
+            Assertions.assertTrue(
+                    message.contains("Failed to resolve publisher name"),
+                    "Error message should indicate failure to resolve publisher");
+            Assertions.assertTrue(message.contains("Check the logs"), "Error message should direct user to check logs");
+            Assertions.assertTrue(message.contains("settings.xml"), "Error message should mention settings.xml");
+            // Verify the failed name is in the message
+            Assertions.assertTrue(
+                    message.contains("unconfigured"), "Error message should contain the failed lookup name");
+        }
+    }
+
+    @Test
     void authRedirect() throws IOException {
         Runtime runtime = Runtimes.INSTANCE.getRuntime();
         try (Context context = runtime.create(ContextOverrides.create()
