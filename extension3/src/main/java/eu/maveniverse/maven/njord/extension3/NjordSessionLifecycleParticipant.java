@@ -17,6 +17,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -37,34 +38,47 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Provider<SessionFactory> sessionFactoryProvider;
+    private final AtomicBoolean initializationAttempted;
 
     @Inject
     public NjordSessionLifecycleParticipant(Provider<SessionFactory> sessionFactoryProvider) {
         this.sessionFactoryProvider = requireNonNull(sessionFactoryProvider);
+
+        this.initializationAttempted = new AtomicBoolean(false);
+    }
+
+    @Override
+    public void afterSessionStart(MavenSession session) throws MavenExecutionException {
+        mayInitialize(session);
     }
 
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
-        requireNonNull(session);
-        try {
-            // session config
-            SessionConfig sc = SessionConfig.defaults(
+        mayInitialize(session);
+    }
+
+    private void mayInitialize(MavenSession session) throws MavenExecutionException {
+        if (initializationAttempted.compareAndSet(false, true)) {
+            try {
+                // session config
+                SessionConfig sc = SessionConfig.defaults(
+                                session.getRepositorySession(),
+                                RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
+                        .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
+                        .build();
+                if (sc.enabled()) {
+                    NjordUtils.lazyInit(
                             session.getRepositorySession(),
-                            RepositoryUtils.toRepos(session.getRequest().getRemoteRepositories()))
-                    .currentProject(SessionConfig.fromMavenProject(session.getTopLevelProject()))
-                    .build();
-            if (sc.enabled()) {
-                NjordUtils.lazyInit(
-                        session.getRepositorySession(),
-                        () -> sessionFactoryProvider.get().create(sc));
-            } else {
-                logger.info("Njord {} disabled", sc.version());
-            }
-        } catch (Exception e) {
-            if ("com.google.inject.ProvisionException".equals(e.getClass().getName())) {
-                logger.error("Njord session creation failed", e); // here runtime req will kick in
-            } else {
-                throw new MavenExecutionException("Error enabling Njord", e);
+                            () -> sessionFactoryProvider.get().create(sc));
+                } else {
+                    logger.info("Njord {} disabled", sc.version());
+                }
+            } catch (Exception e) {
+                if ("com.google.inject.ProvisionException".equals(e.getClass().getName())) {
+                    logger.error("Njord session creation failed", e); // here runtime req will kick in
+                } else {
+                    throw new MavenExecutionException("Error enabling Njord", e);
+                }
             }
         }
     }
