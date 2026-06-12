@@ -48,6 +48,10 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         requireNonNull(session);
         try {
+            if (isExplicitlyDisabled(session)) {
+                logger.debug("Njord disabled via properties, skipping session initialization");
+                return;
+            }
             // session config
             SessionConfig sc = SessionConfig.defaults(
                             session.getRepositorySession(),
@@ -123,5 +127,17 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
         } finally {
             NjordUtils.removeNjordSession(repositorySession);
         }
+    }
+
+    private static boolean isExplicitlyDisabled(MavenSession session) {
+        String userProperty = session.getUserProperties().getProperty(SessionConfig.CONFIG_ENABLED);
+        if (userProperty != null) {
+            return !Boolean.parseBoolean(userProperty);
+        }
+        String systemProperty = session.getSystemProperties().getProperty(SessionConfig.CONFIG_ENABLED);
+        if (systemProperty != null) {
+            return !Boolean.parseBoolean(systemProperty);
+        }
+        return false;
     }
 }
