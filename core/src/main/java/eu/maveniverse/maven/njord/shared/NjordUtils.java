@@ -29,10 +29,12 @@ public final class NjordUtils {
     public static synchronized Session lazyInit(RepositorySystemSession session, Supplier<Session> sessionFactory) {
         requireNonNull(session, "session");
         requireNonNull(sessionFactory, "sessionFactory");
-        Session s = (Session) session.getData().get(Session.class.getName());
+        // Key by class object for isolation between class loaders (ClassRealms)
+        Object existing = session.getData().get(Session.class);
+        Session s = existing instanceof Session ? (Session) existing : null;
         if (s == null) {
             s = sessionFactory.get();
-            session.getData().set(Session.class.getName(), s);
+            session.getData().set(Session.class, s);
         }
         return s;
     }
@@ -42,6 +44,12 @@ public final class NjordUtils {
      */
     public static synchronized Optional<Session> mayGetNjordSession(RepositorySystemSession repositorySystemSession) {
         requireNonNull(repositorySystemSession, "repositorySystemSession");
-        return Optional.ofNullable((Session) repositorySystemSession.getData().get(Session.class.getName()));
+        Object value = repositorySystemSession.getData().get(Session.class);
+        return value instanceof Session ? Optional.of((Session) value) : Optional.empty();
+    }
+
+    public static synchronized void removeNjordSession(RepositorySystemSession repositorySystemSession) {
+        requireNonNull(repositorySystemSession, "repositorySystemSession");
+        repositorySystemSession.getData().set(Session.class, null);
     }
 }

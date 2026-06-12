@@ -25,6 +25,7 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
+import org.eclipse.aether.RepositorySystemSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,8 +73,9 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
     @Override
     public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
         requireNonNull(session);
+        RepositorySystemSession repositorySession = session.getRepositorySession();
         try {
-            Optional<Session> ns = NjordUtils.mayGetNjordSession(session.getRepositorySession());
+            Optional<Session> ns = NjordUtils.mayGetNjordSession(repositorySession);
             if (ns.isPresent()) {
                 try (Session njordSession = ns.orElseThrow(J8Utils.OET)) {
                     if (njordSession.config().autoPublish()) {
@@ -118,6 +120,8 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             }
         } catch (IOException e) {
             throw new MavenExecutionException("Error closing Njord", e);
+        } finally {
+            NjordUtils.removeNjordSession(repositorySession);
         }
     }
 }
