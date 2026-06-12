@@ -47,4 +47,9 @@ public final class NjordUtils {
         Object value = repositorySystemSession.getData().get(Session.class);
         return value instanceof Session ? Optional.of((Session) value) : Optional.empty();
     }
+
+    public static synchronized void removeNjordSession(RepositorySystemSession repositorySystemSession) {
+        requireNonNull(repositorySystemSession, "repositorySystemSession");
+        repositorySystemSession.getData().set(Session.class, null);
+    }
 }
