@@ -8,13 +8,28 @@
 package eu.maveniverse.maven.njord.publisher.sonatype.nx2;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import java.util.Locale;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Sonatype NX2 config.
  */
 public final class SonatypeNx2PublisherConfig extends PublisherConfigSupport {
+    private final NjordRepositoryListener.Mode listenerMode;
+
     public SonatypeNx2PublisherConfig(SessionConfig sessionConfig) {
         super(SonatypeNx2PublisherFactory.NAME, sessionConfig);
+
+        this.listenerMode = NjordRepositoryListener.Mode.valueOf(ConfigUtils.getString(
+                        sessionConfig.effectiveProperties(),
+                        NjordRepositoryListener.Mode.AGGREGATED.name(),
+                        keyNames("listenerMode"))
+                .toUpperCase(Locale.ROOT));
+    }
+
+    public NjordRepositoryListener.Mode listenerMode() {
+        return listenerMode;
     }
 }

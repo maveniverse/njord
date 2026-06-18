@@ -14,7 +14,7 @@
   <parent>
     <groupId>eu.maveniverse.maven.njord</groupId>
     <artifactId>njord</artifactId>
-    <version>0.9.4-SNAPSHOT</version>
+    <version>0.9.8-SNAPSHOT</version>
   </parent>
 
   <groupId>eu.maveniverse.maven.njord.publisher</groupId>
@@ -24,6 +24,7 @@
   <name>${project.groupId}:${project.artifactId}</name>
 
   <modules>
+    <module>install</module>
     <module>deploy</module>
     <module>sonatype-central</module>
     <module>sonatype-cp</module>

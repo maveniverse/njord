@@ -9,11 +9,13 @@ package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.impl.NjordRepositoryListener;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -23,25 +25,32 @@ import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Helper class.
+ * Helper class, that uses {@link RepositorySystem#deploy(RepositorySystemSession, DeployRequest)} calls to perform
+ * deploys "just like maven-deploy-plugin would".
  */
 public class ArtifactStoreDeployer extends ComponentSupport {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
+    private final NjordRepositoryListener.Mode listenerMode;
     private final RemoteRepository repository;
     private final boolean repositoryPrepared;
 
     public ArtifactStoreDeployer(
             RepositorySystem repositorySystem,
             RepositorySystemSession repositorySystemSession,
+            NjordRepositoryListener.Mode listenerMode,
             RemoteRepository repository,
             boolean repositoryPrepared) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemSession = requireNonNull(repositorySystemSession);
+        this.listenerMode = requireNonNull(listenerMode);
         this.repository = requireNonNull(repository);
         this.repositoryPrepared = repositoryPrepared;
     }
 
+    /**
+     * Deploys all artifacts from the store.
+     */
     public void deploy(ArtifactStore artifactStore) throws IOException {
         requireNonNull(artifactStore);
         deploy(
@@ -51,6 +60,9 @@ public class ArtifactStoreDeployer extends ComponentSupport {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Deploys given artifacts from the store. This is useful when we need to deploy only a subset of the store.
+     */
     public void deploy(ArtifactStore artifactStore, Collection<Artifact> artifacts) throws IOException {
         requireNonNull(artifactStore);
         requireNonNull(artifacts);
@@ -67,8 +79,11 @@ public class ArtifactStoreDeployer extends ComponentSupport {
                     deployRequest.getRepository().getId());
         }
         deployRequest.setTrace(new RequestTrace(artifactStore));
-        try {
-            repositorySystem.deploy(repositorySystemSession, deployRequest);
+        try (NjordRepositoryListener repositoryListener = new NjordRepositoryListener(listenerMode)) {
+            repositorySystem.deploy(
+                    new DefaultRepositorySystemSession(repositorySystemSession)
+                            .setRepositoryListener(repositoryListener),
+                    deployRequest);
         } catch (DeploymentException e) {
             throw new IOException(e);
         }

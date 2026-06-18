@@ -29,8 +29,8 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      * stores created from staging this project and will <em>choose latest (newest)</em> out of them if multiple
      * found.
      * <p>
-     * This "heuristic" will work only if there is current project. While invoking mojo is possible outside a
-     * project as well (validate and publish mojos does not require project), in such cases this parameter is
+     * This "heuristic" will work only if there is current project. While invoking goal is possible outside a
+     * project as well (validate and publish goals do not require project), in such cases this parameter is
      * mandatory, as there will be no contextual information to choose store from.
      */
     @Parameter(property = SessionConfig.KEY_PREFIX + "store")
@@ -40,8 +40,8 @@ public abstract class PublisherSupportMojo extends NjordMojoSupport {
      * The name of the publisher or service/server ID to publish to. If not given, Njord will try to figure it out:
      * it will look in user properties, project properties (if available) and user Settings server configuration.
      * <p>
-     * This "heuristic" will work only if there is current project. While invoking mojo is possible outside a
-     * project as well (validate and publish mojos does not require project), in such cases this parameter is
+     * This "heuristic" will work only if there is current project. While invoking goal is possible outside a
+     * project as well (validate and publish goals do not require project), in such cases this parameter is
      * mandatory, as there will be no contextual information to choose publisher from.
      */
     @Parameter(property = SessionConfig.KEY_PREFIX + "publisher")

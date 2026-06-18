@@ -71,6 +71,6 @@ public class SetWriteModeMojo extends NjordMojoSupport {
             case "write_many":
                 return WriteMode.WRITE_MANY;
         }
-        throw new MojoFailureException("Unknown value for 'writeMode' mojo parameter");
+        throw new MojoFailureException("Unknown value for 'writeMode' goal parameter");
     }
 }

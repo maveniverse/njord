@@ -495,7 +495,7 @@ public interface SessionConfig {
                 this.currentProject = currentProject; // nullable
 
                 this.basedir = basedir == null
-                        ? FileUtils.discoverBaseDirectory("njord.basedir", ".njord")
+                        ? FileUtils.discoverCanonicalDirectoryFromSystemProperty("njord.basedir", ".njord")
                         : FileUtils.canonicalPath(basedir);
                 if (!Files.isDirectory(this.basedir)) {
                     try {

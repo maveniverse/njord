@@ -43,6 +43,7 @@ public class SonatypeNx2PublisherFactory extends ArtifactStorePublisherFactorySu
                 config.targetSnapshotRepository(),
                 config.serviceReleaseRepository(),
                 config.serviceSnapshotRepository(),
-                createArtifactStoreRequirements(session, config));
+                createArtifactStoreRequirements(session, config),
+                config.listenerMode());
     }
 }
