@@ -251,7 +251,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
 
         throw new IllegalArgumentException("Failed to resolve publisher name '" + name
                 + "'. Check the logs for available publishers and server configurations, "
-                + "or verify your settings.xml configuration");
+                + "or verify your settings.xml configuration or set publisher explicitly via -Dnjord.publisher=<name>");
     }
 
     /**
