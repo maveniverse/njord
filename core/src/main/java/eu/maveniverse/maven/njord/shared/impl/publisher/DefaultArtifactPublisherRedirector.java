@@ -13,14 +13,19 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactPublisherRedirector;
+import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import eu.maveniverse.maven.njord.shared.store.RepositoryMode;
 import eu.maveniverse.maven.shared.core.component.ComponentSupport;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -165,8 +170,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             .orElseThrow(J8Utils.OET)
                             .repositoryMode());
             if (distributionRepository != null && distributionRepository.getId() != null) {
-                logger.debug(
-                        "Trying current project distribution management repository ID {}",
+                logger.info(
+                        "'{}' property not given, deriving publisher from project's distribution management repository ID '{}'",
+                        SessionConfig.CONFIG_PUBLISHER,
                         distributionRepository.getId());
                 return getArtifactStorePublisherName(distributionRepository.getId());
             }
@@ -197,11 +203,55 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             publisher);
                     return Optional.of(publisher);
                 }
-                throw new IllegalArgumentException("Name '" + name
-                        + "' is not a name of known publisher nor is server ID with configured publisher");
+
+                dumpPublisherDiagAndThrow(name);
             }
         }
         return getArtifactStorePublisherName();
+    }
+
+    private void dumpPublisherDiagAndThrow(String name) {
+        List<ArtifactStorePublisher> availablePublishers = new ArrayList<>(session.availablePublishers());
+        availablePublishers.sort(Comparator.comparing(ArtifactStorePublisher::name));
+        TreeMap<String, Map<String, String>> serverConfigs =
+                new TreeMap<>(session.config().serverConfigurations());
+
+        logger.error("Failed to resolve publisher name '{}'", name);
+        logger.error("Available publishers:");
+        if (availablePublishers.isEmpty()) {
+            logger.error("  (none found)");
+        } else {
+            for (ArtifactStorePublisher pub : availablePublishers) {
+                logger.error("  - {}", pub.name());
+            }
+        }
+
+        logger.error("Available server IDs with publisher configured (can also be set via project properties):");
+        boolean foundConfigured = false;
+        for (Map.Entry<String, Map<String, String>> entry : serverConfigs.entrySet()) {
+            String serverId = entry.getKey();
+            Map<String, String> serverConfig = entry.getValue();
+            String publisherName = serverConfig.get(SessionConfig.CONFIG_PUBLISHER);
+            String redirectName = serverConfig.get(SessionConfig.CONFIG_SERVICE_REDIRECT);
+            if (publisherName != null && redirectName == null) {
+                logger.error("  - {} (publisher: {})", serverId, publisherName);
+                foundConfigured = true;
+            } else if (publisherName == null && redirectName != null) {
+                logger.error(
+                        "  - {} (redirected to: {}) -> {}",
+                        serverId,
+                        redirectName,
+                        serverConfigs.containsKey(redirectName) ? "FOUND" : "MISSING");
+                foundConfigured = true;
+            }
+        }
+        if (!foundConfigured) {
+            logger.error("  (none found)");
+        }
+
+        throw new IllegalArgumentException("Failed to resolve publisher name '" + name
+                + "'. Check the logs for available publishers and server configurations, "
+                + "or verify your settings.xml configuration or set publisher explicitly via -Dnjord.publisher=<name>");
     }
 
     /**
