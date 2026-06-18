@@ -182,10 +182,9 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 logger.debug("Passed in name {} is a valid publisher name", name);
                 return Optional.of(name);
             } else {
-                // see is name a server id (w/ config) and return configured publisher; in this case we want server
-                // values
-                // and not server overridden by user properties, as we may actually get here due user properties
-                // ie mvn -Dnjord.publisher=foo would override server config!
+                // see is the name a server id (w/ config) and return configured publisher; in this case we want
+                // server configuration values and not server configuration overridden by user properties, as we may
+                // actually get here due user properties ie `mvn -Dnjord.publisher=foo` would override server config!
                 Map<String, String> config = effectiveConfiguration(name, false, true);
                 String originServerId = config.getOrDefault(SessionConfig.SERVER_ID_KEY, "<properties>");
                 String publisher = config.get(SessionConfig.CONFIG_PUBLISHER);
