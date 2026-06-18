@@ -52,7 +52,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
         requireNonNull(repositoryMode);
 
-        Map<String, String> config = effectiveConfiguration(repository.getId(), false);
+        Map<String, String> config = effectiveConfiguration(repository.getId(), false, false);
         if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")) {
             String redirectUrl = getRedirectUrl(
                     config,
@@ -110,7 +110,7 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
         requireNonNull(repository);
 
         RemoteRepository authSource = repository;
-        Map<String, String> config = effectiveConfiguration(repository.getId(), true);
+        Map<String, String> config = effectiveConfiguration(repository.getId(), true, false);
         if (config.containsKey(SessionConfig.SERVER_ID_KEY)) {
             authSource = new RemoteRepository.Builder(
                             requireNonNull(config.get(SessionConfig.SERVER_ID_KEY)),
@@ -182,23 +182,21 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                 logger.debug("Passed in name {} is a valid publisher name", name);
                 return Optional.of(name);
             } else {
-                // see is name a server id (w/ config) and return configured publisher
-                Map<String, String> config = effectiveConfiguration(name, false);
+                // see is name a server id (w/ config) and return configured publisher; in this case we want server
+                // values
+                // and not server overridden by user properties, as we may actually get here due user properties
+                // ie mvn -Dnjord.publisher=foo would override server config!
+                Map<String, String> config = effectiveConfiguration(name, false, true);
                 String originServerId = config.getOrDefault(SessionConfig.SERVER_ID_KEY, "<properties>");
                 String publisher = config.get(SessionConfig.CONFIG_PUBLISHER);
                 if (publisher != null
                         && session.selectArtifactStorePublisher(publisher).isPresent()) {
-                    if (session.selectArtifactStorePublisher(publisher).isPresent()) {
-                        logger.debug(
-                                "Passed in name {} led us to server {} with configured publisher {}",
-                                name,
-                                originServerId,
-                                publisher);
-                        return Optional.of(publisher);
-                    } else {
-                        throw new IllegalStateException(String.format(
-                                "Server '%s' contains unknown publisher '%s'", originServerId, publisher));
-                    }
+                    logger.debug(
+                            "Passed in name {} led us to server {} with configured publisher {}",
+                            name,
+                            originServerId,
+                            publisher);
+                    return Optional.of(publisher);
                 }
                 throw new IllegalArgumentException("Name '" + name
                         + "' is not a name of known publisher nor is server ID with configured publisher");
@@ -212,12 +210,20 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
      * map of properties. Is configuration for asked {@code serverId} existing, can be queried by the presence of the
      * {@link SessionConfig#SERVER_ID_KEY} key in the returned map.
      */
-    protected Map<String, String> effectiveConfiguration(String serverId, boolean followAuthRedirection) {
+    protected Map<String, String> effectiveConfiguration(
+            String serverId, boolean followAuthRedirection, boolean serverOverrides) {
         HashMap<String, String> config = new HashMap<>(session.config().effectiveProperties());
         configuration(serverId, followAuthRedirection).ifPresent(server -> {
-            config.putAll(server);
+            // property `njord.publisher` is special here; we want the one coming from server
+            // but user may set it via CLI and this is how we get here; do not override that one
+            if (!serverOverrides) {
+                config.putAll(server);
+            }
             session.config().currentProject().ifPresent(project -> config.putAll(project.projectProperties()));
             config.putAll(session.config().userProperties());
+            if (serverOverrides) {
+                config.putAll(server);
+            }
         });
         return config;
     }

@@ -82,7 +82,6 @@ public class ArtifactStoreDeployer extends ComponentSupport {
         try (NjordRepositoryListener repositoryListener = new NjordRepositoryListener(listenerMode)) {
             repositorySystem.deploy(
                     new DefaultRepositorySystemSession(repositorySystemSession)
-                            .setTransferListener(null)
                             .setRepositoryListener(repositoryListener),
                     deployRequest);
         } catch (DeploymentException e) {
