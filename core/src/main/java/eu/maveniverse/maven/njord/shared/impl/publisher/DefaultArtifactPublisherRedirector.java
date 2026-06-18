@@ -200,42 +200,45 @@ public class DefaultArtifactPublisherRedirector extends ComponentSupport impleme
                             publisher);
                     return Optional.of(publisher);
                 }
-                // Log detailed diagnostic information
-                Collection<ArtifactStorePublisher> availablePublishers = session.availablePublishers();
-                Map<String, Map<String, String>> serverConfigs =
-                        session.config().serverConfigurations();
 
-                logger.error("Failed to resolve publisher name '{}'", name);
-                logger.error("Available publishers:");
-                if (availablePublishers.isEmpty()) {
-                    logger.error("  (none found)");
-                } else {
-                    for (ArtifactStorePublisher pub : availablePublishers) {
-                        logger.error("  - {}", pub.name());
-                    }
-                }
-
-                logger.error("Server IDs with publisher configuration (can also be set via project properties):");
-                boolean foundConfigured = false;
-                for (Map.Entry<String, Map<String, String>> entry : serverConfigs.entrySet()) {
-                    String serverId = entry.getKey();
-                    Map<String, String> serverConfig = entry.getValue();
-                    String publisherName = serverConfig.get(SessionConfig.CONFIG_PUBLISHER);
-                    if (publisherName != null) {
-                        logger.error("  - {} (publisher: {})", serverId, publisherName);
-                        foundConfigured = true;
-                    }
-                }
-                if (!foundConfigured) {
-                    logger.error("  (none found)");
-                }
-
-                throw new IllegalArgumentException("Failed to resolve publisher name '" + name
-                        + "'. Check the logs for available publishers and server configurations, "
-                        + "or verify your settings.xml configuration");
+                dumpPublisherDiagAndThrow(name);
             }
         }
         return getArtifactStorePublisherName();
+    }
+
+    private void dumpPublisherDiagAndThrow(String name) {
+        Collection<ArtifactStorePublisher> availablePublishers = session.availablePublishers();
+        Map<String, Map<String, String>> serverConfigs = session.config().serverConfigurations();
+
+        logger.error("Failed to resolve publisher name '{}'", name);
+        logger.error("Available publishers:");
+        if (availablePublishers.isEmpty()) {
+            logger.error("  (none found)");
+        } else {
+            for (ArtifactStorePublisher pub : availablePublishers) {
+                logger.error("  - {}", pub.name());
+            }
+        }
+
+        logger.error("Available server IDs with publisher configured (can also be set via project properties):");
+        boolean foundConfigured = false;
+        for (Map.Entry<String, Map<String, String>> entry : serverConfigs.entrySet()) {
+            String serverId = entry.getKey();
+            Map<String, String> serverConfig = entry.getValue();
+            String publisherName = serverConfig.get(SessionConfig.CONFIG_PUBLISHER);
+            if (publisherName != null) {
+                logger.error("  - {} (publisher: {})", serverId, publisherName);
+                foundConfigured = true;
+            }
+        }
+        if (!foundConfigured) {
+            logger.error("  (none found)");
+        }
+
+        throw new IllegalArgumentException("Failed to resolve publisher name '" + name
+                + "'. Check the logs for available publishers and server configurations, "
+                + "or verify your settings.xml configuration");
     }
 
     /**
