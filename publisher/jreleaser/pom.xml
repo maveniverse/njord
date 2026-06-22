@@ -61,14 +61,6 @@
       <artifactId>jreleaser-config-yaml</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jreleaser</groupId>
-      <artifactId>jreleaser-config-toml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jreleaser</groupId>
-      <artifactId>jreleaser-config-json</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
     </dependency>

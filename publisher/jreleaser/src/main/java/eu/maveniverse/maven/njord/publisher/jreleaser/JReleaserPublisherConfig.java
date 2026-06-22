@@ -10,6 +10,7 @@ package eu.maveniverse.maven.njord.publisher.jreleaser;
 import static java.util.Objects.requireNonNull;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
+import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -46,6 +47,8 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
     private final boolean strict;
     private final boolean reproducible;
 
+    private final Path outputDirectory;
+
     public JReleaserPublisherConfig(SessionConfig sessionConfig, Logger logger) {
         super(JReleaserPublisherFactory.NAME, sessionConfig);
         this.logger = requireNonNull(logger);
@@ -62,6 +65,16 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         this.strict = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("strict"));
         this.reproducible =
                 ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("reproducible"));
+
+        if (sessionConfig.currentProject().isPresent()) {
+            this.outputDirectory = sessionConfig.currentProject().orElseThrow(J8Utils.OET).buildDirectory();
+        } else {
+            this.outputDirectory = sessionConfig.basedir().resolve("target");
+        }
+    }
+
+    public Path outputDirectory() {
+        return outputDirectory;
     }
 
     public JReleaserContext createContext() throws IOException {
@@ -105,7 +118,7 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
 
         return ContextCreator.create(
                 getLogger(outputDirectory),
-                JReleaserContext.Configurer.MAVEN,
+                JReleaserContext.Configurer.CLI_YAML,
                 org.jreleaser.model.api.JReleaserContext.Mode.FULL,
                 JReleaserCommand.FULL_RELEASE,
                 model,

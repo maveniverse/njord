@@ -42,16 +42,20 @@ public class JReleaserPublisher extends ArtifactStorePublisherSupport {
 
     @Override
     protected void doPublish(ArtifactStore artifactStore) {
-        try {
-            RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
+        try (ArtifactStore s = artifactStore) {
+            RemoteRepository repository = selectServiceRemoteRepositoryFor(s);
             if (session.config().dryRun()) {
                 logger.info(
                         "Dry run; not publishing '{}' to '{}' service at {}",
-                        artifactStore.name(),
+                        s.name(),
                         name,
                         repository.getUrl());
                 return;
             }
+
+            // write it out for JReleaser
+            session.artifactStoreWriter().writeAsDirectory(s, config.outputDirectory());
+
             Workflows.fullRelease(config.createContext()).execute();
         } catch (IOException e) {
             throw new UncheckedIOException(e);

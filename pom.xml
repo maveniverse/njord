@@ -334,16 +334,6 @@
         <version>${version.jreleaser}</version>
       </dependency>
       <dependency>
-        <groupId>org.jreleaser</groupId>
-        <artifactId>jreleaser-config-toml</artifactId>
-        <version>${version.jreleaser}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jreleaser</groupId>
-        <artifactId>jreleaser-config-json</artifactId>
-        <version>${version.jreleaser}</version>
-      </dependency>
-      <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
         <version>1.22.2</version>
