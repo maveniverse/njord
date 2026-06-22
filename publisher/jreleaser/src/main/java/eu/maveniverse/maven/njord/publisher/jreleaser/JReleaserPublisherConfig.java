@@ -23,9 +23,13 @@ import java.util.Collections;
 import org.eclipse.aether.util.ConfigUtils;
 import org.jreleaser.config.JReleaserConfigLoader;
 import org.jreleaser.engine.context.ContextCreator;
+import org.jreleaser.logging.JReleaserLogger;
+import org.jreleaser.model.JReleaserException;
+import org.jreleaser.model.JReleaserVersion;
 import org.jreleaser.model.api.JReleaserCommand;
 import org.jreleaser.model.internal.JReleaserContext;
 import org.jreleaser.model.internal.JReleaserModel;
+import org.jreleaser.util.PlatformUtils;
 import org.slf4j.Logger;
 
 /**
@@ -33,8 +37,8 @@ import org.slf4j.Logger;
  */
 public final class JReleaserPublisherConfig extends PublisherConfigSupport {
     private final Logger logger;
-    private final Path configFile;
 
+    private final Path configFile;
     private final Path settings;
     private final boolean yolo;
     private final boolean dryRun;
@@ -47,7 +51,7 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         this.logger = requireNonNull(logger);
         this.configFile = sessionConfig.basedir().resolve("jreleaser.yml");
         if (!Files.isRegularFile(configFile)) {
-            throw new IllegalStateException("Missing JReleaser configuration: " + configFile);
+            throw new JReleaserException("Missing JReleaser configuration: " + configFile);
         }
 
         this.settings = Paths.get(System.getProperty("user.home")).resolve(".jreleaser");
@@ -69,6 +73,17 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         } else {
             outputDirectory = sessionConfig.basedir().resolve("target");
         }
+
+        JReleaserLogger logger = getLogger(outputDirectory);
+        PlatformUtils.resolveCurrentPlatform(logger);
+        Path basedir = sessionConfig.basedir();
+
+        logger.info("JReleaser {}", JReleaserVersion.getPlainVersion());
+        logger.info("Configuring with {}", configFile);
+        logger.increaseIndent();
+        logger.info("- basedir set to {}", basedir);
+        logger.info("- outputdir set to {}", outputDirectory);
+        logger.decreaseIndent();
 
         JReleaserModel model = JReleaserConfigLoader.loadConfig(configFile);
 
