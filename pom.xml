@@ -38,6 +38,7 @@
     <module>core</module>
     <module>publisher</module>
     <module>extension3</module>
+    <module>extension3-jreleaser</module>
     <module>plugin</module>
     <module>it</module>
   </modules>
@@ -75,6 +76,7 @@
     <version.resolver>1.9.27</version.resolver>
     <version.mima>2.4.46</version.mima>
     <version.slf4j>1.7.36</version.slf4j>
+    <version.jreleaser>1.24.0</version.jreleaser>
   </properties>
 
   <dependencyManagement>
@@ -128,6 +130,11 @@
       <dependency>
         <groupId>eu.maveniverse.maven.njord.publisher</groupId>
         <artifactId>sonatype-nx3</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+        <artifactId>jreleaser</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -313,6 +320,38 @@
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>20260522</version>
+      </dependency>
+
+      <!-- JRelease -->
+      <dependency>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-engine</artifactId>
+        <version>${version.jreleaser}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-config-yaml</artifactId>
+        <version>${version.jreleaser}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-config-toml</artifactId>
+        <version>${version.jreleaser}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-config-json</artifactId>
+        <version>${version.jreleaser}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.22.2</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.22.0</version>
       </dependency>
 
       <dependency>

@@ -17,29 +17,18 @@
     <version>0.9.9-SNAPSHOT</version>
   </parent>
 
-  <groupId>eu.maveniverse.maven.njord.publisher</groupId>
-  <artifactId>publisher</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>extension3-jreleaser</artifactId>
 
   <name>${project.groupId}:${project.artifactId}</name>
 
-  <modules>
-    <module>install</module>
-    <module>deploy</module>
-    <module>sonatype-central</module>
-    <module>sonatype-cp</module>
-    <module>sonatype-nx2</module>
-    <module>sonatype-nx3</module>
-    <module>apache</module>
-    <module>jreleaser</module>
-  </modules>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.eclipse.sisu</groupId>
-        <artifactId>sisu-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
+  <dependencies>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord</groupId>
+      <artifactId>extension3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.maveniverse.maven.njord.publisher</groupId>
+      <artifactId>jreleaser</artifactId>
+    </dependency>
+  </dependencies>
 </project>
