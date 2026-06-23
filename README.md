@@ -74,9 +74,9 @@ Supported publishers are:
 | Apache RAO on https://repository.apache.org/ (`apache-rao`) | `apache.releases.https` | As above but using RAO instance.                                                                                             |
 | Sonatype Nx2 "generic" (`sonatype-nx2`)                     | -                       | To be used by "private" Sonatype Nexus 2 instances; user must configure URLs at least for this publisher to be usable.       |
 | Sonatype Nx3 "generic" (`sonatype-nx3`)                     | -                       | To be used by "private" Sonatype Nexus 3 instances; user must configure URLs at least for this publisher to be usable.       |
-| Install                                                     | -                       | Performs install into local repository (as m-install-p does).                                                                |
-| Deploy                                                      | -                       | Performs deploy into remote repository (as m-deploy-p does).                                                                 |
-| JReleaser                                                   | -                       | Invokes JReleaser over artifact store, and passes the baton to it.                                                           |
+| Install (`install`)                                         | -                       | Performs install into local repository (as m-install-p does).                                                                |
+| Deploy (`deploy`)                                            | -                       | Performs deploy into remote repository (as m-deploy-p does).                                                                 |
+| JReleaser (`jreleaser`)                                     | -                       | Invokes JReleaser over artifact store, and passes the baton to it.                                                           |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
 The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`) or from user
