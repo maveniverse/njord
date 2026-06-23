@@ -25,5 +25,6 @@
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-cp</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-nx2</exportedArtifact>
     <exportedArtifact>eu.maveniverse.maven.njord.publisher:sonatype-nx3</exportedArtifact>
+    <exportedArtifact>eu.maveniverse.maven.njord.publisher:jreleaser</exportedArtifact>
   </exportedArtifacts>
 </extension>

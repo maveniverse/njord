@@ -38,7 +38,7 @@ Maveniverse Njord is a suite of Maven (core or build; works both ways) extension
 the versions of extension and plugin aligned. Simplest way to achieve this is to:
 * create a property like `version.njord` in your parent POM carrying Njord version.
 * adding a build/pluginManagement section with Njord plugin and version property.
-* adding a build/extensions section wirh Njord extension and version property.
+* adding a build/extensions section with Njord `eu.maveniverse.maven.njord:extension3` and version property. Note: if you want to use JReleaser integration, use `eu.maveniverse.maven.njord:extension3-jreleaser` instead.
 
 Depending on your needs, Njord can be defined in parent POMs but can also be "sideloaded" as user or project extension,
 maybe even only when you are about to publish (so not all the time).
@@ -73,6 +73,10 @@ Supported publishers are:
 | Sonatype Central Portal (`sonatype-cp`)                     | -                       | Obtain tokens for publishing by following [this documentation](https://central.sonatype.org/publish/generate-portal-token/). |
 | Apache RAO on https://repository.apache.org/ (`apache-rao`) | `apache.releases.https` | As above but using RAO instance.                                                                                             |
 | Sonatype Nx2 "generic" (`sonatype-nx2`)                     | -                       | To be used by "private" Sonatype Nexus 2 instances; user must configure URLs at least for this publisher to be usable.       |
+| Sonatype Nx3 "generic" (`sonatype-nx3`)                     | -                       | To be used by "private" Sonatype Nexus 3 instances; user must configure URLs at least for this publisher to be usable.       |
+| Install                                                     | -                       | Performs install into local repository (as m-install-p does).                                                                |
+| Deploy                                                      | -                       | Performs deploy into remote repository (as m-deploy-p does).                                                                 |
+| JReleaser                                                   | -                       | Invokes JReleaser over artifact store, and passes the baton to it.                                                           |
 
 Make sure your `settings.xml` contains token associated with proper `server.id` corresponding to you publishing service you want to use.
 The publisher id is determined (or inferred) from the plugin parameter `publisher` (of goal `publish`) or from user
@@ -98,7 +102,3 @@ Next, let's see an example of Apache Maven project (I used `maven-gpg-plugin`):
 Build requirements:
 * Java 21
 * Maven 3.9+
-
-## High level design
-
-TBD

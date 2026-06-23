@@ -28,8 +28,14 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         requireNonNull(outputDirectory);
 
         Path targetDirectory = FileUtils.canonicalPath(outputDirectory);
-        if (Files.exists(targetDirectory)) {
-            throw new IOException("Exporting to existing directory not supported");
+        Path parent = targetDirectory.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        try {
+            Files.createDirectory(targetDirectory); // fails if already exists
+        } catch (java.nio.file.FileAlreadyExistsException e) {
+            throw new IOException("Exporting to existing directory not supported", e);
         }
         artifactStore.writeTo(targetDirectory);
         return targetDirectory;
