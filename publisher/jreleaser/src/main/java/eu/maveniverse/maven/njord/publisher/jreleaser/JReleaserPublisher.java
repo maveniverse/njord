@@ -14,7 +14,6 @@ import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jreleaser.workflow.Workflows;
@@ -41,20 +40,20 @@ public class JReleaserPublisher extends ArtifactStorePublisherSupport {
     }
 
     @Override
-    protected void doPublish(ArtifactStore artifactStore) {
-        try (ArtifactStore s = artifactStore) {
-            RemoteRepository repository = selectServiceRemoteRepositoryFor(s);
-            if (session.config().dryRun()) {
-                logger.info("Dry run; not publishing '{}' to '{}' service at {}", s.name(), name, repository.getUrl());
-                return;
-            }
-
-            // write it out for JReleaser
-            session.artifactStoreWriter().writeAsDirectory(s, config.outputDirectory());
-
-            Workflows.fullRelease(config.createContext()).execute();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    protected void doPublish(ArtifactStore artifactStore) throws IOException {
+        RemoteRepository repository = selectServiceRemoteRepositoryFor(artifactStore);
+        if (session.config().dryRun()) {
+            logger.info(
+                    "Dry run; not publishing '{}' to '{}' service at {}",
+                    artifactStore.name(),
+                    name,
+                    repository.getUrl());
+            return;
         }
+
+        // write it out for JReleaser
+        session.artifactStoreWriter().writeAsDirectory(artifactStore, config.outputDirectory());
+
+        Workflows.fullRelease(config.createContext()).execute();
     }
 }

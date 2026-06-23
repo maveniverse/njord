@@ -125,7 +125,7 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         }
 
         return ContextCreator.create(
-                getLogger(outputDirectory),
+                logger,
                 JReleaserContext.Configurer.CLI_YAML,
                 org.jreleaser.model.api.JReleaserContext.Mode.FULL,
                 command,
