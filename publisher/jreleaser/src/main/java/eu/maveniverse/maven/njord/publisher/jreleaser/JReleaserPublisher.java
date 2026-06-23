@@ -45,11 +45,7 @@ public class JReleaserPublisher extends ArtifactStorePublisherSupport {
         try (ArtifactStore s = artifactStore) {
             RemoteRepository repository = selectServiceRemoteRepositoryFor(s);
             if (session.config().dryRun()) {
-                logger.info(
-                        "Dry run; not publishing '{}' to '{}' service at {}",
-                        s.name(),
-                        name,
-                        repository.getUrl());
+                logger.info("Dry run; not publishing '{}' to '{}' service at {}", s.name(), name, repository.getUrl());
                 return;
             }
 

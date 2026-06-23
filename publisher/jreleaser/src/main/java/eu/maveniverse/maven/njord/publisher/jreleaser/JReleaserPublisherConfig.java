@@ -67,7 +67,8 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
                 ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("reproducible"));
 
         if (sessionConfig.currentProject().isPresent()) {
-            this.outputDirectory = sessionConfig.currentProject().orElseThrow(J8Utils.OET).buildDirectory();
+            this.outputDirectory =
+                    sessionConfig.currentProject().orElseThrow(J8Utils.OET).buildDirectory();
         } else {
             this.outputDirectory = sessionConfig.basedir().resolve("target");
         }
