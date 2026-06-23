@@ -31,6 +31,7 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
         if (Files.exists(targetDirectory)) {
             throw new IOException("Exporting to existing directory not supported");
         }
+        Files.createDirectories(targetDirectory);
         artifactStore.writeTo(targetDirectory);
         return targetDirectory;
     }

@@ -28,6 +28,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>eu.maveniverse.maven.shared</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>eu.maveniverse.maven.njord</groupId>
       <artifactId>core</artifactId>
     </dependency>

@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -19,7 +20,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import org.eclipse.aether.util.ConfigUtils;
 import org.jreleaser.config.JReleaserConfigLoader;
@@ -40,24 +40,20 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
     private final Logger logger;
 
     private final Path configFile;
-    private final Path settings;
     private final boolean yolo;
     private final boolean dryRun;
     private final boolean gitRootSearch;
     private final boolean strict;
     private final boolean reproducible;
 
+    private final JReleaserCommand command;
     private final Path outputDirectory;
 
     public JReleaserPublisherConfig(SessionConfig sessionConfig, Logger logger) {
         super(JReleaserPublisherFactory.NAME, sessionConfig);
         this.logger = requireNonNull(logger);
-        this.configFile = sessionConfig.basedir().resolve("jreleaser.yml");
-        if (!Files.isRegularFile(configFile)) {
-            throw new JReleaserException("Missing JReleaser configuration: " + configFile);
-        }
+        this.configFile = FileUtils.discoverUserCurrentWorkingDirectory().resolve("jreleaser.yml");
 
-        this.settings = Paths.get(System.getProperty("user.home")).resolve(".jreleaser");
         this.yolo = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("yolo"));
         this.dryRun = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("dryRun"));
         this.gitRootSearch =
@@ -65,12 +61,19 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         this.strict = ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("strict"));
         this.reproducible =
                 ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("reproducible"));
+        this.command = JReleaserCommand.valueOf(ConfigUtils.getString(
+                sessionConfig.effectiveProperties(), JReleaserCommand.FULL_RELEASE.name(), keyNames("command")));
 
         if (sessionConfig.currentProject().isPresent()) {
-            this.outputDirectory =
-                    sessionConfig.currentProject().orElseThrow(J8Utils.OET).buildDirectory();
+            this.outputDirectory = sessionConfig
+                    .currentProject()
+                    .orElseThrow(J8Utils.OET)
+                    .buildDirectory()
+                    .resolve("staging-deploy");
         } else {
-            this.outputDirectory = sessionConfig.basedir().resolve("target");
+            this.outputDirectory = FileUtils.discoverUserCurrentWorkingDirectory()
+                    .resolve("target")
+                    .resolve("staging-deploy");
         }
     }
 
@@ -79,6 +82,10 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
     }
 
     public JReleaserContext createContext() throws IOException {
+        if (!Files.isRegularFile(configFile)) {
+            throw new JReleaserException("Missing JReleaser configuration: " + configFile);
+        }
+
         SessionConfig.CurrentProject currentProject =
                 sessionConfig.currentProject().orElse(null);
         Path outputDirectory;
@@ -121,10 +128,10 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
                 getLogger(outputDirectory),
                 JReleaserContext.Configurer.CLI_YAML,
                 org.jreleaser.model.api.JReleaserContext.Mode.FULL,
-                JReleaserCommand.FULL_RELEASE,
+                command,
                 model,
-                sessionConfig.basedir(),
-                settings,
+                FileUtils.discoverUserCurrentWorkingDirectory(),
+                null,
                 outputDirectory,
                 yolo,
                 dryRun,
