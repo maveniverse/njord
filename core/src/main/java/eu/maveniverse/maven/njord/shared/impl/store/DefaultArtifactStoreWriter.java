@@ -37,14 +37,30 @@ public class DefaultArtifactStoreWriter extends ComponentSupport implements Arti
 
     @Override
     public Path writeAsBundle(ArtifactStore artifactStore, Path outputDirectory) throws IOException {
-        requireNonNull(artifactStore);
-        requireNonNull(outputDirectory);
+        return writeAsBundle(artifactStore, outputDirectory, false);
+    }
 
-        Path targetDirectory = FileUtils.canonicalPath(outputDirectory);
-        if (!Files.isDirectory(targetDirectory)) {
-            Files.createDirectories(targetDirectory);
+    @Override
+    public Path writeAsBundle(ArtifactStore artifactStore, Path output, boolean outputMayBeFile) throws IOException {
+        requireNonNull(artifactStore);
+        requireNonNull(output);
+
+        Path target = FileUtils.canonicalPath(output);
+        Path bundleFile;
+        if (!outputMayBeFile || Files.isDirectory(target)) {
+            // directory semantics: write <target>/<store name>.zip
+            if (!Files.isDirectory(target)) {
+                Files.createDirectories(target);
+            }
+            bundleFile = target.resolve(artifactStore.name() + ".zip");
+        } else {
+            // file semantics: write to the exact file, creating missing parent directories
+            bundleFile = target;
+            Path parent = bundleFile.getParent();
+            if (parent != null && !Files.isDirectory(parent)) {
+                Files.createDirectories(parent);
+            }
         }
-        Path bundleFile = targetDirectory.resolve(artifactStore.name() + ".zip");
         if (Files.exists(bundleFile)) {
             throw new IOException("Exporting to existing bundle ZIP not supported");
         }
