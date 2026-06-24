@@ -108,6 +108,11 @@ public interface Session extends Closeable {
     ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri);
 
     /**
+     * Returns the names of session-bound artifact stores created in this session.
+     */
+    Collection<String> sessionArtifactStoreNames();
+
+    /**
      * Publishes all session-bound artifact stores created in this session. Session publishes all own created
      * stores. Hence, top level session publishes all created stores in given
      * Maven session. Returns the count of published stores.

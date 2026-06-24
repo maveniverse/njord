@@ -304,6 +304,12 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     }
 
     @Override
+    public Collection<String> sessionArtifactStoreNames() {
+        checkClosed();
+        return Collections.unmodifiableCollection(getSessionBoundStores().values());
+    }
+
+    @Override
     public int publishSessionArtifactStores() throws IOException {
         checkClosed();
         ConcurrentMap<RemoteRepository, String> sessionBoundStores = getSessionBoundStores();

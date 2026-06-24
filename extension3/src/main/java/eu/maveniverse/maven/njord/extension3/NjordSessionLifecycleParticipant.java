@@ -16,6 +16,7 @@ import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -99,28 +100,38 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                                         "Njord auto publish: Session failed; stores created in this session, if any, are not dropped");
                             }
                         } else {
-                            try {
-                                int published = njordSession.publishSessionArtifactStores();
-                                if (published != 0) {
-                                    logger.info(
-                                            "Njord auto publish: Published {} stores created in this session",
-                                            published);
-                                    if (njordSession.config().autoDrop()) {
-                                        int dropped = njordSession.dropSessionArtifactStores();
-                                        if (dropped != 0) {
+                            Collection<String> stores = njordSession.sessionArtifactStoreNames();
+                            if (stores.isEmpty()) {
+                                logger.info("Njord auto publish: No stores created in this session");
+                            } else {
+                                logger.info(
+                                        "Njord auto publish: Publishing {} stores created in this session",
+                                        stores.size());
+                                try {
+                                    int published = njordSession.publishSessionArtifactStores();
+                                    if (published != 0) {
+                                        logger.info(
+                                                "Njord auto publish: Published {} stores created in this session",
+                                                published);
+                                        if (njordSession.config().autoDrop()) {
+                                            int dropped = njordSession.dropSessionArtifactStores();
+                                            if (dropped != 0) {
+                                                logger.info(
+                                                        "Njord auto publish: Dropped {} auto published stores",
+                                                        dropped);
+                                            }
+                                        } else {
                                             logger.info(
-                                                    "Njord auto publish: Dropped {} auto published stores", dropped);
+                                                    "Njord auto publish: The {} published stores are not dropped",
+                                                    published);
                                         }
                                     } else {
                                         logger.info(
-                                                "Njord auto publish: The {} published stores are not dropped",
-                                                published);
+                                                "Njord auto publish: No stores created in this session were published");
                                     }
-                                } else {
-                                    logger.info("Njord auto publish: No stores created in this session");
+                                } catch (ArtifactStorePublisher.PublishFailedException e) {
+                                    throw new MavenExecutionException(e.getMessage(), e);
                                 }
-                            } catch (ArtifactStorePublisher.PublishFailedException e) {
-                                throw new MavenExecutionException(e.getMessage(), e);
                             }
                         }
                     }
