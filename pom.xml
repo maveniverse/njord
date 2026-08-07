@@ -76,7 +76,7 @@
     <version.resolver>1.9.27</version.resolver>
     <version.mima>2.4.47</version.mima>
     <version.slf4j>1.7.36</version.slf4j>
-    <version.jreleaser>1.24.0</version.jreleaser>
+    <version.jreleaser>1.25.0</version.jreleaser>
   </properties>
 
   <dependencyManagement>
