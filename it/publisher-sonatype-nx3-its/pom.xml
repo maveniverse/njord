@@ -24,7 +24,7 @@
 
   <properties>
     <!-- Must be Java 8 capable -->
-    <groovyVersion>4.0.33</groovyVersion>
+    <groovyVersion>5.1.1</groovyVersion>
   </properties>
 
   <dependencies>
