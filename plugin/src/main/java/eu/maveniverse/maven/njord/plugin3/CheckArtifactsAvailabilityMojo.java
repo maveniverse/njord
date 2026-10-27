@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.artifact.Artifact;
@@ -111,7 +111,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     @Parameter(property = SessionConfig.KEY_PREFIX + "remoteRepository")
     private String remoteRepository;
 
-    @Component
+    @Inject
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
     @Override
