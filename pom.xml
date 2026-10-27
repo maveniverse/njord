@@ -76,7 +76,7 @@
     <version.resolver>1.9.27</version.resolver>
     <version.mima>2.4.48</version.mima>
     <version.slf4j>1.7.36</version.slf4j>
-    <version.jreleaser>1.25.0</version.jreleaser>
+    <version.jreleaser>1.26.0</version.jreleaser>
   </properties>
 
   <dependencyManagement>
@@ -246,7 +246,7 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.10.1</version>
+        <version>9.11.1</version>
       </dependency>
 
       <dependency>
@@ -313,7 +313,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.22.1</version>
+        <version>1.23.0</version>
       </dependency>
 
       <dependency>
