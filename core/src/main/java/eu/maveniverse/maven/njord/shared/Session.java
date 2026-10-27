@@ -101,12 +101,19 @@ public interface Session extends Closeable {
 
     /**
      * Creates session-bound artifact store and memoize it during session. The returned store is owned by this
-     * session (is shared among callers) and must not be closed by caller.
+     * session (is shared among callers) and must not be closed by caller; instead, caller must invoke
+     * {@link #releaseSessionArtifactStore(ArtifactStore)} once done with it.
      * {@code repoId::njord:}
      * {@code repoId::njord:template:templateName}
      * {@code repoId::njord:store:storeName}
      */
     ArtifactStore getOrCreateSessionArtifactStore(RemoteRepository repository, String uri);
+
+    /**
+     * Releases store obtained from {@link #getOrCreateSessionArtifactStore(RemoteRepository, String)}. The shared
+     * store is closed when last caller releases it.
+     */
+    void releaseSessionArtifactStore(ArtifactStore artifactStore);
 
     /**
      * Returns the names of session-bound artifact stores created in this session.

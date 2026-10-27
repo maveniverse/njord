@@ -51,7 +51,8 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     private final RuntimeInformation mavenRuntimeInformation;
     private final String sessionBoundStoresKey;
     private final Set<String> preExistingStores = ConcurrentHashMap.newKeySet();
-    private final ConcurrentMap<String, ArtifactStore> sessionStoreHandles = new ConcurrentHashMap<>();
+    private final Map<String, ArtifactStore> sessionStoreHandles = new HashMap<>();
+    private final Map<String, Integer> sessionStoreHandleRefs = new HashMap<>();
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
@@ -296,24 +297,55 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             }
         });
         // one handle per store: multiple open handles would prevent exclusive lock needed for writes
-        return sessionStoreHandles.computeIfAbsent(storeName, n -> {
-            try {
-                return internalArtifactStoreManager.selectArtifactStore(n).orElseThrow(J8Utils.OET);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+        // handle is closed when last user releases it, as open handle prevents ie. rename on Windows
+        synchronized (sessionStoreHandles) {
+            ArtifactStore handle = sessionStoreHandles.get(storeName);
+            if (handle == null) {
+                try {
+                    handle = internalArtifactStoreManager
+                            .selectArtifactStore(storeName)
+                            .orElseThrow(J8Utils.OET);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                sessionStoreHandles.put(storeName, handle);
             }
-        });
+            sessionStoreHandleRefs.merge(storeName, 1, Integer::sum);
+            return handle;
+        }
+    }
+
+    @Override
+    public void releaseSessionArtifactStore(ArtifactStore artifactStore) {
+        requireNonNull(artifactStore);
+        synchronized (sessionStoreHandles) {
+            String storeName = artifactStore.name();
+            if (sessionStoreHandles.get(storeName) != artifactStore) {
+                return; // already closed (ie. session stores dropped)
+            }
+            if (sessionStoreHandleRefs.merge(storeName, -1, Integer::sum) > 0) {
+                return;
+            }
+            sessionStoreHandleRefs.remove(storeName);
+            sessionStoreHandles.remove(storeName);
+            closeSessionStoreHandle(artifactStore);
+        }
     }
 
     private void closeSessionStoreHandles() {
-        for (ArtifactStore artifactStore : sessionStoreHandles.values()) {
-            try {
-                artifactStore.close();
-            } catch (IOException e) {
-                logger.warn("Could not close session bound ArtifactStore {}", artifactStore.name(), e);
-            }
+        synchronized (sessionStoreHandles) {
+            sessionStoreHandles.values().forEach(this::closeSessionStoreHandle);
+            sessionStoreHandles.clear();
+            sessionStoreHandleRefs.clear();
         }
-        sessionStoreHandles.clear();
+    }
+
+    private void closeSessionStoreHandle(ArtifactStore artifactStore) {
+        try {
+            artifactStore.close();
+        } catch (IOException e) {
+            logger.warn("Could not close session bound ArtifactStore {}", artifactStore.name(), e);
+        }
     }
 
     private ArtifactStoreTemplate selectTemplate(String templateName) {
