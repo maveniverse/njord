@@ -132,9 +132,11 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
                 String authValue = null;
                 try (AuthenticationContext repoAuthContext =
                         AuthenticationContext.forRepository(session.config().session(), authSource)) {
-                    if (repoAuthContext != null) {
-                        String username = repoAuthContext.get(AuthenticationContext.USERNAME);
-                        String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
+                    String username =
+                            repoAuthContext != null ? repoAuthContext.get(AuthenticationContext.USERNAME) : null;
+                    String password =
+                            repoAuthContext != null ? repoAuthContext.get(AuthenticationContext.PASSWORD) : null;
+                    if (username != null && password != null) {
                         authValue = "Bearer "
                                 + Base64.getEncoder()
                                         .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
@@ -275,9 +277,12 @@ public class SonatypeCentralPortalPublisher extends ArtifactStorePublisherSuppor
         post.setHeader(HttpHeaders.ACCEPT, "application/json");
         try (CloseableHttpResponse response = httpClient.execute(post)) {
             if (response.getStatusLine().getStatusCode() == 200) {
-                return new JSONObject(EntityUtils.toString(response.getEntity()))
-                        .optString("deploymentState")
-                        .toLowerCase(Locale.ENGLISH);
+                String body = EntityUtils.toString(response.getEntity());
+                String state = new JSONObject(body).optString("deploymentState");
+                if (state.isEmpty()) {
+                    throw new IOException("Missing deploymentState in response: " + body);
+                }
+                return state.toLowerCase(Locale.ENGLISH);
             } else {
                 throw new IOException("Unexpected response code: " + response.getStatusLine() + " "
                         + (response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : ""));

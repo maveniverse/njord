@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -551,7 +552,8 @@ public interface SessionConfig {
 
                 String prefixString = effectiveProperties.get(CONFIG_PREFIX);
                 if (prefixString == null && currentProject != null) {
-                    prefixString = currentProject.artifact().getArtifactId();
+                    // store names must be lowercase
+                    prefixString = currentProject.artifact().getArtifactId().toLowerCase(Locale.ROOT);
                 }
                 this.prefix = prefixString;
                 this.serverConfigurations = J8Utils.copyOf(requireNonNull(serverConfigurations, "serverConfiguration"));

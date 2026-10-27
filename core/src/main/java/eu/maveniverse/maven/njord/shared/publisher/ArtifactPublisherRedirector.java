@@ -138,8 +138,9 @@ public interface ArtifactPublisherRedirector {
      * {@link eu.maveniverse.maven.njord.shared.SessionConfig#CONFIG_PUBLISHER} property sourced from properties
      * (system, user or project), and finally, if project present, the distribution management of it.
      *
-     * @throws IllegalStateException If string was found (given or found in config) but name does not correspond to
-     *         known publisher.
+     * @throws IllegalStateException If publisher name set as property does not correspond to known publisher.
+     * @throws IllegalArgumentException If publisher derived from distribution management repository ID does not
+     *         correspond to known publisher.
      */
     Optional<String> getArtifactStorePublisherName();
 
@@ -153,8 +154,9 @@ public interface ArtifactPublisherRedirector {
      *             as basis for looking up publisher name. Value may be a publisher name, or a settings server ID that has
      *             Njord config with {@link eu.maveniverse.maven.njord.shared.SessionConfig#CONFIG_PUBLISHER}. If
      *             name is {@code null}, call is passed to {@link #getArtifactStorePublisherName()} method.
-     * @throws IllegalStateException If string was found (given or found in config) but name does not correspond to
+     * @throws IllegalArgumentException If given name is neither a known publisher nor a server ID with configured
      *         known publisher.
+     * @throws IllegalStateException See {@link #getArtifactStorePublisherName()}, when name is {@code null}.
      */
     Optional<String> getArtifactStorePublisherName(String name);
 }

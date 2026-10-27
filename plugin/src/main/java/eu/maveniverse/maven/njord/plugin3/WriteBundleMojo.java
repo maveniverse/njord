@@ -72,9 +72,10 @@ public class WriteBundleMojo extends NjordMojoSupport {
         Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(storeName);
         if (storeOptional.isPresent()) {
             try (ArtifactStore artifactStore = storeOptional.orElseThrow(J8Utils.OET)) {
-                Path output = (file != null ? Paths.get(file) : Paths.get(directory)).toAbsolutePath();
+                boolean isFile = file != null && !file.isEmpty();
+                Path output = (isFile ? Paths.get(file) : Paths.get(directory)).toAbsolutePath();
                 logger.info("Writing store {} as bundle to {}", artifactStore.name(), output);
-                Path result = ns.artifactStoreWriter().writeAsBundle(artifactStore, output, file != null);
+                Path result = ns.artifactStoreWriter().writeAsBundle(artifactStore, output, isFile);
                 logger.info("Written to " + result);
             }
         } else {

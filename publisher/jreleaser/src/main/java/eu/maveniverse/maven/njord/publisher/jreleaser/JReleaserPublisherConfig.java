@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Locale;
 import org.eclipse.aether.util.ConfigUtils;
 import org.jreleaser.config.JReleaserConfigLoader;
 import org.jreleaser.engine.context.ContextCreator;
@@ -62,7 +63,15 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
         this.reproducible =
                 ConfigUtils.getBoolean(sessionConfig.effectiveProperties(), false, keyNames("reproducible"));
         this.command = JReleaserCommand.valueOf(ConfigUtils.getString(
-                sessionConfig.effectiveProperties(), JReleaserCommand.FULL_RELEASE.name(), keyNames("command")));
+                        sessionConfig.effectiveProperties(), JReleaserCommand.FULL_RELEASE.name(), keyNames("command"))
+                .toUpperCase(Locale.ROOT));
+        // other commands do not deploy, but publish would be reported as success (and store auto-dropped)
+        if (command != JReleaserCommand.DEPLOY
+                && command != JReleaserCommand.RELEASE
+                && command != JReleaserCommand.FULL_RELEASE) {
+            throw new IllegalArgumentException("Unsupported JReleaser command: " + command
+                    + "; supported commands are DEPLOY, RELEASE and FULL_RELEASE");
+        }
 
         if (sessionConfig.currentProject().isPresent()) {
             this.outputDirectory = sessionConfig
@@ -75,6 +84,10 @@ public final class JReleaserPublisherConfig extends PublisherConfigSupport {
                     .resolve("target")
                     .resolve("staging-deploy");
         }
+    }
+
+    public JReleaserCommand command() {
+        return command;
     }
 
     public Path outputDirectory() {

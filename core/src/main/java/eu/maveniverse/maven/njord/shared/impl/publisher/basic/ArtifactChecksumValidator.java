@@ -48,8 +48,8 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
     public void validate(ArtifactStore artifactStore, Artifact artifact, ValidationContext collector)
             throws IOException {
         List<ChecksumAlgorithmFactory> extraChecksums = artifactStore.checksumAlgorithmFactories().stream()
-                .filter(a -> mandatoryChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
-                .filter(a -> optionalChecksums.stream().anyMatch(c -> Objects.equals(a.getName(), c.getName())))
+                .filter(a -> mandatoryChecksums.stream().noneMatch(c -> Objects.equals(a.getName(), c.getName())))
+                .filter(a -> optionalChecksums.stream().noneMatch(c -> Objects.equals(a.getName(), c.getName())))
                 .collect(Collectors.toList());
         if (artifactStore.omitChecksumsForExtensions().stream()
                 .noneMatch(e -> artifact.getExtension().endsWith(e))) {
@@ -82,7 +82,9 @@ public class ArtifactChecksumValidator extends ValidatorSupport {
                     J8Utils.transferTo(in, bos);
                     deployed = new String(bos.toByteArray(), StandardCharsets.UTF_8);
                 }
-                if (Objects.equals(calculated, deployed)) {
+                // tolerate whitespace, case and "sha1sum" style "<hash>  <filename>" content
+                String[] tokens = deployed.trim().split("\\s+", 2);
+                if (calculated != null && calculated.equalsIgnoreCase(tokens[0])) {
                     algOk.add(algorithmFactory.getName());
                 } else {
                     algMismatch.add(algorithmFactory.getName());

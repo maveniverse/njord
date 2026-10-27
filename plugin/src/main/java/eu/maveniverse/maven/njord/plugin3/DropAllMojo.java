@@ -22,7 +22,7 @@ public class DropAllMojo extends NjordMojoSupport {
     /**
      * This property must be specified as "safety net" for this operation to succeed, as it is destructive.
      */
-    @Parameter(required = true, property = SessionConfig.KEY_PREFIX + "yes")
+    @Parameter(property = SessionConfig.KEY_PREFIX + "yes", defaultValue = "false")
     private boolean yes;
 
     @Override

@@ -13,6 +13,7 @@ import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Optional;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -40,18 +41,21 @@ public class RedeployMojo extends NjordMojoSupport {
     private boolean drop;
 
     @Override
-    protected void doWithSession(Session ns) throws IOException {
+    protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         Optional<ArtifactStore> fromOptional = ns.artifactStoreManager().selectArtifactStore(from);
-        Optional<ArtifactStore> toOptional = ns.artifactStoreManager().selectArtifactStore(to);
         if (!fromOptional.isPresent()) {
-            logger.warn("ArtifactStore with given name not found: {}", from);
-            return;
+            throw new MojoFailureException("ArtifactStore with given name not found: " + from);
         }
+        Optional<ArtifactStore> toOptional = ns.artifactStoreManager().selectArtifactStore(to);
         if (!toOptional.isPresent()) {
-            logger.warn("ArtifactStore with given name not found: {}", to);
-            return;
+            fromOptional.orElseThrow(J8Utils.OET).close();
+            throw new MojoFailureException("ArtifactStore with given name not found: " + to);
         }
-        ns.artifactStoreMerger().redeploy(fromOptional.orElseThrow(J8Utils.OET), toOptional.orElseThrow(J8Utils.OET));
+        // merger closes stores on success; these close them on early failure (close is idempotent)
+        try (ArtifactStore fromStore = fromOptional.orElseThrow(J8Utils.OET);
+                ArtifactStore toStore = toOptional.orElseThrow(J8Utils.OET)) {
+            ns.artifactStoreMerger().redeploy(fromStore, toStore);
+        }
         if (drop) {
             logger.info("Dropping {}", from);
             ns.artifactStoreManager().dropArtifactStore(from);

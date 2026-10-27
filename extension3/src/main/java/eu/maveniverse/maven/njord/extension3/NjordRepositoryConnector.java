@@ -9,6 +9,7 @@ package eu.maveniverse.maven.njord.extension3;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
 import java.io.IOException;
 import java.util.Collection;
@@ -22,20 +23,22 @@ import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataTransferException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Njord connector.
  */
 public class NjordRepositoryConnector implements RepositoryConnector {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Session session;
     private final ArtifactStore artifactStore;
     private final RemoteRepository remoteRepository;
     private final RepositoryConnector delegate;
 
     public NjordRepositoryConnector(
-            ArtifactStore artifactStore, RemoteRepository remoteRepository, RepositoryConnector delegate) {
+            Session session,
+            ArtifactStore artifactStore,
+            RemoteRepository remoteRepository,
+            RepositoryConnector delegate) {
+        this.session = requireNonNull(session);
         this.artifactStore = requireNonNull(artifactStore);
         this.remoteRepository = requireNonNull(remoteRepository);
         this.delegate = requireNonNull(delegate);
@@ -91,9 +94,8 @@ public class NjordRepositoryConnector implements RepositoryConnector {
     @Override
     public void close() {
         try {
-            artifactStore.close();
-        } catch (IOException e) {
-            logger.warn("Failed to close artifactStore", e);
+            // artifactStore is owned by Njord session
+            session.releaseSessionArtifactStore(artifactStore);
         } finally {
             delegate.close();
         }

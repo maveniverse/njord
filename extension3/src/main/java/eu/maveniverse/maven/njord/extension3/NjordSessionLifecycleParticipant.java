@@ -14,7 +14,6 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
-import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisher;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
@@ -129,8 +128,9 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
                                         logger.info(
                                                 "Njord auto publish: No stores created in this session were published");
                                     }
-                                } catch (ArtifactStorePublisher.PublishFailedException e) {
-                                    throw new MavenExecutionException(e.getMessage(), e);
+                                } catch (IOException | RuntimeException e) {
+                                    throw new MavenExecutionException(
+                                            "Njord auto publish failed: " + e.getMessage(), e);
                                 }
                             }
                         }

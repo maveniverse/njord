@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -61,6 +62,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
     private final Artifact originProjectArtifact;
     private final Path basedir;
     private final DefaultLayout storeLayout;
+    private final Semaphore writer = new Semaphore(1);
 
     public PathArtifactStore(
             String name,
@@ -134,8 +136,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
         checkClosed();
         return readIndex("artifacts", l -> {
             String[] split = l.split("=");
-            return new DefaultArtifact(split[0])
-                    .setFile(basedir.resolve(split[1]).toFile());
+            return new DefaultArtifact(split[0]).setFile(resolveInside(split[1]).toFile());
         });
     }
 
@@ -153,8 +154,49 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                             repositoryMode() == RepositoryMode.RELEASE
                                     ? Metadata.Nature.RELEASE
                                     : Metadata.Nature.SNAPSHOT)
-                    .setFile(basedir.resolve(split[1]).toFile());
+                    .setFile(resolveInside(split[1]).toFile());
         });
+    }
+
+    /**
+     * Serializes writers of this store within JVM and upgrades the directory lock to exclusive while writing.
+     * Upgrade still fails if some other handle of this store is open in this JVM.
+     */
+    private void beginWrite() throws IOException {
+        writer.acquireUninterruptibly();
+        try {
+            DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+            try {
+                DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
+            } catch (IOException e) {
+                // restore the shared lock this handle had
+                DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
+                throw e;
+            }
+        } catch (IOException | RuntimeException e) {
+            writer.release();
+            throw e;
+        }
+    }
+
+    private void endWrite() throws IOException {
+        try {
+            DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+            DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
+        } finally {
+            writer.release();
+        }
+    }
+
+    /**
+     * Resolves index entry path, refusing ones escaping the store basedir (ie. from crafted imported bundles).
+     */
+    private Path resolveInside(String path) {
+        Path result = basedir.resolve(path).normalize();
+        if (!result.startsWith(basedir.normalize())) {
+            throw new IllegalStateException(String.format("Store %s: index entry outside of store: %s", name, path));
+        }
+        return result;
     }
 
     @Override
@@ -241,8 +283,6 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             throw new IOException(String.format("Store %s: does not allow write operations.", name));
         }
 
-        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-        DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
         // check files (set + exists)
         List<Artifact> nfa = artifacts.stream()
                 .filter(a -> a.getFile() == null || !a.getFile().isFile())
@@ -277,6 +317,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             throw new IllegalArgumentException(String.format(
                     "Store %s: Update/redeploy is forbidden (artifacts already exists): %s", name, redeploys));
         }
+        beginWrite();
 
         final AtomicBoolean canceled = new AtomicBoolean(false);
         final AtomicBoolean closed = new AtomicBoolean(false);
@@ -304,8 +345,7 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                                             + "=" + storeLayout.metadataPath(m));
                         }
                     } finally {
-                        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-                        DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
+                        endWrite();
                     }
                 }
             }
@@ -369,10 +409,8 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
             throw new IllegalArgumentException(String.format(
                     "Store %s: Update/redeploy is forbidden (attachment already exists): %s", name, attachmentName));
         }
-        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-        DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
-
         final Path attachmentPath = attachmentsDir(true).resolve(attachmentName);
+        beginWrite();
         final AtomicReference<InputStream> write = new AtomicReference<>(null);
         final AtomicBoolean delete = new AtomicBoolean(false);
         final AtomicBoolean canceled = new AtomicBoolean(false);
@@ -415,8 +453,14 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                             }
                         }
                     } finally {
-                        DirectoryLocker.INSTANCE.unlockDirectory(basedir);
-                        DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
+                        try {
+                            // operation owns the stream passed to write()
+                            if (write.get() != null) {
+                                write.get().close();
+                            }
+                        } finally {
+                            endWrite();
+                        }
                     }
                 }
             }

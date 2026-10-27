@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.apache.maven.model.DeploymentRepository;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
@@ -31,20 +32,22 @@ public class StatusMojo extends PublisherSupportMojo {
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         MavenProject cp = mavenSession.getTopLevelProject();
-        if (cp.getDistributionManagement() == null) {
+        if (cp.getDistributionManagement() == null
+                || cp.getDistributionManagement().getRepository() == null) {
             logger.warn("No distribution management for project {}", cp.getName());
-            throw new MojoFailureException("No distribution management found");
+            throw new MojoFailureException("No distribution management (with release repository) found");
         }
+        DeploymentRepository releaseRepository = cp.getDistributionManagement().getRepository();
+        // as Maven does: snapshot repository is optional and falls back to release repository
+        DeploymentRepository snapshotRepository = cp.getDistributionManagement().getSnapshotRepository() != null
+                ? cp.getDistributionManagement().getSnapshotRepository()
+                : releaseRepository;
         RemoteRepository deploymentRelease = new RemoteRepository.Builder(
-                        cp.getDistributionManagement().getRepository().getId(),
-                        "default",
-                        cp.getDistributionManagement().getRepository().getUrl())
+                        releaseRepository.getId(), "default", releaseRepository.getUrl())
                 .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                 .build();
         RemoteRepository deploymentSnapshot = new RemoteRepository.Builder(
-                        cp.getDistributionManagement().getSnapshotRepository().getId(),
-                        "default",
-                        cp.getDistributionManagement().getSnapshotRepository().getUrl())
+                        snapshotRepository.getId(), "default", snapshotRepository.getUrl())
                 .setReleasePolicy(new RepositoryPolicy(false, null, null))
                 .build();
         String deploymentReleaseUrl =

@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.artifact.Artifact;
@@ -111,7 +111,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
     @Parameter(property = SessionConfig.KEY_PREFIX + "remoteRepository")
     private String remoteRepository;
 
-    @Component
+    @Inject
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
     @Override
@@ -218,7 +218,8 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
         Duration waitTimeout = Duration.parse(this.waitTimeout);
         Duration waitDelay = Duration.parse(this.waitDelay);
         Duration waitSleep = Duration.parse(this.waitSleep);
-        Map<Artifact, Boolean> artifactsMap = artifacts.stream().collect(Collectors.toMap(a -> a, a -> false));
+        Map<Artifact, Boolean> artifactsMap =
+                artifacts.stream().collect(Collectors.toMap(a -> a, a -> false, (a, b) -> a));
 
         try (RepositoryConnector repositoryConnector =
                 repositoryConnectorProvider.newRepositoryConnector(mavenSession.getRepositorySession(), target)) {
@@ -280,6 +281,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
             logger.info("No connector for publishing target exists; bailing out");
             throw new MojoFailureException("No connector for publishing target exists");
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException(e.getMessage(), e);
         }
     }

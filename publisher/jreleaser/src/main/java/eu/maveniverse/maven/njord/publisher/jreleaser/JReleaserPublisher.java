@@ -13,9 +13,14 @@ import eu.maveniverse.maven.njord.shared.Session;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStorePublisherSupport;
 import eu.maveniverse.maven.njord.shared.publisher.ArtifactStoreRequirements;
 import eu.maveniverse.maven.njord.shared.store.ArtifactStore;
+import eu.maveniverse.maven.shared.core.fs.FileUtils;
 import java.io.IOException;
+import java.nio.file.Files;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.jreleaser.model.api.JReleaserCommand;
+import org.jreleaser.model.internal.JReleaserContext;
+import org.jreleaser.workflow.Workflow;
 import org.jreleaser.workflow.Workflows;
 
 public class JReleaserPublisher extends ArtifactStorePublisherSupport {
@@ -51,9 +56,30 @@ public class JReleaserPublisher extends ArtifactStorePublisherSupport {
             return;
         }
 
-        // write it out for JReleaser
+        // write it out for JReleaser; remove leftovers of previous runs
+        if (Files.exists(config.outputDirectory())) {
+            FileUtils.deleteRecursively(config.outputDirectory());
+        }
         session.artifactStoreWriter().writeAsDirectory(artifactStore, config.outputDirectory());
 
-        Workflows.fullRelease(config.createContext()).execute();
+        JReleaserContext context = config.createContext();
+        try {
+            workflow(config.command(), context).execute();
+        } finally {
+            context.getLogger().close();
+        }
+    }
+
+    private static Workflow workflow(JReleaserCommand command, JReleaserContext context) {
+        switch (command) {
+            case DEPLOY:
+                return Workflows.deploy(context);
+            case RELEASE:
+                return Workflows.release(context);
+            case FULL_RELEASE:
+                return Workflows.fullRelease(context);
+            default:
+                throw new IllegalArgumentException("Unsupported JReleaser command: " + command);
+        }
     }
 }

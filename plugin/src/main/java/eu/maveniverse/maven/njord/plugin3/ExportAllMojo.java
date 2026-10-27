@@ -40,7 +40,10 @@ public class ExportAllMojo extends NjordMojoSupport {
             Optional<ArtifactStore> storeOptional = ns.artifactStoreManager().selectArtifactStore(name);
             if (storeOptional.isPresent()) {
                 logger.info("Exporting store {} to {}", name, targetPath);
-                Path bundle = ns.artifactStoreManager().exportTo(storeOptional.orElseThrow(J8Utils.OET), targetPath);
+                Path bundle;
+                try (ArtifactStore artifactStore = storeOptional.orElseThrow(J8Utils.OET)) {
+                    bundle = ns.artifactStoreManager().exportTo(artifactStore, targetPath);
+                }
                 logger.info("Exported to " + bundle);
             }
         }
