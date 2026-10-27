@@ -9,7 +9,6 @@ package eu.maveniverse.maven.njord.publisher.sonatype.nx3;
 
 import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.publisher.PublisherConfigSupport;
-import java.time.Duration;
 import java.util.Map;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -24,20 +23,13 @@ import org.eclipse.aether.util.ConfigUtils;
  *     <li><code>njord.publisher.sonatype-nx3.releaseRepositoryName</code> - the NXRM3 hosted repository name for releases (required)</li>
  *     <li><code>njord.publisher.sonatype-nx3.snapshotRepositoryName</code> - the NXRM3 hosted repository name for snapshots (optional)</li>
  *     <li><code>njord.publisher.sonatype-nx3.tag</code> or <code>njord.tag</code> - tag to apply to components (defaults to ${groupId}-${artifactId}-${version})</li>
- *     <li><code>njord.publisher.sonatype-nx3.connectTimeout</code> - HTTP connect timeout (default: PT30S)</li>
- *     <li><code>njord.publisher.sonatype-nx3.requestTimeout</code> - HTTP request timeout (default: PT5M)</li>
  * </ul>
  */
 public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
-    private static final String DEFAULT_CONNECT_TIMEOUT = "PT30S";
-    private static final String DEFAULT_REQUEST_TIMEOUT = "PT5M";
-
     private final String releaseRepositoryName;
     private final String snapshotRepositoryName;
     private final boolean tagConfigured;
     private final String tag;
-    private final Duration connectTimeout;
-    private final Duration requestTimeout;
 
     public SonatypeNx3PublisherConfig(SessionConfig sessionConfig) {
         super(SonatypeNx3PublisherFactory.NAME, sessionConfig);
@@ -53,28 +45,17 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
                 ConfigUtils.getString(effectiveProperties, null, keyNames("snapshotRepositoryName"));
 
         // Tag: check specific property first, then generic njord.tag, then compute default
-        boolean tagConfigured = false;
         String tagValue = ConfigUtils.getString(effectiveProperties, null, keyNames("tag"));
+        boolean tagConfigured = tagValue != null;
         if (tagValue == null && sessionConfig.currentProject().isPresent()) {
             SessionConfig.CurrentProject project =
                     sessionConfig.currentProject().get();
             tagValue =
                     project.artifact().getGroupId() + "-" + project.artifact().getArtifactId() + "-"
                             + project.artifact().getVersion();
-        } else {
-            tagConfigured = true;
         }
         this.tagConfigured = tagConfigured;
         this.tag = tagValue;
-
-        // Timeouts with defaults
-        String connectTimeoutStr =
-                ConfigUtils.getString(effectiveProperties, DEFAULT_CONNECT_TIMEOUT, keyNames("connectTimeout"));
-        this.connectTimeout = Duration.parse(connectTimeoutStr);
-
-        String requestTimeoutStr =
-                ConfigUtils.getString(effectiveProperties, DEFAULT_REQUEST_TIMEOUT, keyNames("requestTimeout"));
-        this.requestTimeout = Duration.parse(requestTimeoutStr);
     }
 
     public String releaseRepositoryName() {
@@ -91,13 +72,5 @@ public class SonatypeNx3PublisherConfig extends PublisherConfigSupport {
 
     public String tag() {
         return tag;
-    }
-
-    public Duration connectTimeout() {
-        return connectTimeout;
-    }
-
-    public Duration requestTimeout() {
-        return requestTimeout;
     }
 }

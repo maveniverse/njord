@@ -44,7 +44,10 @@ public class ExportMojo extends NjordMojoSupport {
         if (storeOptional.isPresent()) {
             Path targetPath = FileUtils.canonicalPath(Paths.get(path).toAbsolutePath());
             logger.info("Exporting store {} to {}", store, targetPath);
-            Path bundle = ns.artifactStoreManager().exportTo(storeOptional.orElseThrow(J8Utils.OET), targetPath);
+            Path bundle;
+            try (ArtifactStore artifactStore = storeOptional.orElseThrow(J8Utils.OET)) {
+                bundle = ns.artifactStoreManager().exportTo(artifactStore, targetPath);
+            }
             logger.info("Exported to " + bundle);
         } else {
             logger.warn("ArtifactStore with given name not found");

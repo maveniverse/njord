@@ -31,9 +31,12 @@ public class StatusMojo extends PublisherSupportMojo {
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
         MavenProject cp = mavenSession.getTopLevelProject();
-        if (cp.getDistributionManagement() == null) {
+        if (cp.getDistributionManagement() == null
+                || cp.getDistributionManagement().getRepository() == null
+                || cp.getDistributionManagement().getSnapshotRepository() == null) {
             logger.warn("No distribution management for project {}", cp.getName());
-            throw new MojoFailureException("No distribution management found");
+            throw new MojoFailureException(
+                    "No distribution management (with both release and snapshot repository) found");
         }
         RemoteRepository deploymentRelease = new RemoteRepository.Builder(
                         cp.getDistributionManagement().getRepository().getId(),

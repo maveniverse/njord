@@ -8,6 +8,7 @@
 package eu.maveniverse.maven.njord.shared.impl.store;
 
 import static eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreUtils.validateArtifactStoreName;
+import static eu.maveniverse.maven.njord.shared.impl.store.ArtifactStoreUtils.validateName;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -31,7 +32,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -198,17 +198,17 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
         ArrayList<String> names = new ArrayList<>(listArtifactStoreNames());
         names.sort(Comparator.naturalOrder());
-        Map<ArtifactStoreTemplate, TreeSet<String>> stores = new HashMap<>();
+        Map<String, TreeSet<String>> stores = new HashMap<>();
         for (String name : names) {
             Path basedir = config.basedir().resolve(name);
             Map<String, String> properties = loadStoreProperties(basedir);
             ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
-            stores.computeIfAbsent(template, k -> new TreeSet<>()).add(name);
+            stores.computeIfAbsent(template.prefix(), k -> new TreeSet<>()).add(name);
         }
-        for (ArtifactStoreTemplate template : stores.keySet()) {
+        for (Map.Entry<String, TreeSet<String>> entry : stores.entrySet()) {
             int num = 1;
-            for (String name : stores.get(template)) {
-                String formattedName = formatArtifactStoreName(template.prefix(), num++);
+            for (String name : entry.getValue()) {
+                String formattedName = formatArtifactStoreName(entry.getKey(), num++);
                 if (!formattedName.equals(name)) {
                     Path basedir = config.basedir().resolve(name);
                     renameStore(basedir, formattedName);
@@ -231,7 +231,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path bundleFile = targetDirectory;
         if (Files.isDirectory(targetDirectory)) {
             bundleFile = targetDirectory.resolve(artifactStore.name() + ".ntb");
-        } else if (!Files.isDirectory(targetDirectory.getFileName())) {
+        } else if (!Files.isDirectory(targetDirectory.getParent())) {
             throw new IllegalArgumentException("Target parent directory does not exists");
         }
         if (Files.exists(bundleFile)) {
@@ -297,7 +297,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
             throw new IllegalStateException("Template not found: " + properties.get("templateName"));
         }
         if (properties.containsKey("templatePrefix")) {
-            template = template.withPrefix(properties.get("templatePrefix"));
+            template = template.withPrefix(validateName(properties.get("templatePrefix")));
         }
         return template;
     }
@@ -306,35 +306,44 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         Path basedir = config.basedir().resolve(name);
         if (Files.isDirectory(basedir)) {
             DirectoryLocker.INSTANCE.lockDirectory(basedir, false);
-            Map<String, String> properties = loadStoreProperties(basedir);
-            ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
-            String writeModeString = properties.get("writeMode");
-            if (writeModeString == null) {
-                // fallback (this is old store)
-                writeModeString = Boolean.parseBoolean(
-                                properties.getOrDefault("allowRedeploy", Boolean.toString(template.allowRedeploy())))
-                        ? WriteMode.WRITE_MANY.name()
-                        : WriteMode.WRITE_ONCE.name();
+            try {
+                return loadExistingArtifactStore(basedir);
+            } catch (IOException | RuntimeException e) {
+                DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+                throw e;
             }
-            return new PathArtifactStore(
-                    properties.get("name"),
-                    template,
-                    Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
-                    RepositoryMode.valueOf(properties.get("repositoryMode")),
-                    WriteMode.valueOf(writeModeString),
-                    checksumAlgorithmFactorySelector.selectList(Arrays.stream(
-                                    properties.get("checksumAlgorithmFactories").split(","))
-                            .filter(s -> !s.trim().isEmpty())
-                            .collect(toList())),
-                    Arrays.stream(properties.get("omitChecksumsForExtensions").split(","))
-                            .filter(s -> !s.trim().isEmpty())
-                            .collect(toList()),
-                    properties.containsKey("originProjectArtifact")
-                            ? new DefaultArtifact(properties.get("originProjectArtifact"))
-                            : null,
-                    basedir);
         }
         return null;
+    }
+
+    private PathArtifactStore loadExistingArtifactStore(Path basedir) throws IOException {
+        Map<String, String> properties = loadStoreProperties(basedir);
+        ArtifactStoreTemplate template = loadTemplateWithProperties(properties);
+        String writeModeString = properties.get("writeMode");
+        if (writeModeString == null) {
+            // fallback (this is old store)
+            writeModeString = Boolean.parseBoolean(
+                            properties.getOrDefault("allowRedeploy", Boolean.toString(template.allowRedeploy())))
+                    ? WriteMode.WRITE_MANY.name()
+                    : WriteMode.WRITE_ONCE.name();
+        }
+        return new PathArtifactStore(
+                properties.get("name"),
+                template,
+                Instant.ofEpochMilli(Long.parseLong(properties.get("created"))),
+                RepositoryMode.valueOf(properties.get("repositoryMode")),
+                WriteMode.valueOf(writeModeString),
+                checksumAlgorithmFactorySelector.selectList(Arrays.stream(
+                                properties.get("checksumAlgorithmFactories").split(","))
+                        .filter(s -> !s.trim().isEmpty())
+                        .collect(toList())),
+                Arrays.stream(properties.get("omitChecksumsForExtensions").split(","))
+                        .filter(s -> !s.trim().isEmpty())
+                        .collect(toList()),
+                properties.containsKey("originProjectArtifact")
+                        ? new DefaultArtifact(properties.get("originProjectArtifact"))
+                        : null,
+                basedir);
     }
 
     // copied as while it is public in Resolver 2 is not in Resolver 1
@@ -347,10 +356,21 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
 
     private PathArtifactStore createNewArtifactStore(ArtifactStoreTemplate template, Artifact originProjectArtifact)
             throws IOException {
-        String name = newArtifactStoreName(template.prefix());
+        String name = newArtifactStoreName(validateName(template.prefix()));
         Path basedir = config.basedir().resolve(name);
         Files.createDirectories(basedir);
         DirectoryLocker.INSTANCE.lockDirectory(basedir, true);
+        try {
+            return createNewArtifactStore(name, basedir, template, originProjectArtifact);
+        } catch (IOException | RuntimeException e) {
+            DirectoryLocker.INSTANCE.unlockDirectory(basedir);
+            throw e;
+        }
+    }
+
+    private PathArtifactStore createNewArtifactStore(
+            String name, Path basedir, ArtifactStoreTemplate template, Artifact originProjectArtifact)
+            throws IOException {
         Instant created = Instant.now();
         RepositoryMode repositoryMode = template.repositoryMode();
         WriteMode writeMode = template.allowRedeploy() ? WriteMode.WRITE_MANY : WriteMode.WRITE_ONCE;
@@ -450,7 +470,7 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
         properties.forEach(prop::setProperty);
         Path metaStoreProperties = metaRepositoryProperties(basedir);
         Files.createDirectories(metaStoreProperties.getParent());
-        try (OutputStream out = Files.newOutputStream(metaStoreProperties, StandardOpenOption.CREATE)) {
+        try (OutputStream out = Files.newOutputStream(metaStoreProperties)) {
             prop.store(out, null);
         }
     }
@@ -458,10 +478,12 @@ public class DefaultInternalArtifactStoreManager extends CloseableConfigSupport<
     private void renameStore(Path basedir, String newName) throws IOException {
         Map<String, String> props = loadStoreProperties(basedir);
         props.put("name", newName);
-        saveStoreProperties(basedir, props);
+        Path target = basedir;
         if (!basedir.getFileName().toString().equals(newName)) {
-            Files.move(basedir, basedir.getParent().resolve(newName), StandardCopyOption.ATOMIC_MOVE);
+            target = basedir.getParent().resolve(newName);
+            Files.move(basedir, target, StandardCopyOption.ATOMIC_MOVE);
         }
+        saveStoreProperties(target, props);
     }
 
     private void changeWriteModeStore(Path basedir, WriteMode writeMode) throws IOException {

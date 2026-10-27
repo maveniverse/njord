@@ -33,7 +33,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -48,6 +50,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 public class DefaultSession extends CloseableConfigSupport<SessionConfig> implements Session {
     private final RuntimeInformation mavenRuntimeInformation;
     private final String sessionBoundStoresKey;
+    private final Set<String> preExistingStores = ConcurrentHashMap.newKeySet();
+    private final ConcurrentMap<String, ArtifactStore> sessionStoreHandles = new ConcurrentHashMap<>();
     private final InternalArtifactStoreManager internalArtifactStoreManager;
     private final ArtifactStoreWriter artifactStoreWriter;
     private final ArtifactStoreMerger artifactStoreMerger;
@@ -217,7 +221,25 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
             }
             // END: workaround for Maven 4.0.0-rc-5 (only)
         }
+        // resolution repositories (that are not deployment targets as well) are never handled; redirecting them
+        // (ie. same ID used for resolution and distribution) would make resolution use an empty store
+        if (!repository.getUrl().startsWith(SessionConfig.NAME + ":")
+                && config.allRemoteRepositories().stream().anyMatch(r -> sameRepository(r, repository))) {
+            return config.currentProject()
+                    .map(p -> p.distributionManagementRepositories().values().stream()
+                            .anyMatch(r -> sameRepository(r, repository)))
+                    .orElse(false);
+        }
         return true;
+    }
+
+    private static boolean sameRepository(RemoteRepository r1, RemoteRepository r2) {
+        return Objects.equals(r1.getId(), r2.getId())
+                && Objects.equals(stripSlash(r1.getUrl()), stripSlash(r2.getUrl()));
+    }
+
+    private static String stripSlash(String url) {
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     @Override
@@ -263,7 +285,9 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 } else {
                     throw new IllegalArgumentException("Invalid repository URI: " + uri);
                 }
-                if (isNewArtifactStore) {
+                if (!isNewArtifactStore) {
+                    preExistingStores.add(artifactStoreName);
+                } else {
                     logger.info("Created Njord artifact store {} for remote repository {}", artifactStoreName, r);
                 }
                 return artifactStoreName;
@@ -271,11 +295,25 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
                 throw new UncheckedIOException(e);
             }
         });
-        try {
-            return internalArtifactStoreManager.selectArtifactStore(storeName).orElseThrow(J8Utils.OET);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        // one handle per store: multiple open handles would prevent exclusive lock needed for writes
+        return sessionStoreHandles.computeIfAbsent(storeName, n -> {
+            try {
+                return internalArtifactStoreManager.selectArtifactStore(n).orElseThrow(J8Utils.OET);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    private void closeSessionStoreHandles() {
+        for (ArtifactStore artifactStore : sessionStoreHandles.values()) {
+            try {
+                artifactStore.close();
+            } catch (IOException e) {
+                logger.warn("Could not close session bound ArtifactStore {}", artifactStore.name(), e);
+            }
         }
+        sessionStoreHandles.clear();
     }
 
     private ArtifactStoreTemplate selectTemplate(String templateName) {
@@ -348,12 +386,17 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
     @Override
     public int dropSessionArtifactStores() {
         checkClosed();
+        closeSessionStoreHandles();
         ConcurrentMap<RemoteRepository, String> sessionBoundStores = getSessionBoundStores();
         if (sessionBoundStores.isEmpty()) {
             return 0;
         }
         AtomicInteger result = new AtomicInteger(0);
         for (String storeName : sessionBoundStores.values()) {
+            if (preExistingStores.contains(storeName)) {
+                // not created in this session: never drop it
+                continue;
+            }
             try {
                 if (internalArtifactStoreManager.dropArtifactStore(storeName)) {
                     result.addAndGet(1);
@@ -367,6 +410,7 @@ public class DefaultSession extends CloseableConfigSupport<SessionConfig> implem
 
     @Override
     protected void doClose() throws IOException {
+        closeSessionStoreHandles();
         internalArtifactStoreManager.close();
     }
 

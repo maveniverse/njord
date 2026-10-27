@@ -22,14 +22,11 @@ import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataTransferException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Njord connector.
  */
 public class NjordRepositoryConnector implements RepositoryConnector {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ArtifactStore artifactStore;
     private final RemoteRepository remoteRepository;
     private final RepositoryConnector delegate;
@@ -90,12 +87,7 @@ public class NjordRepositoryConnector implements RepositoryConnector {
 
     @Override
     public void close() {
-        try {
-            artifactStore.close();
-        } catch (IOException e) {
-            logger.warn("Failed to close artifactStore", e);
-        } finally {
-            delegate.close();
-        }
+        // artifactStore is owned by Njord session
+        delegate.close();
     }
 }

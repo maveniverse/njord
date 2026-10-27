@@ -100,7 +100,8 @@ public interface Session extends Closeable {
     boolean handleRemoteRepository(RemoteRepository repository);
 
     /**
-     * Creates session-bound artifact store and memoize it during session.
+     * Creates session-bound artifact store and memoize it during session. The returned store is owned by this
+     * session (is shared among callers) and must not be closed by caller.
      * {@code repoId::njord:}
      * {@code repoId::njord:template:templateName}
      * {@code repoId::njord:store:storeName}

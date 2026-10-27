@@ -75,6 +75,8 @@ public abstract class NjordMojoSupport extends MojoSupport {
             try (Session ns =
                     NjordUtils.lazyInit(mavenSession.getRepositorySession(), () -> sessionFactory.create(sc))) {
                 doWithSession(ns);
+            } finally {
+                NjordUtils.removeNjordSession(mavenSession.getRepositorySession());
             }
         } else {
             throw new MojoExecutionException("Njord is disabled");

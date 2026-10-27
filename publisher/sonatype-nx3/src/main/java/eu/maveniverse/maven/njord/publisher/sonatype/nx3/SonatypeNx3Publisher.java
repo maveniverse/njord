@@ -84,8 +84,7 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
      */
     private boolean isNexusProEdition(CloseableHttpClient httpClient, RemoteRepository repository) {
         try {
-            URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
-            uriBuilder.setPath("/service/rest/v1/status");
+            URIBuilder uriBuilder = restUri(repository, "status");
             HttpGet request = new HttpGet(uriBuilder.build());
 
             try (CloseableHttpResponse response = httpClient.execute(request)) {
@@ -107,6 +106,18 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
             logger.debug("Could not determine Nexus edition, assuming OSS: {}", e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Builds REST API URI keeping any context path of the configured Nexus base URL (ie. https://host/nexus).
+     */
+    private static URIBuilder restUri(RemoteRepository repository, String endpoint) throws URISyntaxException {
+        URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
+        String path = uriBuilder.getPath() == null ? "" : uriBuilder.getPath();
+        while (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return uriBuilder.setPath(path + "/service/rest/v1/" + endpoint);
     }
 
     @Override
@@ -219,9 +230,9 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
             ArtifactStore artifactStore,
             boolean isProEdition)
             throws IOException {
+        List<InputStream> contents = new ArrayList<>();
         try {
-            URIBuilder uriBuilder = new URIBuilder(repository.getUrl());
-            uriBuilder.setPath("/service/rest/v1/components");
+            URIBuilder uriBuilder = restUri(repository, "components");
             uriBuilder.addParameter("repository", repositoryName);
 
             HttpPost post = new HttpPost(uriBuilder.build());
@@ -285,6 +296,7 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
                 InputStream content = artifactStore
                         .artifactContent(artifact)
                         .orElseThrow(() -> new IOException("Artifact content not found for " + artifact));
+                contents.add(content);
 
                 String assetPrefix = "maven2.asset" + assetIndex;
                 String fileName = artifact.getArtifactId() + "-" + artifact.getVersion()
@@ -328,6 +340,10 @@ public class SonatypeNx3Publisher extends ArtifactStorePublisherSupport {
             }
         } catch (URISyntaxException e) {
             throw new IOException("Invalid repository URL: " + repository.getUrl(), e);
+        } finally {
+            for (InputStream content : contents) {
+                content.close();
+            }
         }
     }
 }

@@ -94,15 +94,15 @@ public abstract class PublisherConfigSupport {
 
     protected final RemoteRepository createTargetReleaseRepository() {
         RemoteRepository releaseRepository = null;
-        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
+        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY)) {
             RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
-                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
+                    sessionConfig.effectiveProperties().get(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY));
             releaseRepository = new RemoteRepository.Builder(bare)
                     .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                     .build();
-        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY)) {
+        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
             RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
-                    sessionConfig.effectiveProperties().get(PROP_ALT_RELEASE_DEPLOYMENT_REPOSITORY));
+                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
             releaseRepository = new RemoteRepository.Builder(bare)
                     .setSnapshotPolicy(new RepositoryPolicy(false, null, null))
                     .build();
@@ -116,15 +116,15 @@ public abstract class PublisherConfigSupport {
 
     protected final RemoteRepository createTargetSnapshotRepository() {
         RemoteRepository snapshotRepository = null;
-        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
+        if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY)) {
             RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
-                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
+                    sessionConfig.effectiveProperties().get(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY));
             snapshotRepository = new RemoteRepository.Builder(bare)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();
-        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY)) {
+        } else if (sessionConfig.effectiveProperties().containsKey(PROP_ALT_DEPLOYMENT_REPOSITORY)) {
             RemoteRepository bare = ResolverUtils.parseRemoteRepositoryString(
-                    sessionConfig.effectiveProperties().get(PROP_ALT_SNAPSHOT_DEPLOYMENT_REPOSITORY));
+                    sessionConfig.effectiveProperties().get(PROP_ALT_DEPLOYMENT_REPOSITORY));
             snapshotRepository = new RemoteRepository.Builder(bare)
                     .setReleasePolicy(new RepositoryPolicy(false, null, null))
                     .build();

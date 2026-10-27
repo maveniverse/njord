@@ -56,7 +56,9 @@ public class AttachmentToFileMojo extends NjordMojoSupport {
             try (ArtifactStore artifactStore = aso.orElseThrow(J8Utils.OET)) {
                 Optional<InputStream> ato = artifactStore.attachmentContent(attachmentName);
                 if (ato.isPresent()) {
-                    Files.copy(ato.get(), attachment, StandardCopyOption.REPLACE_EXISTING);
+                    try (InputStream in = ato.get()) {
+                        Files.copy(in, attachment, StandardCopyOption.REPLACE_EXISTING);
+                    }
                     logger.info(
                             "Written attachment {} from ArtifactStore {} to {}", attachmentName, store, attachmentFile);
                 } else {

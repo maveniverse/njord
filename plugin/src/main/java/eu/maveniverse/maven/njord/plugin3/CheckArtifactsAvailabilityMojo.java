@@ -218,7 +218,8 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
         Duration waitTimeout = Duration.parse(this.waitTimeout);
         Duration waitDelay = Duration.parse(this.waitDelay);
         Duration waitSleep = Duration.parse(this.waitSleep);
-        Map<Artifact, Boolean> artifactsMap = artifacts.stream().collect(Collectors.toMap(a -> a, a -> false));
+        Map<Artifact, Boolean> artifactsMap =
+                artifacts.stream().collect(Collectors.toMap(a -> a, a -> false, (a, b) -> a));
 
         try (RepositoryConnector repositoryConnector =
                 repositoryConnectorProvider.newRepositoryConnector(mavenSession.getRepositorySession(), target)) {
@@ -280,6 +281,7 @@ public class CheckArtifactsAvailabilityMojo extends PublisherSupportMojo {
             logger.info("No connector for publishing target exists; bailing out");
             throw new MojoFailureException("No connector for publishing target exists");
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException(e.getMessage(), e);
         }
     }

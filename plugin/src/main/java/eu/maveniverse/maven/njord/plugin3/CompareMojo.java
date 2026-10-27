@@ -49,17 +49,16 @@ public class CompareMojo extends NjordMojoSupport {
 
     @Override
     protected void doWithSession(Session ns) throws IOException, MojoFailureException {
+        Optional<ArtifactStoreComparator> po = ns.selectArtifactStoreComparator(comparator);
         Optional<ArtifactStore> store1Optional = ns.artifactStoreManager().selectArtifactStore(store1);
         if (!store1Optional.isPresent()) {
-            logger.warn("ArtifactStore with given name not found: {}", store1);
-            return;
+            throw new MojoFailureException("ArtifactStore with given name not found: " + store1);
         }
         Optional<ArtifactStore> store2Optional = ns.artifactStoreManager().selectArtifactStore(store2);
         if (!store2Optional.isPresent()) {
-            logger.warn("ArtifactStore with given name not found: {}", store2);
-            return;
+            store1Optional.orElseThrow(J8Utils.OET).close();
+            throw new MojoFailureException("ArtifactStore with given name not found: " + store2);
         }
-        Optional<ArtifactStoreComparator> po = ns.selectArtifactStoreComparator(comparator);
         if (po.isPresent()) {
             ArtifactStoreComparator p = po.orElseThrow(J8Utils.OET);
             try (ArtifactStore one = store1Optional.orElseThrow(J8Utils.OET);
@@ -77,6 +76,8 @@ public class CompareMojo extends NjordMojoSupport {
                 }
             }
         } else {
+            store1Optional.orElseThrow(J8Utils.OET).close();
+            store2Optional.orElseThrow(J8Utils.OET).close();
             throw new MojoFailureException("Comparator not found");
         }
     }
