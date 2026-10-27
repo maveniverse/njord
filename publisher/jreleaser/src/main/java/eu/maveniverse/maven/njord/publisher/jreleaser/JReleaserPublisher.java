@@ -72,32 +72,10 @@ public class JReleaserPublisher extends ArtifactStorePublisherSupport {
 
     private static Workflow workflow(JReleaserCommand command, JReleaserContext context) {
         switch (command) {
-            case DOWNLOAD:
-                return Workflows.download(context);
-            case ASSEMBLE:
-                return Workflows.assemble(context);
-            case CHANGELOG:
-                return Workflows.changelog(context);
-            case CHECKSUM:
-                return Workflows.checksum(context);
-            case CATALOG:
-                return Workflows.catalog(context);
-            case SIGN:
-                return Workflows.sign(context);
             case DEPLOY:
                 return Workflows.deploy(context);
-            case UPLOAD:
-                return Workflows.upload(context);
             case RELEASE:
                 return Workflows.release(context);
-            case PREPARE:
-                return Workflows.prepare(context);
-            case PACKAGE:
-                return Workflows.packageRelease(context);
-            case PUBLISH:
-                return Workflows.publish(context);
-            case ANNOUNCE:
-                return Workflows.announce(context);
             case FULL_RELEASE:
                 return Workflows.fullRelease(context);
             default:

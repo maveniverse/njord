@@ -16,5 +16,7 @@ This publisher is **available with dedicated extension** (due JReleaser size).
 | `njord.jreleaser.strict`        | `false`        |
 | `njord.jreleaser.reproducible`  | `false`        |
 | `njord.jreleaser.command`       | `FULL_RELEASE` |
-| `njord.jreleaser.reproducible`  | `false`        |
+
+Supported values of `njord.jreleaser.command` are `DEPLOY`, `RELEASE` and `FULL_RELEASE` (case-insensitive); other
+JReleaser commands do not deploy, hence are rejected.
 

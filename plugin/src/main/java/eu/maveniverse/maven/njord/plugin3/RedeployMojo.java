@@ -51,7 +51,11 @@ public class RedeployMojo extends NjordMojoSupport {
             fromOptional.orElseThrow(J8Utils.OET).close();
             throw new MojoFailureException("ArtifactStore with given name not found: " + to);
         }
-        ns.artifactStoreMerger().redeploy(fromOptional.orElseThrow(J8Utils.OET), toOptional.orElseThrow(J8Utils.OET));
+        // merger closes stores on success; these close them on early failure (close is idempotent)
+        try (ArtifactStore fromStore = fromOptional.orElseThrow(J8Utils.OET);
+                ArtifactStore toStore = toOptional.orElseThrow(J8Utils.OET)) {
+            ns.artifactStoreMerger().redeploy(fromStore, toStore);
+        }
         if (drop) {
             logger.info("Dropping {}", from);
             ns.artifactStoreManager().dropArtifactStore(from);

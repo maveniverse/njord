@@ -453,11 +453,14 @@ public class PathArtifactStore extends CloseableSupport implements ArtifactStore
                             }
                         }
                     } finally {
-                        // operation owns the stream passed to write()
-                        if (write.get() != null) {
-                            write.get().close();
+                        try {
+                            // operation owns the stream passed to write()
+                            if (write.get() != null) {
+                                write.get().close();
+                            }
+                        } finally {
+                            endWrite();
                         }
-                        endWrite();
                     }
                 }
             }
