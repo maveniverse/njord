@@ -34,3 +34,8 @@ var log3 = log3f.text
 assert log3.contains("[INFO] BUILD SUCCESS")
 assert !log3.contains("is closed")
 assert log3.contains("[INFO] Njord auto publish: Published 1 stores created in this session")
+// releases-repo still has files from second run; compare published counts instead (all modules published)
+def published = ~/\[INFO\] Published (\d+) artifact\(s\) to deploy-release-service repository/
+var count2 = (log2 =~ published)[0][1]
+var count3 = (log3 =~ published)[0][1]
+assert count2 == count3
