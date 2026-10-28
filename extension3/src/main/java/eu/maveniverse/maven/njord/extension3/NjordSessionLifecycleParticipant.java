@@ -15,7 +15,10 @@ import eu.maveniverse.maven.njord.shared.SessionConfig;
 import eu.maveniverse.maven.njord.shared.SessionFactory;
 import eu.maveniverse.maven.njord.shared.impl.J8Utils;
 import java.io.IOException;
+import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -25,6 +28,7 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
+import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.eclipse.aether.RepositorySystemSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +51,7 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
     @Override
     public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
         requireNonNull(session);
+        failIfLoadedMoreThanOnce();
         try {
             if (isExplicitlyDisabled(session)) {
                 logger.debug("Njord disabled via properties, skipping session initialization");
@@ -142,6 +147,33 @@ public class NjordSessionLifecycleParticipant extends AbstractMavenLifecyclePart
             throw new MavenExecutionException("Error closing Njord", e);
         } finally {
             NjordUtils.removeNjordSession(repositorySession);
+        }
+    }
+
+    /**
+     * Njord loaded more than once (ie. as core extension and as POM build extension) ends up with mixed classes:
+     * the core extension exports the session, while each copy brings its own connector. These copies step on each
+     * other (ie. closing shared store handles), so refuse to run. Each copy (of any version) has own class realm
+     * defining this class.
+     */
+    private void failIfLoadedMoreThanOnce() throws MavenExecutionException {
+        if (!(getClass().getClassLoader() instanceof ClassRealm)) {
+            return; // not running in Maven (ie. tests)
+        }
+        List<String> copies = new ArrayList<>();
+        for (ClassRealm realm :
+                ((ClassRealm) getClass().getClassLoader()).getWorld().getRealms()) {
+            Class<?> copy = realm.loadClassFromSelf(getClass().getName());
+            if (copy != null) {
+                CodeSource codeSource = copy.getProtectionDomain().getCodeSource();
+                copies.add(realm.getId() + (codeSource != null ? " (" + codeSource.getLocation() + ")" : ""));
+            }
+        }
+        if (copies.size() > 1) {
+            throw new MavenExecutionException(
+                    "Njord is loaded more than once; keep only one (either core extension or POM build extension):\n"
+                            + String.join("\n", copies),
+                    (Throwable) null);
         }
     }
 
